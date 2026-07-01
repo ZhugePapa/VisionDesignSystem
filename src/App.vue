@@ -1133,13 +1133,15 @@ const elementApiDescriptionsZh: Partial<Record<DemoPageId, Record<string, string
 }
 
 function toVisionAttributeRows(rows: ApiRow[]): ApiDisplayRow[] {
-  return rows.map((row) => ({
-    api: row.visionApi,
-    elementApi: row.elementApi,
-    description: row.description,
-    type: row.type,
-    defaultValue: row.defaultValue,
-  }))
+  return rows.flatMap((row) =>
+    splitMergedApiRow({
+      api: row.visionApi,
+      elementApi: row.elementApi,
+      description: row.description,
+      type: row.type,
+      defaultValue: row.defaultValue,
+    }),
+  )
 }
 
 function getElementRows(page: DemoPageId): ElementApiRow[] {
@@ -1151,11 +1153,35 @@ function getElementRows(page: DemoPageId): ElementApiRow[] {
 }
 
 function toElementRows(rows: ElementApiRow[]): ApiDisplayRow[] {
-  return rows.map((row) => ({
-    api: row.api,
-    description: row.description,
-    type: row.type,
-    defaultValue: row.defaultValue,
+  return rows.flatMap((row) =>
+    splitMergedApiRow({
+      api: row.api,
+      description: row.description,
+      type: row.type,
+      defaultValue: row.defaultValue,
+    }),
+  )
+}
+
+function splitMergedValue(value: string | undefined): string[] {
+  return value?.split(/\s+\/\s+/).map((part) => part.trim()).filter(Boolean) ?? []
+}
+
+function getAlignedPart(value: string | undefined, index: number, expectedLength: number) {
+  const parts = splitMergedValue(value)
+  return parts.length === expectedLength ? parts[index] : value
+}
+
+function splitMergedApiRow(row: ApiDisplayRow): ApiDisplayRow[] {
+  const apiParts = splitMergedValue(row.api)
+  if (apiParts.length <= 1) return [row]
+
+  return apiParts.map((api, index) => ({
+    ...row,
+    api,
+    elementApi: getAlignedPart(row.elementApi, index, apiParts.length),
+    type: getAlignedPart(row.type, index, apiParts.length) ?? row.type,
+    defaultValue: getAlignedPart(row.defaultValue, index, apiParts.length),
   }))
 }
 
@@ -1342,6 +1368,14 @@ function selectPage(page: SidebarPageId | undefined) {
                   <h4 class="api-section__subtitle ld-heading-h4">{{ section.title }}</h4>
                   <div class="api-table-wrap">
                     <table class="api-table">
+                      <colgroup>
+                        <col
+                          v-for="column in section.columns"
+                          :key="column.key"
+                          class="api-table__col"
+                          :class="`api-table__col--${column.key}`"
+                        >
+                      </colgroup>
                       <thead>
                         <tr>
                           <th v-for="column in section.columns" :key="column.key">{{ column.label }}</th>
@@ -1349,7 +1383,12 @@ function selectPage(page: SidebarPageId | undefined) {
                       </thead>
                       <tbody>
                         <tr v-for="row in section.rows" :key="`${section.title}-${row.api}`">
-                          <td v-for="column in section.columns" :key="column.key">
+                          <td
+                            v-for="column in section.columns"
+                            :key="column.key"
+                            class="api-table__cell"
+                            :class="`api-table__cell--${column.key}`"
+                          >
                             <code v-if="column.key !== 'description'">{{ row[column.key] ?? '-' }}</code>
                             <template v-else>{{ row.description }}</template>
                           </td>
@@ -1367,6 +1406,14 @@ function selectPage(page: SidebarPageId | undefined) {
                   <h4 class="api-section__subtitle ld-heading-h4">{{ section.title }}</h4>
                   <div class="api-table-wrap">
                     <table class="api-table">
+                      <colgroup>
+                        <col
+                          v-for="column in section.columns"
+                          :key="column.key"
+                          class="api-table__col"
+                          :class="`api-table__col--${column.key}`"
+                        >
+                      </colgroup>
                       <thead>
                         <tr>
                           <th v-for="column in section.columns" :key="column.key">{{ column.label }}</th>
@@ -1374,7 +1421,12 @@ function selectPage(page: SidebarPageId | undefined) {
                       </thead>
                       <tbody>
                         <tr v-for="row in section.rows" :key="`${section.title}-${row.api}`">
-                          <td v-for="column in section.columns" :key="column.key">
+                          <td
+                            v-for="column in section.columns"
+                            :key="column.key"
+                            class="api-table__cell"
+                            :class="`api-table__cell--${column.key}`"
+                          >
                             <code v-if="column.key !== 'description'">{{ row[column.key] ?? '-' }}</code>
                             <template v-else>{{ row.description }}</template>
                           </td>
@@ -1701,11 +1753,32 @@ function selectPage(page: SidebarPageId | undefined) {
 
 .api-table {
   inline-size: 100%;
-  min-inline-size: 980px;
+  min-inline-size: 1080px;
   border-collapse: collapse;
   color: var(--color-text-secondary);
   font-size: var(--font-text-md-size);
   line-height: var(--font-text-md-line-height);
+  table-layout: fixed;
+}
+
+.api-table__col--api {
+  inline-size: 18%;
+}
+
+.api-table__col--elementApi {
+  inline-size: 18%;
+}
+
+.api-table__col--description {
+  inline-size: 42%;
+}
+
+.api-table__col--type {
+  inline-size: 14%;
+}
+
+.api-table__col--defaultValue {
+  inline-size: 8%;
 }
 
 .api-table th,
@@ -1727,11 +1800,19 @@ function selectPage(page: SidebarPageId | undefined) {
   white-space: nowrap;
 }
 
-.api-table td:first-child,
-.api-table td:nth-child(2),
-.api-table td:nth-child(4),
-.api-table td:nth-child(5) {
+.api-table__cell {
+  overflow-wrap: anywhere;
+}
+
+.api-table__cell--api,
+.api-table__cell--elementApi,
+.api-table__cell--defaultValue {
   white-space: nowrap;
+}
+
+.api-table__cell--description,
+.api-table__cell--type {
+  white-space: normal;
 }
 
 .api-table code {
@@ -1739,6 +1820,7 @@ function selectPage(page: SidebarPageId | undefined) {
   font-family: var(--font-family-mono);
   font-size: var(--font-text-md-size);
   line-height: var(--font-text-md-line-height);
+  white-space: inherit;
 }
 
 .button-demo,
