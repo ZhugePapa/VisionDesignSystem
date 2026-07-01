@@ -41,6 +41,25 @@ interface ElementApiRow {
   defaultValue: string
 }
 
+interface ApiDisplayRow {
+  api: string
+  elementApi?: string
+  description: string
+  type: string
+  defaultValue?: string
+}
+
+interface ApiColumn {
+  key: keyof ApiDisplayRow
+  label: string
+}
+
+interface ApiTableSection {
+  title: string
+  columns: ApiColumn[]
+  rows: ApiDisplayRow[]
+}
+
 const theme = ref<VisTheme>('light')
 const activePage = ref<DemoPageId>('button')
 const collapsedGroups = ref<Set<string>>(new Set())
@@ -453,15 +472,7 @@ const apiTables: Record<DemoPageId, ApiRow[]> = {
   ],
 }
 
-const noElementApiRows = (reason: string): ElementApiRow[] => [
-  {
-    category: 'Reference',
-    api: '无直接对应',
-    description: reason,
-    type: '-',
-    defaultValue: '-',
-  },
-]
+const noElementApiRows = (): ElementApiRow[] => []
 
 const elementApiTables: Record<DemoPageId, ElementApiRow[]> = {
   button: [
@@ -776,8 +787,8 @@ const elementApiTables: Record<DemoPageId, ElementApiRow[]> = {
     { category: 'Event', api: 'open-auto-focus', description: 'triggers after Dialog opens and content focused', type: 'event', defaultValue: '-' },
     { category: 'Event', api: 'close-auto-focus', description: 'triggers after Dialog closed and content focused', type: 'event', defaultValue: '-' },
   ],
-  'featured-icon': noElementApiRows('FeaturedIcon 是 leoht-design/Vision 自绘组件，Element Plus 没有原生等价组件。'),
-  'code-block': noElementApiRows('CodeBlock 是 leoht-design/Vision 自绘代码展示组件，Element Plus 没有原生等价组件。'),
+  'featured-icon': noElementApiRows(),
+  'code-block': noElementApiRows(),
   'scroll-shadow': [
     { category: 'Attribute', api: 'height', description: 'height of scrollbar', type: 'string | number', defaultValue: '-' },
     { category: 'Attribute', api: 'max-height', description: 'max height of scrollbar', type: 'string | number', defaultValue: '-' },
@@ -819,8 +830,367 @@ const elementApiTables: Record<DemoPageId, ElementApiRow[]> = {
   ],
 }
 
-const currentApiRows = computed(() => apiTables[activePage.value])
-const currentElementApiRows = computed(() => elementApiTables[activePage.value])
+const visionComponentNames: Record<DemoPageId, string> = {
+  button: 'VisButton',
+  input: 'VisInput',
+  modal: 'VisModal',
+  'featured-icon': 'VisFeaturedIcon',
+  'code-block': 'VisCodeBlock',
+  'scroll-shadow': 'VisScrollShadow',
+}
+
+const elementComponentNames: Partial<Record<DemoPageId, string>> = {
+  button: 'ElButton',
+  input: 'ElInput',
+  modal: 'ElDialog',
+  'scroll-shadow': 'ElScrollbar',
+}
+
+const visionAttributeColumns: ApiColumn[] = [
+  { key: 'api', label: 'Vision API' },
+  { key: 'elementApi', label: 'Element API' },
+  { key: 'description', label: '说明' },
+  { key: 'type', label: '类型' },
+  { key: 'defaultValue', label: '默认值' },
+]
+
+const apiColumns: ApiColumn[] = [
+  { key: 'api', label: 'API' },
+  { key: 'description', label: '说明' },
+  { key: 'type', label: '类型' },
+  { key: 'defaultValue', label: '默认值' },
+]
+
+const eventColumns: ApiColumn[] = [
+  { key: 'api', label: '事件名' },
+  { key: 'description', label: '说明' },
+  { key: 'type', label: '类型' },
+]
+
+const slotColumns: ApiColumn[] = [
+  { key: 'api', label: '插槽名' },
+  { key: 'description', label: '说明' },
+  { key: 'type', label: '类型' },
+]
+
+const exposeColumns: ApiColumn[] = [
+  { key: 'api', label: '名称' },
+  { key: 'description', label: '说明' },
+  { key: 'type', label: '类型' },
+]
+
+const visionEventTables: Record<DemoPageId, ApiDisplayRow[]> = {
+  button: [
+    {
+      api: 'click',
+      description: '点击按钮时触发，透传原生 button click 事件。',
+      type: '(event: MouseEvent) => void',
+    },
+  ],
+  input: [
+    {
+      api: 'update:modelValue',
+      description: '输入值变化时触发，用于 v-model 双向绑定。',
+      type: '(value: string) => void',
+    },
+    {
+      api: 'clear',
+      description: '点击清除按钮并清空内容时触发。',
+      type: '() => void',
+    },
+    {
+      api: 'focus',
+      description: '输入框获得焦点时触发。',
+      type: '(event: FocusEvent) => void',
+    },
+    {
+      api: 'blur',
+      description: '输入框失去焦点时触发。',
+      type: '(event: FocusEvent) => void',
+    },
+  ],
+  modal: [
+    {
+      api: 'update:modelValue',
+      description: '弹窗显示状态变化时触发，用于 v-model 双向绑定。',
+      type: '(value: boolean) => void',
+    },
+    {
+      api: 'close',
+      description: '点击关闭按钮关闭弹窗时触发。',
+      type: '() => void',
+    },
+    {
+      api: 'cancel',
+      description: '点击默认取消按钮时触发。',
+      type: '() => void',
+    },
+    {
+      api: 'confirm',
+      description: '点击默认确认按钮时触发。',
+      type: '() => void',
+    },
+    {
+      api: 'back',
+      description: '点击二级弹窗返回入口时触发。',
+      type: '() => void',
+    },
+    {
+      api: 'menu-select',
+      description: '菜单型弹窗选择菜单项时触发。',
+      type: '(item: VisModalMenuItem) => void',
+    },
+  ],
+  'featured-icon': [],
+  'code-block': [],
+  'scroll-shadow': [],
+}
+
+const elementExtraApiRows: Record<DemoPageId, ElementApiRow[]> = {
+  button: [
+    { category: 'Slot', api: 'default', description: '自定义默认内容', type: 'slot', defaultValue: '-' },
+    { category: 'Slot', api: 'loading', description: '自定义加载中组件', type: 'slot', defaultValue: '-' },
+    { category: 'Slot', api: 'icon', description: '自定义图标组件', type: 'slot', defaultValue: '-' },
+    { category: 'Expose', api: 'ref', description: '按钮 HTML 元素', type: 'object', defaultValue: '-' },
+    { category: 'Expose', api: 'size', description: '按钮尺寸', type: 'object', defaultValue: '-' },
+    { category: 'Expose', api: 'type', description: '按钮类型', type: 'object', defaultValue: '-' },
+    { category: 'Expose', api: 'disabled', description: '按钮禁用状态', type: 'object', defaultValue: '-' },
+    { category: 'Expose', api: 'shouldAddSpace', description: '是否在两个中文字符之间插入空格', type: 'object', defaultValue: '-' },
+  ],
+  input: [
+    { category: 'Slot', api: 'prefix', description: '输入框头部内容，只对非 textarea 有效', type: 'slot', defaultValue: '-' },
+    { category: 'Slot', api: 'suffix', description: '输入框尾部内容，只对非 textarea 有效', type: 'slot', defaultValue: '-' },
+    { category: 'Slot', api: 'prepend', description: '输入框前置内容，只对非 textarea 有效', type: 'slot', defaultValue: '-' },
+    { category: 'Slot', api: 'append', description: '输入框后置内容，只对非 textarea 有效', type: 'slot', defaultValue: '-' },
+    {
+      category: 'Slot',
+      api: 'password-icon',
+      description: '作为输入密码图标的内容，仅在 show-password 为 true 时生效',
+      type: 'slot',
+      defaultValue: '-',
+    },
+    { category: 'Expose', api: 'blur', description: '使 input 失去焦点', type: 'Function', defaultValue: '-' },
+    { category: 'Expose', api: 'clear', description: '清除 input 值', type: 'Function', defaultValue: '-' },
+    { category: 'Expose', api: 'focus', description: '使 input 获取焦点', type: 'Function', defaultValue: '-' },
+    { category: 'Expose', api: 'input', description: 'Input HTML 元素', type: 'object', defaultValue: '-' },
+    { category: 'Expose', api: 'ref', description: 'HTML input 或 textarea 元素', type: 'object', defaultValue: '-' },
+    { category: 'Expose', api: 'resizeTextarea', description: '改变 textarea 大小', type: 'Function', defaultValue: '-' },
+    { category: 'Expose', api: 'select', description: '选中 input 中的文字', type: 'Function', defaultValue: '-' },
+    { category: 'Expose', api: 'textarea', description: 'HTML textarea 元素', type: 'object', defaultValue: '-' },
+    { category: 'Expose', api: 'textareaStyle', description: 'textarea 的样式', type: 'object', defaultValue: '-' },
+    { category: 'Expose', api: 'isComposing', description: '是否处于输入法 composing 状态', type: 'object', defaultValue: '-' },
+    { category: 'Expose', api: 'passwordVisible', description: '密码是否可见', type: 'object', defaultValue: '-' },
+  ],
+  modal: [
+    { category: 'Slot', api: 'default', description: '对话框的默认内容', type: 'slot', defaultValue: '-' },
+    { category: 'Slot', api: 'header', description: '对话框标题内容；会替换标题部分，但不会移除关闭按钮', type: 'slot', defaultValue: '-' },
+    { category: 'Slot', api: 'footer', description: 'Dialog 按钮操作区的内容', type: 'slot', defaultValue: '-' },
+    { category: 'Slot', api: 'title', description: '已废弃，与 header 作用相同', type: 'slot', defaultValue: '-' },
+    { category: 'Expose', api: 'resetPosition', description: '重置位置', type: 'Function', defaultValue: '-' },
+    { category: 'Expose', api: 'handleClose', description: '关闭对话框', type: 'Function', defaultValue: '-' },
+  ],
+  'featured-icon': [],
+  'code-block': [],
+  'scroll-shadow': [
+    { category: 'Slot', api: 'default', description: '滚动区域的默认内容', type: 'slot', defaultValue: '-' },
+    { category: 'Expose', api: 'handleScroll', description: '处理滚动事件并更新滚动条位置', type: 'Function', defaultValue: '-' },
+    { category: 'Expose', api: 'scrollTo', description: '滚动到指定位置', type: 'Function', defaultValue: '-' },
+    { category: 'Expose', api: 'setScrollTop', description: '设置垂直滚动距离', type: 'Function', defaultValue: '-' },
+    { category: 'Expose', api: 'setScrollLeft', description: '设置水平滚动距离', type: 'Function', defaultValue: '-' },
+    { category: 'Expose', api: 'update', description: '手动更新滚动条状态', type: 'Function', defaultValue: '-' },
+  ],
+}
+
+const elementApiDescriptionsZh: Partial<Record<DemoPageId, Record<string, string>>> = {
+  button: {
+    size: '尺寸',
+    type: '按钮类型；设置 color 时，color 优先。',
+    plain: '是否为朴素按钮',
+    text: '是否为文字按钮',
+    bg: '是否显示文字按钮背景颜色',
+    link: '是否为链接按钮',
+    round: '是否为圆角按钮',
+    circle: '是否为圆形按钮',
+    dashed: '是否为虚线按钮',
+    loading: '是否为加载中状态',
+    'loading-icon': '自定义加载中状态图标组件',
+    disabled: '按钮是否为禁用状态',
+    icon: '图标组件',
+    autofocus: '原生 autofocus 属性',
+    'native-type': '原生 type 属性',
+    'auto-insert-space': '两个中文字符之间自动插入空格，仅当文本长度为 2 且所有字符均为中文时生效',
+    color: '自定义按钮颜色，并自动计算 hover 和 active 触发后的颜色',
+    dark: 'dark 模式，自动将 color 转换为暗色模式颜色',
+    tag: '自定义元素标签',
+  },
+  input: {
+    type: '输入类型，更多信息可参考 MDN input 类型',
+    'model-value': '绑定值',
+    'model-modifiers': 'v-model 修饰符',
+    maxlength: '同原生 maxlength 属性',
+    minlength: '原生属性，最小输入长度',
+    'show-word-limit': "是否显示统计字数，只在 type 为 'text' 或 'textarea' 时生效",
+    'word-limit-position': '字数统计的位置，仅当 show-word-limit 为 true 时生效',
+    placeholder: '输入框占位文本',
+    clearable: '是否显示清除按钮，只有当 type 不是 textarea 时生效',
+    'clear-icon': '自定义清除图标',
+    formatter: '指定输入值的格式，仅当 type 是 text 时生效',
+    parser: '指定从格式化器输入中提取的值，仅当 type 是 text 时生效',
+    'show-password': '是否显示切换密码图标',
+    disabled: '是否禁用',
+    size: "输入框尺寸，只在 type 不为 'textarea' 时有效",
+    'prefix-icon': '自定义前缀图标',
+    'suffix-icon': '自定义后缀图标',
+    rows: "输入框行数，仅 type 为 'textarea' 时有效",
+    autosize: "textarea 高度是否自适应，仅 type 为 'textarea' 时生效",
+    autocomplete: '原生 autocomplete 属性',
+    name: '等价于原生 input name 属性',
+    readonly: '原生 readonly 属性，是否只读',
+    max: '原生 max 属性，设置最大值',
+    min: '原生 min 属性，设置最小值',
+    step: '原生 step 属性，设置输入字段的合法数字间隔',
+    resize: '控制是否能被用户缩放',
+    autofocus: '原生 autofocus 属性，自动获取焦点',
+    form: '原生 form 属性',
+    'aria-label': '等价于原生 input aria-label 属性',
+    tabindex: '输入框的 tabindex',
+    'validate-event': '输入时是否触发表单校验',
+    'input-style': 'input 元素或 textarea 元素的 style',
+    label: '已废弃，等价于原生 input aria-label 属性',
+    inputmode: '等价于原生 inputmode 属性',
+    'count-graphemes': '自定义函数用于计算字形；设置后会绕过原生 maxlength/minlength 约束',
+    blur: '当输入框失去焦点时触发',
+    focus: '当输入框获得焦点时触发',
+    change: '仅当 modelValue 改变时，在输入框失去焦点或用户按 Enter 时触发',
+    input: '在 Input 值改变时触发',
+    clear: '在点击由 clearable 属性生成的清空按钮时触发',
+    keydown: '按下键时触发',
+    mouseleave: '当鼠标离开输入元素时触发',
+    mouseenter: '当鼠标进入输入元素时触发',
+    compositionstart: '输入法输入开始时触发',
+    compositionupdate: '输入法输入改变时触发',
+    compositionend: '输入法输入完成时触发',
+  },
+  modal: {
+    'model-value': '是否显示 Dialog',
+    title: 'Dialog 的标题，也可通过具名 slot 传入',
+    width: '对话框的宽度，默认值为 50%',
+    fullscreen: '是否为全屏 Dialog',
+    top: 'Dialog CSS 中的 margin-top 值，默认为 15vh',
+    modal: '是否需要遮罩层',
+    'modal-penetrable': '是否允许穿透遮罩层，modal 属性必须为 false',
+    'modal-class': '遮罩的自定义类名',
+    'header-class': 'header 部分的自定义 class 名',
+    'body-class': 'body 部分的自定义 class 名',
+    'footer-class': 'footer 部分的自定义 class 名',
+    'append-to-body': 'Dialog 自身是否插入至 body 元素上；嵌套 Dialog 必须指定为 true',
+    'append-to': 'Dialog 挂载到哪个 DOM 元素，会覆盖 append-to-body',
+    'lock-scroll': '是否在 Dialog 出现时将 body 滚动锁定',
+    'open-delay': 'Dialog 打开的延时时间，单位毫秒',
+    'close-delay': 'Dialog 关闭的延时时间，单位毫秒',
+    'close-on-click-modal': '是否可以通过点击 modal 关闭 Dialog',
+    'close-on-press-escape': '是否可以通过按下 ESC 关闭 Dialog',
+    'show-close': '是否显示关闭按钮',
+    'before-close': '关闭前的回调，会暂停 Dialog 的关闭；执行 done 参数方法时才真正关闭',
+    draggable: '为 Dialog 启用可拖拽功能',
+    overflow: '拖动范围是否可以超出可视区',
+    center: '是否让 Dialog 的 header 和 footer 部分居中排列',
+    'align-center': '是否水平垂直对齐对话框',
+    'destroy-on-close': '关闭 Dialog 时是否销毁其中的元素',
+    'close-icon': '自定义关闭图标',
+    'z-index': '和原生 CSS z-index 相同，用于改变 z 轴顺序',
+    'header-aria-level': 'header 的 aria-level 属性',
+    transition: '对话框动画的自定义过渡配置，可以是字符串或 Vue 过渡属性对象',
+    'custom-class': '已废弃，Dialog 的自定义类名',
+    open: 'Dialog 打开的回调',
+    opened: 'Dialog 打开动画结束时的回调',
+    close: 'Dialog 关闭的回调',
+    closed: 'Dialog 关闭动画结束时的回调',
+    'open-auto-focus': '输入焦点聚焦在 Dialog 内容时的回调',
+    'close-auto-focus': '输入焦点从 Dialog 内容失焦时的回调',
+  },
+  'scroll-shadow': {
+    height: '滚动条高度',
+    'max-height': '滚动条最大高度',
+    native: '是否使用原生滚动条样式',
+    'wrap-style': '包裹容器的自定义样式',
+    'wrap-class': '包裹容器的自定义类名',
+    'view-style': '视图容器的自定义样式',
+    'view-class': '视图容器的自定义类名',
+    noresize: '不响应容器尺寸变化；容器尺寸不变化时可设置以优化性能',
+    tag: '视图容器的元素标签',
+    always: '是否始终显示滚动条',
+    'min-size': '滚动条最小尺寸',
+    id: '视图容器 id',
+    role: '视图容器 role',
+    'aria-label': '视图容器 aria-label',
+    'aria-orientation': '视图容器 aria-orientation',
+    tabindex: '包裹容器 tabindex',
+    distance: '触发 end-reached 事件的距离，单位 px',
+    scroll: '滚动时触发，返回滚动距离',
+    'end-reached': '滚动到末端时触发',
+  },
+}
+
+function toVisionAttributeRows(rows: ApiRow[]): ApiDisplayRow[] {
+  return rows.map((row) => ({
+    api: row.visionApi,
+    elementApi: row.elementApi,
+    description: row.description,
+    type: row.type,
+    defaultValue: row.defaultValue,
+  }))
+}
+
+function getElementRows(page: DemoPageId): ElementApiRow[] {
+  const zhMap = elementApiDescriptionsZh[page] ?? {}
+  return [...elementApiTables[page], ...elementExtraApiRows[page]].map((row) => ({
+    ...row,
+    description: zhMap[row.api] ?? row.description,
+  }))
+}
+
+function toElementRows(rows: ElementApiRow[]): ApiDisplayRow[] {
+  return rows.map((row) => ({
+    api: row.api,
+    description: row.description,
+    type: row.type,
+    defaultValue: row.defaultValue,
+  }))
+}
+
+function createSection(title: string, columns: ApiColumn[], rows: ApiDisplayRow[]): ApiTableSection | undefined {
+  if (rows.length === 0) return undefined
+  return { title, columns, rows }
+}
+
+const currentVisionApiSections = computed(() => {
+  const componentName = visionComponentNames[activePage.value]
+  return [
+    createSection(`${componentName} Attributes`, visionAttributeColumns, toVisionAttributeRows(apiTables[activePage.value])),
+    createSection(`${componentName} Events`, eventColumns, visionEventTables[activePage.value]),
+  ].filter((section): section is ApiTableSection => Boolean(section))
+})
+
+const currentElementApiSections = computed(() => {
+  const componentName = elementComponentNames[activePage.value]
+  if (!componentName) return []
+
+  const rows = getElementRows(activePage.value)
+  const rowsByCategory = {
+    Attribute: rows.filter((row) => row.category === 'Attribute'),
+    Event: rows.filter((row) => row.category === 'Event'),
+    Slot: rows.filter((row) => row.category === 'Slot'),
+    Expose: rows.filter((row) => row.category === 'Expose'),
+  }
+
+  return [
+    createSection(`${componentName} Attributes`, apiColumns, toElementRows(rowsByCategory.Attribute)),
+    createSection(`${componentName} Events`, eventColumns, toElementRows(rowsByCategory.Event)),
+    createSection(`${componentName} Slots`, slotColumns, toElementRows(rowsByCategory.Slot)),
+    createSection(`${componentName} Exposes`, exposeColumns, toElementRows(rowsByCategory.Expose)),
+  ].filter((section): section is ApiTableSection => Boolean(section))
+})
 
 function toggleTheme() {
   theme.value = theme.value === 'light' ? 'dark' : 'light'
@@ -964,58 +1334,54 @@ function selectPage(page: SidebarPageId | undefined) {
               </VisScrollShadow>
             </section>
 
-            <section class="api-section" aria-labelledby="api-section-title">
-              <h3 id="api-section-title" class="api-section__title ld-heading-h3">API</h3>
+            <section class="api-section" aria-label="组件 API">
+              <div v-if="currentVisionApiSections.length > 0" class="api-section__major">
+                <h3 class="api-section__title ld-heading-h3">Vision API</h3>
 
-              <div class="api-section__group">
-                <h4 class="api-section__subtitle ld-heading-h4">Vision API</h4>
-                <div class="api-table-wrap">
-                  <table class="api-table">
-                    <thead>
-                      <tr>
-                        <th>Vision API</th>
-                        <th>Element API</th>
-                        <th>说明</th>
-                        <th>类型</th>
-                        <th>默认值</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr v-for="row in currentApiRows" :key="row.visionApi">
-                        <td><code>{{ row.visionApi }}</code></td>
-                        <td><code>{{ row.elementApi }}</code></td>
-                        <td>{{ row.description }}</td>
-                        <td><code>{{ row.type }}</code></td>
-                        <td><code>{{ row.defaultValue }}</code></td>
-                      </tr>
-                    </tbody>
-                  </table>
+                <div v-for="section in currentVisionApiSections" :key="section.title" class="api-section__group">
+                  <h4 class="api-section__subtitle ld-heading-h4">{{ section.title }}</h4>
+                  <div class="api-table-wrap">
+                    <table class="api-table">
+                      <thead>
+                        <tr>
+                          <th v-for="column in section.columns" :key="column.key">{{ column.label }}</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr v-for="row in section.rows" :key="`${section.title}-${row.api}`">
+                          <td v-for="column in section.columns" :key="column.key">
+                            <code v-if="column.key !== 'description'">{{ row[column.key] ?? '-' }}</code>
+                            <template v-else>{{ row.description }}</template>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               </div>
 
-              <div class="api-section__group">
-                <h4 class="api-section__subtitle ld-heading-h4">Element API</h4>
-                <div class="api-table-wrap">
-                  <table class="api-table">
-                    <thead>
-                      <tr>
-                        <th>分类</th>
-                        <th>API</th>
-                        <th>说明</th>
-                        <th>类型</th>
-                        <th>默认值</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr v-for="row in currentElementApiRows" :key="`${row.category}-${row.api}`">
-                        <td><code>{{ row.category }}</code></td>
-                        <td><code>{{ row.api }}</code></td>
-                        <td>{{ row.description }}</td>
-                        <td><code>{{ row.type }}</code></td>
-                        <td><code>{{ row.defaultValue }}</code></td>
-                      </tr>
-                    </tbody>
-                  </table>
+              <div v-if="currentElementApiSections.length > 0" class="api-section__major">
+                <h3 class="api-section__title ld-heading-h3">Element API</h3>
+
+                <div v-for="section in currentElementApiSections" :key="section.title" class="api-section__group">
+                  <h4 class="api-section__subtitle ld-heading-h4">{{ section.title }}</h4>
+                  <div class="api-table-wrap">
+                    <table class="api-table">
+                      <thead>
+                        <tr>
+                          <th v-for="column in section.columns" :key="column.key">{{ column.label }}</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr v-for="row in section.rows" :key="`${section.title}-${row.api}`">
+                          <td v-for="column in section.columns" :key="column.key">
+                            <code v-if="column.key !== 'description'">{{ row[column.key] ?? '-' }}</code>
+                            <template v-else>{{ row.description }}</template>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               </div>
             </section>
@@ -1301,6 +1667,14 @@ function selectPage(page: SidebarPageId | undefined) {
 .api-section__title {
   margin: 0 0 var(--space-20);
   color: var(--color-text-primary);
+}
+
+.api-section__major {
+  min-inline-size: 0;
+}
+
+.api-section__major + .api-section__major {
+  margin-block-start: var(--space-32);
 }
 
 .api-section__group {
