@@ -1,0 +1,3 @@
+import { createIconComponent } from '../../createIconComponent'
+
+export const GlobeSlated01Icon = createIconComponent("globe-slated-01", "GlobeSlated01Icon", `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none"><path d="M12.4212 1.57886C15.4152 4.57288 15.4152 9.42714 12.4212 12.4212C9.55396 15.2884 4.9807 15.4098 1.96898 12.7854C1.83764 12.671 1.77197 12.6138 1.74232 12.5355C1.71738 12.4697 1.71459 12.3883 1.73496 12.321C1.75917 12.2409 1.82478 12.1753 1.956 12.044L3.43283 10.5672M12 7.00001C12 9.76143 9.76145 12 7.00003 12C4.2386 12 2.00003 9.76143 2.00003 7.00001C2.00003 4.23859 4.2386 2.00001 7.00003 2.00001C9.76145 2.00001 12 4.23859 12 7.00001Z" stroke="currentColor" stroke-width="1.33" stroke-linecap="round" stroke-linejoin="round"/></svg>`)

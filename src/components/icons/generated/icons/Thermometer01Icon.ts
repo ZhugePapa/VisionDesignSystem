@@ -1,0 +1,3 @@
+import { createIconComponent } from '../../createIconComponent'
+
+export const Thermometer01Icon = createIconComponent("thermometer-01", "Thermometer01Icon", `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none"><path d="M9.66667 2.99992C9.66667 2.07944 8.92047 1.33325 8 1.33325C7.07953 1.33325 6.33333 2.07944 6.33333 2.99992V9.17177C5.52934 9.70994 5 10.6264 5 11.6666C5 13.3234 6.34315 14.6666 8 14.6666C9.65685 14.6666 11 13.3234 11 11.6666C11 10.6264 10.4707 9.70994 9.66667 9.17177V2.99992Z" stroke="currentColor" stroke-width="1.33" stroke-linecap="round" stroke-linejoin="round"/></svg>`)

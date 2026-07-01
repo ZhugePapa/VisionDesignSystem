@@ -1,0 +1,3 @@
+import { createIconComponent } from '../../createIconComponent'
+
+export const DropIcon = createIconComponent("drop", "DropIcon", `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none"><path d="M13.3334 9.33325C13.3334 12.2788 10.9456 14.6666 8.00008 14.6666C5.05456 14.6666 2.66675 12.2788 2.66675 9.33325C2.66675 8.62598 2.80442 7.95087 3.05443 7.33325C3.84561 5.3787 8.00008 1.33325 8.00008 1.33325C8.00008 1.33325 12.1546 5.3787 12.9457 7.33325C13.1957 7.95087 13.3334 8.62598 13.3334 9.33325Z" stroke="currentColor" stroke-width="1.33" stroke-linecap="round" stroke-linejoin="round"/></svg>`)

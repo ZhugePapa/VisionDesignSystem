@@ -1,0 +1,3 @@
+import { createIconComponent } from '../../createIconComponent'
+
+export const CompassIcon = createIconComponent("compass", "CompassIcon", `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none"><path d="M8 2.66659C7.07953 2.66659 6.33333 3.41278 6.33333 4.33325C6.33333 5.25373 7.07953 5.99992 8 5.99992C8.92047 5.99992 9.66667 5.25373 9.66667 4.33325C9.66667 3.41278 8.92047 2.66659 8 2.66659ZM8 2.66659V1.33325M14 9.95823C12.5341 11.6191 10.3894 12.6666 8 12.6666C5.61061 12.6666 3.46589 11.6191 2 9.95823M7.16322 5.77438L2 14.6666M8.83678 5.77438L14 14.6666" stroke="currentColor" stroke-width="1.33" stroke-linecap="round" stroke-linejoin="round"/></svg>`)

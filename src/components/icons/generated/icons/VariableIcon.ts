@@ -1,0 +1,3 @@
+import { createIconComponent } from '../../createIconComponent'
+
+export const VariableIcon = createIconComponent("variable", "VariableIcon", `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none"><path d="M13.2707 14C14.1643 12.1926 14.6667 10.1553 14.6667 8C14.6667 5.84474 14.1643 3.80744 13.2707 2M2.7293 2C1.83577 3.80744 1.33334 5.84474 1.33334 8C1.33334 10.1553 1.83577 12.1926 2.7293 14M11.0324 5.75H10.9726C10.537 5.75 10.1232 5.94134 9.83971 6.27381L6.25648 10.4762C5.973 10.8087 5.55915 11 5.12355 11H5.06376M5.8099 5.75H6.73929C7.0724 5.75 7.36516 5.97198 7.45667 6.29396L8.63963 10.456C8.73114 10.778 9.02389 11 9.357 11H10.2864" stroke="currentColor" stroke-width="1.33" stroke-linecap="round" stroke-linejoin="round"/></svg>`)

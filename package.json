@@ -1,0 +1,80 @@
+{
+  "name": "vision-design-system",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Vision Design System Vue 3 component library built on Element Plus adapters.",
+  "main": "./dist/lib/index.js",
+  "module": "./dist/lib/index.js",
+  "types": "./dist/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/types/index.d.ts",
+      "import": "./dist/lib/index.js"
+    },
+    "./components/button": {
+      "types": "./dist/types/components/button/index.d.ts",
+      "import": "./dist/lib/components/button/index.js"
+    },
+    "./components/code-block": {
+      "types": "./dist/types/components/code-block/index.d.ts",
+      "import": "./dist/lib/components/code-block/index.js"
+    },
+    "./components/config-provider": {
+      "types": "./dist/types/components/config-provider/index.d.ts",
+      "import": "./dist/lib/components/config-provider/index.js"
+    },
+    "./components/featured-icon": {
+      "types": "./dist/types/components/featured-icon/index.d.ts",
+      "import": "./dist/lib/components/featured-icon/index.js"
+    },
+    "./components/icons": {
+      "types": "./dist/types/components/icons/index.d.ts",
+      "import": "./dist/lib/components/icons/index.js"
+    },
+    "./components/input": {
+      "types": "./dist/types/components/input/index.d.ts",
+      "import": "./dist/lib/components/input/index.js"
+    },
+    "./components/modal": {
+      "types": "./dist/types/components/modal/index.d.ts",
+      "import": "./dist/lib/components/modal/index.js"
+    },
+    "./components/scroll-shadow": {
+      "types": "./dist/types/components/scroll-shadow/index.d.ts",
+      "import": "./dist/lib/components/scroll-shadow/index.js"
+    },
+    "./style.css": "./dist/lib/style.css",
+    "./tokens.css": "./dist/lib/tokens.css"
+  },
+  "sideEffects": [
+    "**/*.css",
+    "**/*.scss"
+  ],
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "typecheck": "vue-tsc --noEmit -p tsconfig.app.json",
+    "build": "npm run typecheck && npm run build:docs && npm run build:lib",
+    "build:docs": "vite build",
+    "build:types": "vue-tsc -p tsconfig.build.json",
+    "build:lib": "npm run build:types && vite build --config vite.lib.config.ts && cp src/styles/tokens.css dist/lib/tokens.css"
+  },
+  "peerDependencies": {
+    "element-plus": "^2.14.0",
+    "vue": "^3.5.0"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^6.0.5",
+    "@vue/tsconfig": "^0.9.1",
+    "element-plus": "^2.14.0",
+    "sass": "^1.94.2",
+    "typescript": "~6.0.2",
+    "vite": "^8.0.4",
+    "vue": "^3.5.32",
+    "vue-tsc": "^3.2.6"
+  }
+}

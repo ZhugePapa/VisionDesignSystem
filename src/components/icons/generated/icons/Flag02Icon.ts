@@ -1,0 +1,3 @@
+import { createIconComponent } from '../../createIconComponent'
+
+export const Flag02Icon = createIconComponent("flag-02", "Flag02Icon", `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none"><path d="M2.66666 9.99992C2.66666 9.99992 3.33332 9.33325 5.33332 9.33325C7.33332 9.33325 8.66666 10.6666 10.6667 10.6666C12.6667 10.6666 13.3333 9.99992 13.3333 9.99992V2.66659C13.3333 2.66659 12.6667 3.33325 10.6667 3.33325C8.66666 3.33325 7.33332 1.99992 5.33332 1.99992C3.33332 1.99992 2.66666 2.66659 2.66666 2.66659M2.66666 14.6666L2.66666 1.33325" stroke="currentColor" stroke-width="1.33" stroke-linecap="round" stroke-linejoin="round"/></svg>`)

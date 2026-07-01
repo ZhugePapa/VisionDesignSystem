@@ -1,0 +1,3 @@
+import { createIconComponent } from '../../createIconComponent'
+
+export const TerminalIcon = createIconComponent("terminal", "TerminalIcon", `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none"><path d="M2.66666 11.3334L6.66666 7.33337L2.66666 3.33337M7.99999 12.6667H13.3333" stroke="currentColor" stroke-width="1.33" stroke-linecap="round" stroke-linejoin="round"/></svg>`)

@@ -1,0 +1,3 @@
+import { createIconComponent } from '../../createIconComponent'
+
+export const SubscriptIcon = createIconComponent("subscript", "SubscriptIcon", `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none"><path d="M2 3.33325L8.66667 9.99992M8.66667 3.33325L2 9.99992M14 12.6666H11.3333C11.3333 11.6666 11.6267 11.3333 12.3333 11C13.04 10.6666 14 10.22 14 9.33331C14 9.01997 13.8867 8.71331 13.68 8.47331C13.4666 8.23164 13.1766 8.07063 12.8586 8.01723C12.5407 7.96383 12.214 8.02129 11.9333 8.17997C11.6533 8.33997 11.44 8.59331 11.3333 8.89331" stroke="currentColor" stroke-width="1.33" stroke-linecap="round" stroke-linejoin="round"/></svg>`)

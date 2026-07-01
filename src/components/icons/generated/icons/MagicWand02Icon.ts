@@ -1,0 +1,3 @@
+import { createIconComponent } from '../../createIconComponent'
+
+export const MagicWand02Icon = createIconComponent("magic-wand-02", "MagicWand02Icon", `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none"><path d="M10 2.66671V1.33337M10 10.6667V9.33337M5.33333 6.00004H6.66667M13.3333 6.00004H14.6667M11.8667 7.86671L12.6667 8.66671M11.8667 4.13337L12.6667 3.33337M2 14L8 8.00004M8.13333 4.13337L7.33333 3.33337" stroke="currentColor" stroke-width="1.33" stroke-linecap="round" stroke-linejoin="round"/></svg>`)

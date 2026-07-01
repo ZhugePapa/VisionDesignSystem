@@ -1,0 +1,3 @@
+import { createIconComponent } from '../../createIconComponent'
+
+export const Percent02Icon = createIconComponent("percent-02", "Percent02Icon", `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none"><path d="M12.6667 3.33337L3.33333 12.6667M5.99999 4.66671C5.99999 5.40309 5.40304 6.00004 4.66666 6.00004C3.93028 6.00004 3.33333 5.40309 3.33333 4.66671C3.33333 3.93033 3.93028 3.33337 4.66666 3.33337C5.40304 3.33337 5.99999 3.93033 5.99999 4.66671ZM12.6667 11.3334C12.6667 12.0698 12.0697 12.6667 11.3333 12.6667C10.5969 12.6667 9.99999 12.0698 9.99999 11.3334C9.99999 10.597 10.5969 10 11.3333 10C12.0697 10 12.6667 10.597 12.6667 11.3334Z" stroke="currentColor" stroke-width="1.33" stroke-linecap="round" stroke-linejoin="round"/></svg>`)

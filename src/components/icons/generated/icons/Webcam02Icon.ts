@@ -1,0 +1,3 @@
+import { createIconComponent } from '../../createIconComponent'
+
+export const Webcam02Icon = createIconComponent("webcam-02", "Webcam02Icon", `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none"><path d="M5.33325 14.6666H10.6666M13.6666 6.99998C13.6666 10.1296 11.1295 12.6666 7.99992 12.6666C4.8703 12.6666 2.33325 10.1296 2.33325 6.99998C2.33325 3.87037 4.8703 1.33331 7.99992 1.33331C11.1295 1.33331 13.6666 3.87037 13.6666 6.99998ZM10.1249 6.99998C10.1249 8.17358 9.17352 9.12498 7.99992 9.12498C6.82631 9.12498 5.87492 8.17358 5.87492 6.99998C5.87492 5.82637 6.82631 4.87498 7.99992 4.87498C9.17352 4.87498 10.1249 5.82637 10.1249 6.99998Z" stroke="currentColor" stroke-width="1.33" stroke-linecap="round" stroke-linejoin="round"/></svg>`)

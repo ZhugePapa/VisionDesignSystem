@@ -1,0 +1,3 @@
+import { createIconComponent } from '../../createIconComponent'
+
+export const Expand05Icon = createIconComponent("expand-05", "Expand05Icon", `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none"><path d="M10 6L14 2M14 2H10M14 2V6M6 6L2 2M2 2L2 6M2 2L6 2M6 10L2 14M2 14H6M2 14L2 10M10 10L14 14M14 14V10M14 14H10" stroke="currentColor" stroke-width="1.33" stroke-linecap="round" stroke-linejoin="round"/></svg>`)

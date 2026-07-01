@@ -1,0 +1,3 @@
+import { createIconComponent } from '../../createIconComponent'
+
+export const BarChartCircle03Icon = createIconComponent("bar-chart-circle-03", "BarChartCircle03Icon", `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none"><g clip-path="url(#clip0_7140_50040)"> <path d="M5.33325 4.66659V11.3333M7.99992 7.33325V11.3333M10.6666 9.99992V11.3333M14.6666 7.99992C14.6666 11.6818 11.6818 14.6666 7.99992 14.6666C4.31802 14.6666 1.33325 11.6818 1.33325 7.99992C1.33325 4.31802 4.31802 1.33325 7.99992 1.33325C11.6818 1.33325 14.6666 4.31802 14.6666 7.99992Z" stroke="currentColor" stroke-width="1.33" stroke-linecap="round" stroke-linejoin="round"/> </g> <defs> <clipPath id="clip0_7140_50040"> <rect width="16" height="16" fill="white"/> </clipPath> </defs></svg>`)

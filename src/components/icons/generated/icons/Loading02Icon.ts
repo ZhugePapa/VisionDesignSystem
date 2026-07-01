@@ -1,0 +1,3 @@
+import { createIconComponent } from '../../createIconComponent'
+
+export const Loading02Icon = createIconComponent("loading-02", "Loading02Icon", `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none"><g clip-path="url(#clip0_7140_51354)"> <path d="M7.99999 1.33337V4.00004M7.99999 12V14.6667M3.99999 8.00004H1.33333M14.6667 8.00004H12M12.7189 12.719L10.8333 10.8334M12.7189 3.33334L10.8333 5.21895M3.28104 12.719L5.16666 10.8334M3.28104 3.33334L5.16666 5.21895" stroke="currentColor" stroke-width="1.33" stroke-linecap="round" stroke-linejoin="round"/> </g> <defs> <clipPath id="clip0_7140_51354"> <rect width="16" height="16" fill="white"/> </clipPath> </defs></svg>`)

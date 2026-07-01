@@ -1,0 +1,105 @@
+/* Minimal runtime namespace support for Element Plus components used by the MVP. */
+.vis-el-button {
+  border: 1px solid transparent;
+  border-radius: var(--el-border-radius-base);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  outline: 0;
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+}
+
+.vis-el-button.is-loading {
+  pointer-events: none;
+}
+
+.vis-el-input {
+  position: relative;
+  inline-size: 100%;
+  display: inline-flex;
+  vertical-align: middle;
+}
+
+.vis-el-input__wrapper {
+  position: relative;
+  inline-size: 100%;
+  display: inline-flex;
+  align-items: center;
+  flex-grow: 1;
+  gap: var(--space-6);
+  padding-inline: var(--space-12);
+}
+
+.vis-el-input__inner {
+  inline-size: 100%;
+  min-inline-size: 0;
+  block-size: 100%;
+  border: 0;
+  outline: 0;
+  padding: 0;
+  color: inherit;
+  background: transparent;
+  appearance: none;
+}
+
+.vis-el-input__prefix,
+.vis-el-input__suffix,
+.vis-el-input__prefix-inner,
+.vis-el-input__suffix-inner {
+  display: inline-flex;
+  align-items: center;
+}
+
+.vis-el-input.is-disabled .vis-el-input__inner {
+  cursor: not-allowed;
+}
+
+.vis-el-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: var(--el-index-popper, 3000);
+  overflow: auto;
+  background: var(--el-mask-color);
+}
+
+.vis-el-overlay-dialog {
+  position: fixed;
+  inset: 0;
+  overflow: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.vis-el-dialog {
+  position: relative;
+  inline-size: 50%;
+  margin: var(--space-40) auto;
+  box-sizing: border-box;
+}
+
+.vis-el-dialog__headerbtn {
+  position: absolute;
+  border: 0;
+  padding: 0;
+  color: var(--color-fg-tertiary);
+  background: transparent;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.vis-el-dialog__close {
+  color: currentColor;
+}
+
+.vis-el-dialog__body {
+  overflow-wrap: break-word;
+}
+
+.vis-el-dialog__footer {
+  text-align: end;
+}

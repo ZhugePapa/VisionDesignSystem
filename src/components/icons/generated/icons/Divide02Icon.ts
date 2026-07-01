@@ -1,0 +1,3 @@
+import { createIconComponent } from '../../createIconComponent'
+
+export const Divide02Icon = createIconComponent("divide-02", "Divide02Icon", `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none"><path d="M2.66666 7.99999H13.3333M9.33332 3.99999C9.33332 4.73637 8.73637 5.33332 7.99999 5.33332C7.26361 5.33332 6.66666 4.73637 6.66666 3.99999C6.66666 3.26361 7.26361 2.66666 7.99999 2.66666C8.73637 2.66666 9.33332 3.26361 9.33332 3.99999ZM9.33332 12C9.33332 12.7364 8.73637 13.3333 7.99999 13.3333C7.26361 13.3333 6.66666 12.7364 6.66666 12C6.66666 11.2636 7.26361 10.6667 7.99999 10.6667C8.73637 10.6667 9.33332 11.2636 9.33332 12Z" stroke="currentColor" stroke-width="1.33" stroke-linecap="round" stroke-linejoin="round"/></svg>`)

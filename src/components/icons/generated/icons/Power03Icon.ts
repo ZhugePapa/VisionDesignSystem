@@ -1,0 +1,3 @@
+import { createIconComponent } from '../../createIconComponent'
+
+export const Power03Icon = createIconComponent("power-03", "Power03Icon", `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none"><g clip-path="url(#clip0_7140_52094)"> <path d="M7.99992 4.66667V11.3333M14.6666 8C14.6666 11.6819 11.6818 14.6667 7.99992 14.6667C4.31802 14.6667 1.33325 11.6819 1.33325 8C1.33325 4.3181 4.31802 1.33334 7.99992 1.33334C11.6818 1.33334 14.6666 4.3181 14.6666 8Z" stroke="currentColor" stroke-width="1.33" stroke-linecap="round" stroke-linejoin="round"/> </g> <defs> <clipPath id="clip0_7140_52094"> <rect width="16" height="16" fill="white"/> </clipPath> </defs></svg>`)

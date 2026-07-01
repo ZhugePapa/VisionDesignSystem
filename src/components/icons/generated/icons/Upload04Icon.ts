@@ -1,0 +1,3 @@
+import { createIconComponent } from '../../createIconComponent'
+
+export const Upload04Icon = createIconComponent("upload-04", "Upload04Icon", `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none"><path d="M10.6667 7.99998L8.00001 5.33331M8.00001 5.33331L5.33334 7.99998M8.00001 5.33331V11.4666C8.00001 12.3938 8.00001 12.8574 8.36702 13.3764C8.61087 13.7212 9.31296 14.1469 9.73149 14.2036C10.3614 14.2889 10.6006 14.1641 11.0791 13.9146C13.2111 12.8024 14.6667 10.5712 14.6667 7.99998C14.6667 4.31808 11.6819 1.33331 8.00001 1.33331C4.31811 1.33331 1.33334 4.31808 1.33334 7.99998C1.33334 10.4676 2.67401 12.6221 4.66668 13.7748" stroke="currentColor" stroke-width="1.33" stroke-linecap="round" stroke-linejoin="round"/></svg>`)

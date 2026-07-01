@@ -1,0 +1,3 @@
+import { createIconComponent } from '../../createIconComponent'
+
+export const Microphone01Icon = createIconComponent("microphone-01", "Microphone01Icon", `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none"><path d="M12.6666 6.66667V8C12.6666 10.5773 10.5772 12.6667 7.99992 12.6667M3.33325 6.66667V8C3.33325 10.5773 5.42259 12.6667 7.99992 12.6667M7.99992 12.6667V14.6667M5.33325 14.6667H10.6666M7.99992 10C6.89535 10 5.99992 9.10457 5.99992 8V3.33333C5.99992 2.22876 6.89535 1.33333 7.99992 1.33333C9.10449 1.33333 9.99992 2.22876 9.99992 3.33333V8C9.99992 9.10457 9.10449 10 7.99992 10Z" stroke="currentColor" stroke-width="1.33" stroke-linecap="round" stroke-linejoin="round"/></svg>`)

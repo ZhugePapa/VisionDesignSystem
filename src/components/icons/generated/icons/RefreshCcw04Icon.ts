@@ -1,0 +1,3 @@
+import { createIconComponent } from '../../createIconComponent'
+
+export const RefreshCcw04Icon = createIconComponent("refresh-ccw-04", "RefreshCcw04Icon", `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none"><path d="M11.3334 12.5831C12.7476 11.5527 13.6667 9.88367 13.6667 7.99998C13.6667 4.87037 11.1297 2.33332 8.00004 2.33332H7.66671M8.00004 13.6666C4.87043 13.6666 2.33337 11.1296 2.33337 7.99998C2.33337 6.11629 3.25248 4.44727 4.66671 3.41692M7.33337 14.9333L8.66671 13.6L7.33337 12.2666M8.66671 3.73332L7.33337 2.39998L8.66671 1.06665" stroke="currentColor" stroke-width="1.33" stroke-linecap="round" stroke-linejoin="round"/></svg>`)

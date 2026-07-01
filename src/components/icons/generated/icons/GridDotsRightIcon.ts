@@ -1,0 +1,3 @@
+import { createIconComponent } from '../../createIconComponent'
+
+export const GridDotsRightIcon = createIconComponent("grid-dots-right", "GridDotsRightIcon", `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none"><path d="M5 2H5.00667M5 8H5.00667M5 14H5.00667M11 2H11.0067M11 8H11.0067M11 14H11.0067M8 2H8.00667M8 8H8.00667M8 14H8.00667M8 11H8.00667M8 5H8.00667M2 2H2.00667M2 8H2.00667M2 14H2.00667M2 11H2.00667M2 5H2.00667M14 14V2" stroke="currentColor" stroke-width="1.33" stroke-linecap="round" stroke-linejoin="round"/></svg>`)

@@ -1,0 +1,3 @@
+import { createIconComponent } from '../../createIconComponent'
+
+export const PlusCircleIcon = createIconComponent("plus-circle", "PlusCircleIcon", `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none"><g clip-path="url(#clip0_7140_51438)"> <path d="M7.99999 5.33331V10.6666M5.33333 7.99998H10.6667M14.6667 7.99998C14.6667 11.6819 11.6819 14.6666 7.99999 14.6666C4.3181 14.6666 1.33333 11.6819 1.33333 7.99998C1.33333 4.31808 4.3181 1.33331 7.99999 1.33331C11.6819 1.33331 14.6667 4.31808 14.6667 7.99998Z" stroke="currentColor" stroke-width="1.33" stroke-linecap="round" stroke-linejoin="round"/> </g> <defs> <clipPath id="clip0_7140_51438"> <rect width="16" height="16" fill="white"/> </clipPath> </defs></svg>`)

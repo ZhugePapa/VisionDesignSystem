@@ -1,0 +1,3 @@
+import { createIconComponent } from '../../createIconComponent'
+
+export const Lightning01Icon = createIconComponent("lightning-01", "Lightning01Icon", `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none"><path d="M8.66662 1.33325L2.72892 8.45849C2.49638 8.73753 2.38011 8.87706 2.37833 8.99489C2.37679 9.09733 2.42244 9.19479 2.50212 9.25918C2.59378 9.33325 2.7754 9.33325 3.13864 9.33325H7.99995L7.33328 14.6666L13.271 7.54135C13.5035 7.2623 13.6198 7.12278 13.6216 7.00494C13.6231 6.90251 13.5775 6.80505 13.4978 6.74066C13.4061 6.66658 13.2245 6.66658 12.8613 6.66658H7.99995L8.66662 1.33325Z" stroke="currentColor" stroke-width="1.33" stroke-linecap="round" stroke-linejoin="round"/></svg>`)

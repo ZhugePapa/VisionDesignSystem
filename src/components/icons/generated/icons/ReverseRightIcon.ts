@@ -1,0 +1,3 @@
+import { createIconComponent } from '../../createIconComponent'
+
+export const ReverseRightIcon = createIconComponent("reverse-right", "ReverseRightIcon", `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none"><path d="M13.3333 4.66667H6.66663C4.45749 4.66667 2.66663 6.45753 2.66663 8.66667C2.66663 10.8758 4.45749 12.6667 6.66663 12.6667H13.3333M13.3333 4.66667L10.6666 2M13.3333 4.66667L10.6666 7.33333" stroke="currentColor" stroke-width="1.33" stroke-linecap="round" stroke-linejoin="round"/></svg>`)

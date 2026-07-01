@@ -1,0 +1,3 @@
+import { createIconComponent } from '../../createIconComponent'
+
+export const Target02Icon = createIconComponent("target-02", "Target02Icon", `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none"><g clip-path="url(#clip0_7140_51237)"> <path d="M14.6667 8.00004H12M4.00001 8.00004H1.33334M8.00001 4.00004V1.33337M8.00001 14.6667V12M13.3333 8.00004C13.3333 10.9456 10.9455 13.3334 8.00001 13.3334C5.05449 13.3334 2.66668 10.9456 2.66668 8.00004C2.66668 5.05452 5.05449 2.66671 8.00001 2.66671C10.9455 2.66671 13.3333 5.05452 13.3333 8.00004Z" stroke="currentColor" stroke-width="1.33" stroke-linecap="round" stroke-linejoin="round"/> </g> <defs> <clipPath id="clip0_7140_51237"> <rect width="16" height="16" fill="white"/> </clipPath> </defs></svg>`)

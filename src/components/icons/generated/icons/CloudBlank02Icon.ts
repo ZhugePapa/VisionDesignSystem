@@ -1,0 +1,3 @@
+import { createIconComponent } from '../../createIconComponent'
+
+export const CloudBlank02Icon = createIconComponent("cloud-blank-02", "CloudBlank02Icon", `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none"><path d="M6.33334 12.6667C3.57192 12.6667 1.33334 10.4281 1.33334 7.66669C1.33334 4.90526 3.57192 2.66669 6.33334 2.66669C8.25514 2.66669 9.9237 3.75091 10.7607 5.34104C10.8398 5.33594 10.9196 5.33335 11 5.33335C13.0251 5.33335 14.6667 6.97498 14.6667 9.00002C14.6667 11.0251 13.0251 12.6667 11 12.6667C9.299 12.6667 8.08159 12.6667 6.33334 12.6667Z" stroke="currentColor" stroke-width="1.33" stroke-linecap="round" stroke-linejoin="round"/></svg>`)

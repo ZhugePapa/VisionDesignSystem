@@ -1,0 +1,11 @@
+@import "element-plus/theme-chalk/base.css";
+@import "element-plus/theme-chalk/el-button.css";
+@import "element-plus/theme-chalk/el-dialog.css";
+@import "element-plus/theme-chalk/el-input.css";
+@import "element-plus/theme-chalk/el-overlay.css";
+@import "element-plus/theme-chalk/el-scrollbar.css";
+@import "element-plus/theme-chalk/el-icon.css";
+@import "./tokens.css";
+@import "./element-plus.css";
+@import "./theme.css";
+@import "./element-plus-namespace.css";

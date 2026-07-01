@@ -1,0 +1,3 @@
+import { createIconComponent } from '../../createIconComponent'
+
+export const ArrowRightIcon = createIconComponent("arrow-right", "ArrowRightIcon", `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none"><path d="M3.33337 8.00004H12.6667M12.6667 8.00004L8.00004 3.33337M12.6667 8.00004L8.00004 12.6667" stroke="currentColor" stroke-width="1.33" stroke-linecap="round" stroke-linejoin="round"/></svg>`)

@@ -1,0 +1,3 @@
+import { createIconComponent } from '../../createIconComponent'
+
+export const ArrowBlockLeftIcon = createIconComponent("arrow-block-left", "ArrowBlockLeftIcon", `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none"><path d="M2 7.99992L6.66667 3.33325V5.99992H13.4667C13.6534 5.99992 13.7467 5.99992 13.818 6.03625C13.8807 6.06821 13.9317 6.1192 13.9637 6.18192C14 6.25323 14 6.34657 14 6.53325V9.46658C14 9.65327 14 9.74661 13.9637 9.81792C13.9317 9.88064 13.8807 9.93163 13.818 9.96359C13.7467 9.99992 13.6534 9.99992 13.4667 9.99992H6.66667V12.6666L2 7.99992Z" stroke="currentColor" stroke-width="1.33" stroke-linecap="round" stroke-linejoin="round"/></svg>`)

@@ -1,0 +1,3 @@
+import { createIconComponent } from '../../createIconComponent'
+
+export const SpacingHeight02Icon = createIconComponent("spacing-height-02", "SpacingHeight02Icon", `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none"><path d="M14 2H2M14 14H2M8 11.6667L8 4.33336M10.0001 4.33334L6 4.33333M10.0001 11.6667L6 11.6667" stroke="currentColor" stroke-width="1.33" stroke-linecap="round" stroke-linejoin="round"/></svg>`)

@@ -1,0 +1,3 @@
+import { createIconComponent } from '../../createIconComponent'
+
+export const CursorClick02Icon = createIconComponent("cursor-click-02", "CursorClick02Icon", `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none"><g clip-path="url(#clip0_7140_52598)"> <path d="M5.99992 2.33337V1.33337M3.37369 3.37381L2.66659 2.66671M3.37369 8.66671L2.66659 9.37381M8.66658 3.37381L9.37369 2.66671M2.33325 6.00004H1.33325M5.66659 5.66671L8.40733 14.1852L10.3333 12.2593L12.7407 14.6667L14.6666 12.7408L12.2592 10.3334L14.1851 8.40745L5.66659 5.66671Z" stroke="currentColor" stroke-width="1.33" stroke-linecap="round" stroke-linejoin="round"/> </g> <defs> <clipPath id="clip0_7140_52598"> <rect width="16" height="16" fill="white"/> </clipPath> </defs></svg>`)

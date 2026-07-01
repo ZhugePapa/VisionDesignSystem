@@ -1,0 +1,3 @@
+import { createIconComponent } from '../../createIconComponent'
+
+export const Database01Icon = createIconComponent("database-01", "Database01Icon", `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none"><path d="M14 3.33337C14 4.43794 11.3137 5.33337 8 5.33337C4.68629 5.33337 2 4.43794 2 3.33337M14 3.33337C14 2.2288 11.3137 1.33337 8 1.33337C4.68629 1.33337 2 2.2288 2 3.33337M14 3.33337V12.6667C14 13.7734 11.3333 14.6667 8 14.6667C4.66667 14.6667 2 13.7734 2 12.6667V3.33337M14 8.00004C14 9.10671 11.3333 10 8 10C4.66667 10 2 9.10671 2 8.00004" stroke="currentColor" stroke-width="1.33" stroke-linecap="round" stroke-linejoin="round"/></svg>`)

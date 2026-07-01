@@ -1,0 +1,3 @@
+import { createIconComponent } from '../../createIconComponent'
+
+export const BracketsMinusIcon = createIconComponent("brackets-minus", "BracketsMinusIcon", `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none"><path d="M12.3805 13.3333C13.2219 13.3333 13.9045 12.6513 13.9045 11.8093V8.76196L14.6665 7.99996L13.9045 7.23796V4.19063C13.9045 3.34863 13.2225 2.66663 12.3805 2.66663M3.61934 2.66663C2.77734 2.66663 2.09534 3.34863 2.09534 4.19063V7.23796L1.33334 7.99996L2.09534 8.76196V11.8093C2.09534 12.6513 2.77734 13.3333 3.61934 13.3333M5.33334 7.99996H10.6667" stroke="currentColor" stroke-width="1.33" stroke-linecap="round" stroke-linejoin="round"/></svg>`)

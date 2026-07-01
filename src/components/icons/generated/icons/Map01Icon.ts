@@ -1,0 +1,3 @@
+import { createIconComponent } from '../../createIconComponent'
+
+export const Map01Icon = createIconComponent("map-01", "Map01Icon", `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none"><g clip-path="url(#clip0_7140_53140)"> <path d="M5.99999 11.9999L1.33333 14.6666V3.99992L5.99999 1.33325M5.99999 11.9999L10.6667 14.6666M5.99999 11.9999V1.33325M10.6667 14.6666L14.6667 11.9999V1.33325L10.6667 3.99992M10.6667 14.6666V3.99992M10.6667 3.99992L5.99999 1.33325" stroke="currentColor" stroke-width="1.33" stroke-linecap="round" stroke-linejoin="round"/> </g> <defs> <clipPath id="clip0_7140_53140"> <rect width="16" height="16" fill="white"/> </clipPath> </defs></svg>`)

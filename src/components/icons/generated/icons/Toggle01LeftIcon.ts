@@ -1,0 +1,3 @@
+import { createIconComponent } from '../../createIconComponent'
+
+export const Toggle01LeftIcon = createIconComponent("toggle-01-left", "Toggle01LeftIcon", `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none"><path d="M4.66668 11.3333H11.3333C13.1743 11.3333 14.6667 9.84091 14.6667 7.99996C14.6667 6.15901 13.1743 4.66663 11.3333 4.66663H4.66668M4.66668 11.3333C2.82573 11.3333 1.33334 9.84091 1.33334 7.99996C1.33334 6.15901 2.82573 4.66663 4.66668 4.66663M4.66668 11.3333C6.50763 11.3333 8.00001 9.84091 8.00001 7.99996C8.00001 6.15901 6.50763 4.66663 4.66668 4.66663" stroke="currentColor" stroke-width="1.33" stroke-linecap="round" stroke-linejoin="round"/></svg>`)

@@ -1,0 +1,3 @@
+import { createIconComponent } from '../../createIconComponent'
+
+export const Repeat04Icon = createIconComponent("repeat-04", "Repeat04Icon", `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none"><path d="M7.99992 13.6667C11.1295 13.6667 13.6666 11.1296 13.6666 8C13.6666 6.11631 12.7475 4.44729 11.3333 3.41693M8.66658 14.9333L7.33325 13.6L8.66658 12.2667M7.99992 2.33333C4.8703 2.33333 2.33325 4.87038 2.33325 8C2.33325 9.88369 3.25236 11.5527 4.66659 12.5831M7.33325 3.73333L8.66658 2.4L7.33325 1.06667" stroke="currentColor" stroke-width="1.33" stroke-linecap="round" stroke-linejoin="round"/></svg>`)

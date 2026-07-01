@@ -1,0 +1,3 @@
+import { createIconComponent } from '../../createIconComponent'
+
+export const HelpIcon = createIconComponent("help", "HelpIcon", `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none"><path d="M5.41333 5.33339C5.62231 4.73932 6.0348 4.23838 6.57773 3.91929C7.12067 3.6002 7.75901 3.48356 8.37971 3.59002C9.0004 3.69649 9.56339 4.01919 9.96895 4.50097C10.3745 4.98275 10.5965 5.59252 10.5956 6.22228C10.5956 8.00006 7.92889 8.88895 7.92889 8.88895V10M8.4 12.5C8.4 12.2239 8.17614 12 7.9 12C7.62386 12 7.4 12.2239 7.4 12.5C7.4 12.7762 7.62386 13 7.9 13C8.17614 13 8.4 12.7762 8.4 12.5Z" stroke="currentColor" stroke-width="1.33" stroke-linecap="round" stroke-linejoin="round"/></svg>`)

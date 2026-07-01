@@ -1,0 +1,3 @@
+import { createIconComponent } from '../../createIconComponent'
+
+export const Rss01Icon = createIconComponent("rss-01", "Rss01Icon", `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none"><path d="M2.66675 7.33332C4.25805 7.33332 5.78417 7.96546 6.90939 9.09068C8.03461 10.2159 8.66675 11.742 8.66675 13.3333M2.66675 2.66666C5.49572 2.66666 8.20883 3.79046 10.2092 5.79085C12.2096 7.79124 13.3334 10.5043 13.3334 13.3333M4.00008 12.6667C4.00008 13.0348 3.7016 13.3333 3.33341 13.3333C2.96522 13.3333 2.66675 13.0348 2.66675 12.6667C2.66675 12.2985 2.96522 12 3.33341 12C3.7016 12 4.00008 12.2985 4.00008 12.6667Z" stroke="currentColor" stroke-width="1.33" stroke-linecap="round" stroke-linejoin="round"/></svg>`)

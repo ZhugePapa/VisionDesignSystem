@@ -1,0 +1,5 @@
+export { default as Icon } from './Icon.vue'
+export type { IconComponentProps } from './createIconComponent'
+export { iconNames, iconRegistry } from './generated/registry.generated'
+export type { IconName } from './generated/registry.generated'
+export * from './generated/components.generated'

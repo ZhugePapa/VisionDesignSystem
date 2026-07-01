@@ -1,0 +1,3 @@
+import { createIconComponent } from '../../createIconComponent'
+
+export const FilterLinesIcon = createIconComponent("filter-lines", "FilterLinesIcon", `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none"><path d="M4 8H12M2 4H14M6 12H10" stroke="currentColor" stroke-width="1.33" stroke-linecap="round" stroke-linejoin="round"/></svg>`)

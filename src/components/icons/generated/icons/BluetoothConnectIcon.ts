@@ -1,0 +1,3 @@
+import { createIconComponent } from '../../createIconComponent'
+
+export const BluetoothConnectIcon = createIconComponent("bluetooth-connect", "BluetoothConnectIcon", `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none"><path d="M2 4.66667L10 11.3333L6 14.6667V1.33333L10 4.66667L2 11.3333M12 8H12.0067M10 8H10.0067M14 8H14.0067" stroke="currentColor" stroke-width="1.33" stroke-linecap="round" stroke-linejoin="round"/></svg>`)

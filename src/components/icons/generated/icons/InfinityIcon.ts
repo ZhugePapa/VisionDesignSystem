@@ -1,0 +1,3 @@
+import { createIconComponent } from '../../createIconComponent'
+
+export const InfinityIcon = createIconComponent("infinity", "InfinityIcon", `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none"><path d="M12.1185 5.33337C15.5159 5.33337 15.5159 10.6667 12.1185 10.6667C8.72187 10.6667 7.36321 5.33337 3.62587 5.33337C0.569207 5.33337 0.569207 10.6667 3.62587 10.6667C7.36321 10.6667 8.72187 5.33337 12.1192 5.33337H12.1185Z" stroke="currentColor" stroke-width="1.33" stroke-linecap="round" stroke-linejoin="round"/></svg>`)

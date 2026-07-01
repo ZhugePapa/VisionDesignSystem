@@ -1,0 +1,3 @@
+import { createIconComponent } from '../../createIconComponent'
+
+export const DownloadCloud01Icon = createIconComponent("download-cloud-01", "DownloadCloud01Icon", `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none"><path d="M2.66666 10.8282C1.86267 10.29 1.33333 9.37347 1.33333 8.33333C1.33333 6.77095 2.52767 5.48753 4.05316 5.34625C4.3652 3.44809 6.01349 2 7.99999 2C9.9865 2 11.6348 3.44809 11.9468 5.34625C13.4723 5.48753 14.6667 6.77095 14.6667 8.33333C14.6667 9.37347 14.1373 10.29 13.3333 10.8282M5.33333 11.3333L7.99999 14M7.99999 14L10.6667 11.3333M7.99999 14V8" stroke="currentColor" stroke-width="1.33" stroke-linecap="round" stroke-linejoin="round"/></svg>`)

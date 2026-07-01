@@ -1,0 +1,20 @@
+.vis-icon {
+  color: currentColor;
+  display: inline-flex;
+  flex: 0 0 auto;
+  line-height: 0;
+  vertical-align: middle;
+}
+
+.vis-icon svg {
+  display: block;
+  height: 100%;
+  width: 100%;
+}
+
+.vis-icon svg[stroke],
+.vis-icon svg [stroke],
+.vis-icon svg[stroke-width],
+.vis-icon svg [stroke-width] {
+  stroke-width: var(--vis-icon-stroke-width);
+}

@@ -1,0 +1,3 @@
+import { createIconComponent } from '../../createIconComponent'
+
+export const CornerUpLeftIcon = createIconComponent("corner-up-left", "CornerUpLeftIcon", `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none"><path d="M5.99996 9.33329L2.66663 5.99996M2.66663 5.99996L5.99996 2.66663M2.66663 5.99996H6.93329C9.1735 5.99996 10.2936 5.99996 11.1493 6.43593C11.9019 6.81943 12.5138 7.43135 12.8973 8.184C13.3333 9.03964 13.3333 10.1597 13.3333 12.4V13.3333" stroke="currentColor" stroke-width="1.33" stroke-linecap="round" stroke-linejoin="round"/></svg>`)

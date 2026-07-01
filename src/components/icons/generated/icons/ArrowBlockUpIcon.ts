@@ -1,0 +1,3 @@
+import { createIconComponent } from '../../createIconComponent'
+
+export const ArrowBlockUpIcon = createIconComponent("arrow-block-up", "ArrowBlockUpIcon", `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none"><path d="M6.53331 14C6.34663 14 6.25329 14 6.18198 13.9637C6.11926 13.9317 6.06827 13.8807 6.03631 13.818C5.99998 13.7467 5.99998 13.6534 5.99998 13.4667V6.66667H3.33331L7.99998 2L12.6666 6.66667H9.99998V13.4667C9.99998 13.6534 9.99998 13.7467 9.96365 13.818C9.93169 13.8807 9.8807 13.9317 9.81798 13.9637C9.74667 14 9.65333 14 9.46665 14H6.53331Z" stroke="currentColor" stroke-width="1.33" stroke-linecap="round" stroke-linejoin="round"/></svg>`)
