@@ -42,7 +42,7 @@ const isShowMore = computed(() => props.type === 'show_more')
 const isCollapsedVariant = computed(() => isShowMore.value && isCollapsed.value)
 
 const containerHeight = computed<string>(() => {
-  if (!isShowMore.value) return 'auto'
+  if (!isShowMore.value) return '264px'
   if (!isCollapsed.value) return '854px'
   return '400px'
 })
@@ -258,8 +258,8 @@ defineOptions({ name: 'VisCodeBlock' })
 /* ---------- Copy button ---------- */
 .vis-code-block__copy {
   position: absolute;
-  top: 10px;
-  right: 10px;
+  top: 9px;
+  right: 9px;
   z-index: 2;
   inline-size: var(--space-32);
   block-size: var(--space-32);

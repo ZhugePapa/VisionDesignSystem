@@ -1,14 +1,14 @@
-# Leoht Design API 语义字典表
+# Leoht Design API 语义兼容字典表
 
 来源项目：`/Users/leiwang/Documents/Project/LeohtDesign/leoht-design`
 
 目标项目：`/Users/leiwang/Documents/Project/VisionDesignSystem`
 
-本文用于指导 AI 将 `leoht-design` 组件迁移为 Vision Design System 的二次封装组件。每个组件独立一张表，表内字段含义如下：
+本文用于指导 AI 将 `leoht-design` 组件迁移为 Vision Design System 的二次封装组件。API 策略以旧项目和 Figma 设计稿兼容为主：旧 API 名默认就是 Vision 对外主 API；只有旧 API 与 Vue/Element Plus 约定冲突、拼写确认为错误、或会造成长期歧义时，才新增更语义化的别名。每个组件独立一张表，表内字段含义如下：
 
 | 字段 | 说明 |
 | --- | --- |
-| API 名 | Vision 对外语义 API，作为新组件主 API。 |
+| API 名 | Vision 对外主 API。默认沿用 `leoht-design` / Figma 旧 API 名。 |
 | 旧 API | `leoht-design` 中对应的旧 props / events / slots。 |
 | Element Plus API | 建议映射到的 Element Plus API；自研组件写 `自研` 或 `DOM`。 |
 | 说明 | 迁移规则、兼容策略、冲突处理。 |
@@ -19,15 +19,14 @@
 
 | API 名 | 旧 API | Element Plus API | 说明 | 类型 | 默认值 |
 | --- | --- | --- | --- | --- | --- |
-| `type` | `type` | `type` | 当旧 API 与 Element Plus API 都叫 `type` 时，Vision API 也保留 `type`，避免 Figma、旧代码、adapter 三边重复映射。 | `string` | 视组件而定 |
-| `variant` | `type` | class / 自研结构 | 只有当旧 `type` 不直接映射 Element Plus `type`，或表示纯视觉结构时，才改为 `variant`。 | `string` | 视组件而定 |
-| `status` | `state` / `danger` / 非 Element `type` | `validate-state` / class | 信息等级与校验状态统一用 `status`。旧 `error` 统一映射为 `danger`。 | `'default' \| 'info' \| 'success' \| 'warning' \| 'danger'` | `'default'` |
-| `tone` | `color` / `colorType` | class / CSS var | 意图色统一用 `tone`。旧 `grey` 映射为 `neutral`。 | `'brand' \| 'neutral' \| 'success' \| 'warning' \| 'danger'` | `'brand'` |
-| `visualState` | `state` | class | 只用于 demo 和视觉回归；真实交互由 `disabled`、`loading`、`:hover`、`:focus-visible` 驱动。 | `string` | `'default'` |
-| `readonlyView` | `readView` / `readview` | `readonly` + wrapper view | 统一命名为 `readonlyView`，旧拼写作为 deprecated alias。 | `boolean` | `false` |
-| `icon` | `iconName` | icon slot / prefix icon | 图标名称统一为 `icon`，类型继续复用 `IconName`。 | `IconName` | 视组件而定 |
-| `nativeType` | `htmlType` | `native-type` | 原生 button type 统一为 `nativeType`。 | `'button' \| 'submit' \| 'reset'` | `'button'` |
-| `closable` | `closeable` | `show-close` / close icon | 统一拼写为 `closable`。 | `boolean` | 视组件而定 |
+| 保持旧名 | 同名旧 API | 视组件而定 | 默认策略。Figma 已存在且业务代码可能依赖的 API 不主动改名，避免 Figma、旧代码、组件实现三边维护映射。 | 视组件而定 | 视组件而定 |
+| `type` | `type` | `type` / class | 旧项目大量组件使用 `type` 表达视觉形态或状态。即使内部不直接映射 Element Plus `type`，对外也优先保留 `type`。 | `string` | 视组件而定 |
+| `state` | `state` | class / validate state | 旧 `state` 优先保留为视觉状态或字段状态 API；内部可映射为 hover/focus/error/danger 等 class 或 Element validate state。 | `string` | `'default'` |
+| `color` / `colorType` | `color` / `colorType` | class / CSS var | 旧项目中 `color` 与 `colorType` 语义不同，均按原名保留；内部可归一到 tone token。旧 `grey` 在视觉 token 层映射，不改 public API。 | `string` | 视组件而定 |
+| `readView` / `readview` | `readView` / `readview` | `readonly` + wrapper view | 旧只读展示 API 保留旧拼写；如新增 `readonlyView`，只作为别名，不作为 Figma 主名。 | `boolean` | `false` |
+| `iconName` / `suffixIconName` | 同名 | icon slot / prefix icon | 旧图标命名保留。新组件可支持 `icon` 作为补充别名，但 Figma 对齐以旧名为准。 | `IconName` | 视组件而定 |
+| `htmlType` | `htmlType` | `native-type` | 原生 button type 对外保留旧名 `htmlType`；内部映射 Element Plus `native-type`。 | `'button' \| 'submit' \| 'reset'` | `'button'` |
+| `closeable` | `closeable` | `show-close` / close icon | 旧项目使用 `closeable` 时保留旧拼写；`closable` 可作为 Vue/Element 生态别名。 | `boolean` | 视组件而定 |
 | `elProps` | 无 | 对应 Element Plus 组件 props | 逃生口。Vision 主 API 与 `elProps` 冲突时，Vision 优先。 | `Record<string, unknown>` | `{}` |
 
 ## Accordion
@@ -53,8 +52,8 @@
 | `title` | `title` | `title` | 主标题。未传时可沿用旧默认标题 map。 | `string` | `undefined` |
 | `description` | `descriptionText` | `description` | 描述文本。旧 `description` 布尔改为 `showDescription`。 | `string` | `'这里是提示的描述内容'` |
 | `showDescription` | `description` | class / description slot | 控制是否显示描述区域。 | `boolean` | `false` |
-| `showActions` | `actions` | action slot | 控制默认操作按钮；推荐用 `actions` slot。 | `boolean` | `true` |
-| `closable` | `closeable` | `closable` | 统一拼写。 | `boolean` | `true` |
+| `actions` | `actions` | action slot | 控制默认操作按钮；推荐用 `actions` slot，保持旧 API。 | `boolean` | `true` |
+| `closeable` | `closeable` | `closable` | 关闭按钮，保持旧 API；可支持 `closable` 别名。 | `boolean` | `true` |
 | `detailLabel` | `detailLabel` | action slot | 默认详情按钮文案。 | `string` | `'查看详情'` |
 | `ignoreLabel` | `ignoreLabel` | action slot | 默认忽略按钮文案。 | `string` | `'忽略'` |
 | `close` | `close` | `close` | 关闭事件。 | event | - |
@@ -64,9 +63,9 @@
 
 | API 名 | 旧 API | Element Plus API | 说明 | 类型 | 默认值 |
 | --- | --- | --- | --- | --- | --- |
-| `variant` | `type` | 自研 | `image/icon/text` 仍可保留，但 Vision 推荐叫 `variant`。 | `'image' \| 'icon' \| 'text'` | `'image'` |
+| `type` | `type` | 自研 | 头像形态，保持旧/Figma API。 | `'image' \| 'icon' \| 'text'` | `'image'` |
 | `size` | `size` | `size` / class | Avatar 视觉尺寸自研，不直接使用 Element Plus 默认尺寸。 | `'xs' \| 'sm' \| 'md' \| 'lg' \| 'xl' \| 'xxl'` | `'sm'` |
-| `visualState` | `state` | class | 仅用于 hover 视觉态演示。 | `'default' \| 'hover'` | `'default'` |
+| `state` | `state` | class | 视觉态演示，保持旧 API。 | `'default' \| 'hover'` | `'default'` |
 | `shape` | `shapeSquare` / group `shape` | `shape` | 统一为 `circle/square`。 | `'circle' \| 'square'` | `'circle'` |
 | `src` | `imageSrc` | `src` | 图片地址。 | `string` | `undefined` |
 | `imageVariant` | `imageVariant` / `avatarImageVariant` | 自研 demo asset | 旧内置头像资源兼容项，不作为核心 API 推荐。 | `LeoAvatarImageVariant` | `'09'` |
@@ -75,18 +74,20 @@
 | `description` | label `subtitle` | 自研 | AvatarLabel 副标题。 | `string` | `'zhangdashan'` |
 | `icon` | `icon` / `avatarIcon` | icon slot | 图标头像。 | `IconName` | `'user-03'` |
 | `badge` | `badge` | 自研 / Badge | 头像角标类型。 | `'none' \| 'dot' \| 'icon' \| 'number' \| 'state'` | `'none'` |
-| `badgeTone` | `badgeColorType` | Badge tone | 角标颜色语义。 | `VisTone` | `'danger'` |
+| `badgeColorType` | `badgeColorType` | Badge color token | 角标颜色语义，保持旧 API。 | `VisBadgeColorType` | `'danger'` |
 | `items` | group `items` | 自研 | AvatarGroup 成员。 | `VisAvatarGroupItem[]` | `[]` |
 
 ## Badge
 
 | API 名 | 旧 API | Element Plus API | 说明 | 类型 | 默认值 |
 | --- | --- | --- | --- | --- | --- |
-| `tone` | `colorType` | class / CSS var | 颜色语义统一为 `tone`。 | `VisTone` | `'danger'` |
-| `variant` | `type` / `solid` / `subtle` | class | `type` 代表形态；`solid/subtle` 合并进 `variant`。 | `'status' \| 'number' \| 'icon' \| 'solid' \| 'subtle'` | `'status'` |
+| `colorType` | `colorType` | class / CSS var | 保持 Figma/旧项目 API。内部映射到 Badge 颜色 token，`info` 继续表示灰/信息色。 | `VisBadgeColorType` | `'danger'` |
+| `type` | `type` | `is-dot` / class | Badge 形态主 API。`status/number/icon` 由 Vision 自研结构控制，必要时参考 Element Plus `is-dot` / `value`。 | `'status' \| 'number' \| 'icon'` | `'status'` |
+| `solid` | `solid` | class | 保留旧布尔 API，控制实色风格。与 `subtle` 同时传入时按组件实现定义优先级。 | `boolean` | `false` |
+| `subtle` | `subtle` | class | 保留旧布尔 API，控制柔和风格。 | `boolean` | `false` |
 | `label` | `label` | 自研 | 文本内容。 | `string` | `undefined` |
-| `count` | `count` | `value` | 数字角标。 | `string \| number` | `undefined` |
-| `icon` | `iconName` | icon slot | 图标角标。 | `IconName` | `undefined` |
+| `count` | `count` | `value` | 数字角标。内部可映射 Element Plus `value`。 | `string \| number` | `undefined` |
+| `iconName` | `iconName` | icon slot | 图标角标名称，保持旧 API。 | `IconName` | `undefined` |
 | `icon` slot | `icon` slot | slot | 自定义图标。 | slot | - |
 
 ## Breadcrumb
@@ -102,20 +103,22 @@
 
 ## Button
 
-| API 名 | 旧 API | Element Plus API | 说明 | 类型 | 默认值 |
-| --- | --- | --- | --- | --- | --- |
-| `variant` | `variant` | `type` / class | `primary/secondary/text/link-*` 映射 Element Plus type 与 Vision class。 | `VisButtonVariant` | `'primary'` |
-| `tone` | `danger` | `type="danger"` / class | 旧 `danger=true` 改为 `tone="danger"`。 | `VisButtonTone` | `'brand'` |
-| `size` | `size` | `size` | `sm/md/lg` 映射 `small/default/large`。 | `'sm' \| 'md' \| 'lg'` | `'md'` |
-| `visualState` | `state` | class | 仅用于视觉演示；真实状态由交互驱动。 | `VisButtonVisualState` | `'default'` |
-| `disabled` | `disabled` | `disabled` | 禁用原生点击。 | `boolean` | `false` |
-| `loading` | `loading` | `loading` | loading 时禁用点击，可替换 loading slot。 | `boolean` | `false` |
-| `iconOnly` | `iconOnly` | class / aria-label | icon-only 必须有可访问名称。 | `boolean` | `false` |
-| `prefixIcon` | `prefix` + `iconName` | icon slot | 旧布尔 `prefix` 降级为兼容项，主 API 直接传图标。 | `IconName` | `'plus'` |
-| `suffixIcon` | `suffix` + `suffixIconName` | icon slot | 后置图标。 | `IconName` | `'chevron-down'` |
-| `label` | `label` | default slot | 按钮文本，也作为 icon-only aria-label fallback。 | `string` | `undefined` |
-| `nativeType` | `htmlType` | `native-type` | 原生按钮类型。 | `'button' \| 'submit' \| 'reset'` | `'button'` |
-| `elProps` | 无 | `ElButton` props | 逃生口；`type/size/loading/disabled` 冲突时 Vision 优先。 | `Partial<ButtonProps>` | `{}` |
+| API 名         | 旧 API                       | Element Plus API        | 说明                                                                   | 类型                                | 默认值              |
+| ------------- | --------------------------- | ----------------------- | -------------------------------------------------------------------- | --------------------------------- | ---------------- |
+| `variant`     | `variant`                   | `type` / class          | `primary/secondary/text/link-*` 映射 Element Plus type 与 Vision class。 | `VisButtonVariant`                | `'primary'`      |
+| `danger`      | `danger`                    | `type="danger"` / class | 保持旧/Figma API。为 `true` 时覆盖危险色视觉；内部可映射 Element Plus danger 或 Vision danger class。 | `boolean`                         | `false`          |
+| `size`        | `size`                      | `size`                  | `sm/md/lg` 映射 `small/default/large`。                                 | `'sm' \| 'md' \| 'lg'`            | `'md'`           |
+| `state`       | `state`                     | class                   | 保持旧/Figma API。仅用于视觉演示和回归；真实状态由交互驱动。 | `VisButtonState`                  | `'default'`      |
+| `disabled`    | `disabled`                  | `disabled`              | 禁用原生点击。                                                              | `boolean`                         | `false`          |
+| `loading`     | `loading`                   | `loading`               | loading 时禁用点击，可替换 loading slot。                                      | `boolean`                         | `false`          |
+| `iconOnly`    | `iconOnly`                  | class / aria-label      | icon-only 必须有可访问名称。                                                  | `boolean`                         | `false`          |
+| `prefix`      | `prefix`                    | icon slot visibility    | 是否显示前置图标，保持旧布尔 API。                                                | `boolean`                         | `false`          |
+| `suffix`      | `suffix`                    | icon slot visibility    | 是否显示后置图标，保持旧布尔 API。                                                | `boolean`                         | `false`          |
+| `iconName`    | `iconName`                  | icon slot               | 前置/主图标名称，保持旧 API。                                                   | `IconName`                        | `'plus'`         |
+| `suffixIconName` | `suffixIconName`         | icon slot               | 后置图标名称，保持旧 API。                                                     | `IconName`                        | `'chevron-down'` |
+| `label`       | `label`                     | default slot            | 按钮文本，也作为 icon-only aria-label fallback。                              | `string`                          | `undefined`      |
+| `htmlType`    | `htmlType`                  | `native-type`           | 原生按钮类型，保持旧 API。                                                     | `'button' \| 'submit' \| 'reset'` | `'button'`       |
+| `elProps`     | 无                           | `ElButton` props        | 逃生口；`type/size/loading/disabled` 冲突时 Vision 优先。                      | `Partial<ButtonProps>`            | `{}`             |
 
 ## Checkbox
 
@@ -124,11 +127,11 @@
 | `modelValue` | `modelValue` | `model-value` | 单个 checkbox 选中值；group 为数组。 | `boolean \| VisCheckboxValue[]` | `false` / `[]` |
 | `indeterminate` | `indeterminate` | `indeterminate` | 半选状态。 | `boolean` | `false` |
 | `disabled` | `disabled` | `disabled` | 禁用。 | `boolean` | `false` |
-| `visualState` | `state` | class | hover 演示态。 | `'default' \| 'hover'` | `'default'` |
-| `showLabel` | `label` | default slot visibility | 旧 `label` 是布尔，Vision 改为 `showLabel`。 | `boolean` | `true` |
+| `state` | `state` | class | hover 演示态，保持旧 API。 | `'default' \| 'hover'` | `'default'` |
+| `label` | `label` | default slot visibility | 文本显示控制，保持旧布尔 API。 | `boolean` | `true` |
 | `value` | `value` | `value` | 表单提交值或 group option value。 | `string \| number \| boolean` | `undefined` |
 | `options` | group `options` | `ElCheckboxGroup` options | group 数据。 | `VisCheckboxOption[]` | `[]` |
-| `direction` | group `align` | class | `horizontal/vertical` 布局。 | `'horizontal' \| 'vertical'` | `'horizontal'` |
+| `align` | group `align` | class | 布局方向，保持旧 API；内部映射 horizontal/vertical。 | `'horizontal' \| 'vertical'` | `'horizontal'` |
 | `name` | `name` | `name` | 原生 name。 | `string` | `undefined` |
 | `ariaLabel` | `ariaLabel` | `aria-label` | 无 label 时必须提供或自动兜底。 | `string` | `undefined` |
 | `change` | `change` | `change` | payload 保留 checked、indeterminate、value。 | event | - |
@@ -137,13 +140,13 @@
 
 | API 名 | 旧 API | Element Plus API | 说明 | 类型 | 默认值 |
 | --- | --- | --- | --- | --- | --- |
-| `variant` | `type` | 自研 | 代码块视觉形态。 | `VisCodeBlockVariant` | `'default'` |
+| `type` | `type` | 自研 | 保持旧/Figma API，表示代码块视觉形态。 | `VisCodeBlockType` | `'default'` |
 | `collapsed` | `collapsed` | 自研 | 是否折叠。 | `boolean` | `false` |
-| `showHeader` | `heading` | 自研 | 旧 `heading` 改成更清晰的 `showHeader`。 | `boolean` | `false` |
-| `copyable` | `copy` | 自研 | 是否显示复制按钮。 | `boolean` | `true` |
+| `heading` | `heading` | 自研 | 是否显示头部，保持旧 API。 | `boolean` | `false` |
+| `copy` | `copy` | 自研 | 是否显示复制按钮，保持旧 API。 | `boolean` | `true` |
 | `language` | `language` | 自研 | 语言标签。 | `string` | `'Javascript'` |
 | `code` | `code` | 自研 | 代码内容。 | `string` | `''` |
-| `copy` | 无 | 自研 | 复制事件，可新增。 | event | - |
+| `copy-click` / `copyClick` | 无 | 自研 | 如需新增复制事件，建议同时支持 kebab 与 camelCase。 | event | - |
 
 ## DatePicker
 
@@ -151,14 +154,14 @@
 | --- | --- | --- | --- | --- | --- |
 | `modelValue` | `modelValue` | `model-value` | 日期值，range 时为元组。 | `Date \| string \| [Date \| string, Date \| string] \| null` | `null` |
 | `range` | `range` | `type="daterange"` | 是否范围选择。 | `boolean` | `false` |
-| `readonlyView` | `readView` | `readonly` + wrapper | 只读展示态。 | `boolean` | `false` |
 | `disabled` | `disabled` | `disabled` | 禁用。 | `boolean` | `false` |
-| `status` | `state` | class / validate state | `error` 映射为 `danger`。 | `VisFieldStatus` | `'default'` |
+| `state` | `state` | class / validate state | 字段状态，按 Figma DatePicker 变体使用 `default`、`hover`、`focus`、`danger`。 | `VisDatePickerState` | `'default'` |
 | `placeholder` | `placeholder` | `placeholder` | 单日期占位。 | `string` | `'请选择日期'` |
 | `startPlaceholder` | `startPlaceholder` | `start-placeholder` | 范围开始占位。 | `string` | `'选择开始日期'` |
 | `endPlaceholder` | `endPlaceholder` | `end-placeholder` | 范围结束占位。 | `string` | `'选择结束日期'` |
 | `open` | `open` | `visible` / controlled popper | 受控打开状态。 | `boolean` | `undefined` |
-| `prefixIcon` | `prefix` + `prefixIcon` | `prefix-icon` | 旧 `prefix` 改为是否显示 prefix icon。 | `IconName` | `'calendar'` |
+| `prefix` | `prefix` | prefix slot visibility | 是否显示前缀图标，保持旧 API。 | `boolean` | `true` |
+| `prefixIcon` | `prefixIcon` | `prefix-icon` | 前缀图标名，保持旧 API。 | `IconName` | `'calendar'` |
 | `showFooterShortcuts` | `showFooterShortcuts` | shortcuts slot | 是否显示快捷项。 | `boolean` | `true` |
 | `shortcuts` | `shortcuts` | `shortcuts` | 快捷日期。 | `Array<{ label: string; days: number }>` | demo shortcuts |
 | `disabledDate` | `disabledDate` | `disabled-date` | 禁用日期函数。 | `(date: Date) => boolean` | `undefined` |
@@ -179,13 +182,13 @@
 | --- | --- | --- | --- | --- | --- |
 | `modelValue` | `modelValue` | `model-value` | 抽屉开关。 | `boolean` | `true` |
 | `title` | `title` | `title` / header slot | 标题。 | `string` | `'对话框标题'` |
-| `placement` | `position` | `direction` | `right/bottom` 映射 Element Plus direction。 | `'right' \| 'bottom'` | `'right'` |
-| `divided` | `divider` | class | 是否显示分割线。 | `boolean` | `true` |
-| `showActions` | `actions` | footer slot | 是否显示默认 footer actions。 | `boolean` | `true` |
+| `position` | `position` | `direction` | 抽屉位置，保持旧 API；内部映射 Element Plus direction。 | `'right' \| 'bottom'` | `'right'` |
+| `divider` | `divider` | class | 是否显示分割线，保持旧 API。 | `boolean` | `true` |
+| `actions` | `actions` | footer slot | 是否显示默认 footer actions，保持旧 API。 | `boolean` | `true` |
 | `icon` | `icon` + `iconName` | header slot | 旧布尔 + 图标名改为直接传图标。 | `IconName \| false` | `false` |
-| `showBack` | `twoLevel` | header slot | 二级抽屉返回按钮。 | `boolean` | `false` |
-| `closable` | `closeable` | `show-close` | 关闭按钮。 | `boolean` | `true` |
-| `showHandle` | `handle` | class / handle node | bottom drawer 拖拽视觉 handle。 | `boolean` | `true` |
+| `twoLevel` | `twoLevel` | header slot | 二级抽屉返回按钮，保持旧 API。 | `boolean` | `false` |
+| `closeable` | `closeable` | `show-close` | 关闭按钮，保持旧 API。 | `boolean` | `true` |
+| `handle` | `handle` | class / handle node | bottom drawer 拖拽视觉 handle，保持旧 API。 | `boolean` | `true` |
 | `width` | `width` | `size` | right drawer 宽度。 | `number \| string` | `undefined` |
 | `height` | `height` | `size` | bottom drawer 高度。 | `number \| string` | `undefined` |
 | `cancelText` / `confirmText` / `backText` | 同名 | footer/header slot | 默认按钮文案。 | `string` | `'按钮'` / `'返回'` |
@@ -215,8 +218,8 @@
 | API 名 | 旧 API | Element Plus API | 说明 | 类型 | 默认值 |
 | --- | --- | --- | --- | --- | --- |
 | `size` | `size` | 自研 | 特征图标尺寸。 | `'xs' \| 'sm' \| 'md' \| 'lg' \| 'xl' \| 'xxl'` | `'xs'` |
-| `tone` | `color` | CSS var | 颜色语义。旧 `grey` 映射 `neutral`。 | `VisTone` | `'brand'` |
-| `variant` | `type` | class | 视觉容器形态。 | `VisFeaturedIconVariant` | `'solid-round'` |
+| `color` | `color` | CSS var | 保持旧/Figma API。内部映射颜色 token，旧 `grey` 不改名。 | `VisFeaturedIconColor` | `'brand'` |
+| `type` | `type` | class | 视觉容器形态，保持旧/Figma API。 | `VisFeaturedIconType` | `'solid-round'` |
 | `icon` | `icon` | icon slot | 图标名称。 | `IconName` | `'download-cloud-02'` |
 | `label` | `label` | `aria-label` | 非 decorative 时作为可访问名称。 | `string` | `undefined` |
 | `decorative` | `decorative` | `aria-hidden` | 装饰性图标。 | `boolean` | `true` |
@@ -237,15 +240,19 @@
 | --- | --- | --- | --- | --- | --- |
 | `modelValue` | `modelValue` | `model-value` | 输入值。 | `string` | `undefined` |
 | `placeholder` | `placeholder` | `placeholder` | 占位文案。 | `string` | `'请输入'` |
-| `readonlyValue` | `valueText` | wrapper text | 只读展示文案。 | `string` | `'已输入内容'` |
-| `status` | `state` | class / validate state | `error` 映射 `danger`。 | `VisFieldStatus` | `'default'` |
+| `valueText` | `valueText` | wrapper text | 只读展示文案，保持旧/Figma API。 | `string` | `'已输入内容'` |
+| `state` | `state` | class / validate state | 保持旧/Figma API。`error` 内部映射危险态或 Element validate state。 | `VisInputState` | `'default'` |
 | `disabled` | `disabled` | `disabled` | 禁用。 | `boolean` | `false` |
 | `filled` | `filled` | class | 填充背景样式。 | `boolean` | `false` |
-| `readonlyView` | `readView` | `readonly` + wrapper | 只读展示态。 | `boolean` | `false` |
-| `prefixIcon` | `prefix` + `prefixIcon` | `prefix-icon` / slot | 旧 `prefix` 为显示开关。 | `IconName` | `'user-01'` |
-| `suffixIcon` | `suffix` + `suffixIcon` | `suffix-icon` / slot | 后置图标。 | `IconName` | `'copy-03'` |
-| `addonBefore` | `addonLeft` + `addonLeftText` | prepend slot | 前置 addon。 | `string \| slot` | `'http://'` |
-| `addonAfter` | `addonRight` + `addonRightText` | append slot | 后置 addon。 | `string \| slot` | `'.com'` |
+| `readView` | `readView` | `readonly` + wrapper | 只读展示态，保持旧/Figma API。 | `boolean` | `false` |
+| `prefix` | `prefix` | prefix slot visibility | 是否显示前缀图标，保持旧布尔 API。 | `boolean` | `false` |
+| `suffix` | `suffix` | suffix slot visibility | 是否显示后缀图标，保持旧布尔 API。 | `boolean` | `false` |
+| `prefixIcon` | `prefixIcon` | `prefix-icon` / slot | 前缀图标名；旧项目当前输入框已使用该名。 | `IconName` | `'user-01'` |
+| `suffixIcon` | `suffixIcon` | `suffix-icon` / slot | 后缀图标名；旧项目当前输入框已使用该名。 | `IconName` | `'copy-03'` |
+| `addonLeft` | `addonLeft` | prepend slot visibility | 是否显示前置 addon，保持旧 API。 | `boolean` | `false` |
+| `addonRight` | `addonRight` | append slot visibility | 是否显示后置 addon，保持旧 API。 | `boolean` | `false` |
+| `addonLeftText` | `addonLeftText` | prepend slot | 前置 addon 文案。 | `string` | `'http://'` |
+| `addonRightText` | `addonRightText` | append slot | 后置 addon 文案。 | `string` | `'.com'` |
 | `maxLength` | `maxLength` | `maxlength` / `show-word-limit` | `false` 表示不限制。 | `number \| false` | `false` |
 | `type` | `type` | `type` | 原生 input 类型。 | `string` | `'text'` |
 | `clear` / `focus` / `blur` | 同名 | `clear` / `focus` / `blur` | 事件保持。 | event | - |
@@ -256,12 +263,15 @@
 | --- | --- | --- | --- | --- | --- |
 | `modelValue` | `modelValue` | `model-value` | 数字值。 | `number \| null` | `0` |
 | `width` | `width` | style | 外层宽度。 | `number \| string` | `undefined` |
-| `controlsPosition` | `position` / `rightControls` | `controls-position` | `rightControls=true` 映射右侧控制器。 | `'default' \| 'right'` | `'default'` |
-| `status` | `state` | class | 字段状态。 | `VisFieldStatus` | `'default'` |
+| `position` | `position` | `controls-position` | 控制器位置，保持旧 API。 | `'default' \| 'right'` | `'default'` |
+| `rightControls` | `rightControls` | `controls-position="right"` | 是否使用右侧控制器，保持旧 API。 | `boolean` | `false` |
+| `state` | `state` | class | 字段状态，保持旧 API。 | `VisFieldState` | `'default'` |
 | `disabled` | `disabled` | `disabled` | 禁用。 | `boolean` | `false` |
-| `readonlyView` | `readView` / `readview` | readonly wrapper | 兼容两个旧拼写。 | `boolean` | `false` |
-| `prefixIcon` | `prefixIcon` + `prefixIconName` | prefix slot | 图标前缀。 | `IconName \| false` | `'currency-yen'` |
-| `suffixIcon` | `suffixIcon` + `suffixIconName` | suffix slot | 图标后缀。 | `IconName \| false` | `'percent-02'` |
+| `readView` / `readview` | `readView` / `readview` | readonly wrapper | 兼容两个旧拼写。 | `boolean` | `false` |
+| `prefixIcon` | `prefixIcon` | prefix slot visibility | 是否显示前缀图标，保持旧 API。 | `boolean` | `false` |
+| `prefixIconName` | `prefixIconName` | prefix slot | 前缀图标名，保持旧 API。 | `IconName` | `'currency-yen'` |
+| `suffixIcon` | `suffixIcon` | suffix slot visibility | 是否显示后缀图标，保持旧 API。 | `boolean` | `false` |
+| `suffixIconName` | `suffixIconName` | suffix slot | 后缀图标名，保持旧 API。 | `IconName` | `'percent-02'` |
 | `min` / `max` / `step` | 同名 | `min` / `max` / `step` | 数值边界和步进。 | `number` | `undefined` / `1` |
 | `focus` / `blur` | 同名 | `focus` / `blur` | 事件保持。 | event | - |
 
@@ -271,12 +281,12 @@
 | --- | --- | --- | --- | --- | --- |
 | `modelValue` | `modelValue` | `model-value` | 搜索值。 | `string` | `undefined` |
 | `placeholder` | `placeholder` | `placeholder` | 占位文案。 | `string` | `'请输入关键字'` |
-| `readonlyValue` | `valueText` | wrapper text | 展示值。 | `string` | `'关键字'` |
+| `valueText` | `valueText` | wrapper text | 展示值，保持旧 API。 | `string` | `'关键字'` |
 | `filled` | `filled` | class | 填充样式。 | `boolean` | `false` |
-| `showFilter` | `filter` | suffix button | 过滤按钮。 | `boolean` | `false` |
+| `filter` | `filter` | suffix button | 过滤按钮，保持旧 API。 | `boolean` | `false` |
 | `simple` | `simple` | class | 简洁样式。 | `boolean` | `false` |
 | `disabled` | `disabled` | `disabled` | 禁用。 | `boolean` | `false` |
-| `status` | `state` | class | 字段状态。 | `VisFieldStatus` | `'default'` |
+| `state` | `state` | class | 字段状态，保持旧 API。 | `VisFieldState` | `'default'` |
 | `ariaLabel` | `ariaLabel` | `aria-label` | 可访问名称。 | `string` | `undefined` |
 | `clear` / `filter` / `focus` | 同名 | handlers | 事件保持。 | event | - |
 
@@ -286,11 +296,11 @@
 | --- | --- | --- | --- | --- | --- |
 | `modelValue` | `modelValue` | `model-value` | 文本值。 | `string` | `undefined` |
 | `placeholder` | `placeholder` | `placeholder` | 占位文案。 | `string` | `'请输入文字'` |
-| `readonlyValue` | `valueText` | wrapper text | 只读展示值。 | `string` | sample text |
-| `status` | `state` | class | 字段状态。 | `VisFieldStatus` | `'default'` |
+| `valueText` | `valueText` | wrapper text | 只读展示值，保持旧 API。 | `string` | sample text |
+| `state` | `state` | class | 字段状态，保持旧 API。 | `VisFieldState` | `'default'` |
 | `disabled` | `disabled` | `disabled` | 禁用。 | `boolean` | `false` |
 | `filled` | `filled` | class | 填充样式。 | `boolean` | `false` |
-| `readonlyView` | `readView` | readonly wrapper | 只读展示态。 | `boolean` | `false` |
+| `readView` | `readView` | readonly wrapper | 只读展示态，保持旧 API。 | `boolean` | `false` |
 | `maxLength` | `maxLength` | `maxlength` / `show-word-limit` | `false` 表示不限制。 | `number \| false` | `false` |
 | `name` / `ariaLabel` | 同名 | DOM attr | 原生属性。 | `string` | `undefined` |
 | `focus` / `blur` | 同名 | `focus` / `blur` | 事件保持。 | event | - |
@@ -300,8 +310,8 @@
 | API 名 | 旧 API | Element Plus API | 说明 | 类型 | 默认值 |
 | --- | --- | --- | --- | --- | --- |
 | `size` | `size` | 自研 | spinner 尺寸。 | `'xs' \| 'sm' \| 'md' \| 'lg' \| 'xl'` | `'xs'` |
-| `tone` | `color` | CSS var | `brand/grey/white/danger` 统一映射为 tone。 | `VisLoadingTone` | `'brand'` |
-| `showText` | `text` | 自研 | 是否显示文字。 | `boolean` | `false` |
+| `color` | `color` | CSS var | 保持旧/Figma API。`brand/grey/white/danger` 内部映射 loading 颜色 token。 | `VisLoadingColor` | `'brand'` |
+| `text` | `text` | 自研 | 是否显示文字，保持旧/Figma API。 | `boolean` | `false` |
 | `label` | `label` | text / aria-label | loading 文案。 | `string` | `'loading...'` |
 | `decorative` | `decorative` | `aria-hidden` | 装饰性 loading。 | `boolean` | `false` |
 
@@ -354,33 +364,34 @@
 | `modelValue` | `modelValue` | `model-value` | 弹窗开关。 | `boolean` | `true` |
 | `title` | `title` | `title` / header slot | 标题。 | `string` | `'对话框标题'` |
 | `description` | confirm `description` | default slot | 确认弹窗描述。 | `string` | `undefined` |
-| `status` | confirm `type` | class / icon | `confirm/info/success/warning/danger`。 | `VisModalStatus` | `'confirm'` |
-| `divided` | `divider` | class | 分割线。 | `boolean` | `true` |
+| `type` | confirm `type` | class / icon | 确认弹窗状态，保持旧/Figma API。`confirm/info/success/warning/danger` 内部映射图标和色彩。 | `VisModalConfirmType` | `'confirm'` |
+| `divider` | `divider` | class | 分割线，保持旧/Figma API。 | `boolean` | `true` |
 | `footer` | `footer` | footer slot | 是否显示默认 footer。 | `boolean` | `true` |
 | `icon` | `icon` | header icon slot | 图标区域。 | `IconName \| false` | `false` |
-| `showBack` | `twoLevel` | header slot | 二级返回。 | `boolean` | `false` |
-| `menuItems` | `withMenu` + `menuItems` | side menu slot | 有 menuItems 时进入菜单弹窗模式。 | `VisModalMenuItem[]` | demo items |
+| `twoLevel` | `twoLevel` | header slot | 二级返回，保持旧/Figma API。 | `boolean` | `false` |
+| `withMenu` | `withMenu` | side menu slot visibility | 是否显示左侧菜单，保持旧/Figma API。 | `boolean` | `false` |
+| `menuItems` | `menuItems` | side menu data | 菜单数据。 | `VisModalMenuItem[]` | demo items |
 | `activeMenuKey` | `activeMenuKey` | side menu active | 当前菜单项。 | `string` | `'overview'` |
-| `closable` | `closeable` | `show-close` | 关闭按钮。 | `boolean` | `true` |
+| `closeable` | `closeable` | `show-close` | 关闭按钮，保持旧/Figma API。 | `boolean` | `true` |
 | `width` / `height` | 同名 | `width` / body style | 尺寸。 | `number \| string` | `undefined` |
 | `cancelText` / `confirmText` / `okText` | 同名 | footer buttons | 默认按钮文案。 | `string` | `'取消'` / `'确认'` / `'知道了'` |
-| `close` / `cancel` / `confirm` / `back` / `menuSelect` | `menu-select` 等 | handlers | 事件保持，kebab 事件在类型中用 camelCase 别名。 | event | - |
+| `close` / `cancel` / `confirm` / `back` / `menu-select` | 同名 | handlers | 事件保持。可额外支持 `menuSelect`，但 Figma/旧 API 主名为 `menu-select`。 | event | - |
 
 ## Notification
 
-| API 名 | 旧 API | Element Plus API | 说明 | 类型 | 默认值 |
-| --- | --- | --- | --- | --- | --- |
-| `type` | `type` | `type` | 旧 API 与 Element Plus API 均为 `type`，因此 Vision 继续使用 `type`；`danger` 在 adapter 内映射 Element Plus `error`。 | `'info' \| 'success' \| 'warning' \| 'danger'` | `'info'` |
-| `title` | `title` | `title` | 标题。 | `string` | `undefined` |
-| `description` | `description` | `message` | 描述内容。 | `string` | `undefined` |
-| `showActions` | `actions` | action slot | 是否显示默认操作。 | `boolean` | `true` |
-| `closable` | `closeable` | `show-close` | 关闭按钮。 | `boolean` | `true` |
-| `modelValue` | `modelValue` | visible state | 组件式可见性。 | `boolean` | `true` |
-| `width` | `width` | custom style | 宽度。 | `number \| string` | `384` |
-| `icon` | `iconName` | icon slot | 通知图标。 | `IconName` | `'download-cloud-01'` |
-| `avatar` | `avatarImageVariant/avatarName/avatarTime` | avatar slot | 用户通知头像信息，建议合并为对象。 | `VisNotificationAvatar` | demo avatar |
-| `autoClose` | `autoClose` | `duration` | 自动关闭。 | `boolean` | `true` |
-| `actionPrimary` / `actionSecondary` | `action-primary` / `action-secondary` | action handlers | 事件改 camelCase，同时保留 kebab emit。 | event | - |
+| API 名                               | 旧 API                                      | Element Plus API | 说明                                                                                                    | 类型                                             | 默认值                   |
+| ----------------------------------- | ------------------------------------------ | ---------------- | ----------------------------------------------------------------------------------------------------- | ---------------------------------------------- | --------------------- |
+| `type`                              | `type`                                     | `type`           | 旧 API 与 Element Plus API 均为 `type`，因此 Vision 继续使用 `type`；`danger` 在 adapter 内映射 Element Plus `error`。 | `'info' \| 'success' \| 'warning' \| 'danger'` | `'info'`              |
+| `title`                             | `title`                                    | `title`          | 标题。                                                                                                   | `string`                                       | `undefined`           |
+| `description`                       | `description`                              | `message`        | 描述内容。                                                                                                 | `string`                                       | `undefined`           |
+| `actions`                           | `actions`                                  | action slot      | 是否显示默认操作，保持旧 API。                                                                                  | `boolean`                                      | `true`                |
+| `closeable`                         | `closeable`                                | `show-close`     | 关闭按钮，保持旧 API。                                                                                        | `boolean`                                      | `true`                |
+| `modelValue`                        | `modelValue`                               | visible state    | 组件式可见性。                                                                                               | `boolean`                                      | `true`                |
+| `width`                             | `width`                                    | custom style     | 宽度。                                                                                                   | `number \| string`                             | `384`                 |
+| `iconName`                          | `iconName`                                 | icon slot        | 通知图标，保持旧 API。                                                                                        | `IconName`                                     | `'download-cloud-01'` |
+| `avatar`                            | `avatarImageVariant/avatarName/avatarTime` | avatar slot      | 用户通知头像信息，建议合并为对象。                                                                                     | `VisNotificationAvatar`                        | demo avatar           |
+| `autoClose`                         | `autoClose`                                | `duration`       | 自动关闭。                                                                                                 | `boolean`                                      | `true`                |
+| `action-primary` / `action-secondary` | `action-primary` / `action-secondary`    | action handlers  | 保持旧 kebab 事件；TS 类型可额外提供 camelCase。                                                               | event                                          | -                     |
 
 ## PageHeader
 
@@ -429,8 +440,8 @@
 | `content` | `content` | `content` / default slot | 内容。 | `string` | `'Popover content'` |
 | `showTitle` | `showTitle` | title slot visibility | 是否显示标题区。 | `boolean` | `true` |
 | `icon` | `icon` + `iconName` | title slot | 标题图标。 | `IconName \| false` | `false` |
-| `showActions` | `actions` | actions slot | 默认操作按钮。 | `boolean` | `false` |
-| `closable` | `closeButton` | close button | 关闭按钮。 | `boolean` | `false` |
+| `actions` | `actions` | actions slot | 默认操作按钮，保持旧 API。 | `boolean` | `false` |
+| `closeButton` | `closeButton` | close button | 关闭按钮，保持旧 API。 | `boolean` | `false` |
 | `width` | `width` | `width` | 宽度。 | `number \| string` | `256` |
 | `show` / `hide` / `cancel` / `confirm` / `close` | 同名 | handlers | 事件保持。 | event | - |
 
@@ -468,9 +479,9 @@
 | `modelValue` | `modelValue` | `model-value` | 单项旧值为 boolean，group 为选中值。 | `boolean \| VisRadioValue` | `false` / `null` |
 | `value` | `value` | `value` | 单项 value。 | `string \| number \| boolean` | `undefined` |
 | `disabled` | `disabled` | `disabled` | 禁用。 | `boolean` | `false` |
-| `visualState` | `state` | class | hover 演示态。 | `'default' \| 'hover'` | `'default'` |
-| `variant` | `radioButton` | `ElRadioButton` | button radio 形态。 | `'default' \| 'button'` | `'default'` |
-| `showLabel` | `label` | default slot visibility | 是否显示文本。 | `boolean` | `true` |
+| `state` | `state` | class | hover 演示态，保持旧 API。 | `'default' \| 'hover'` | `'default'` |
+| `radioButton` | `radioButton` | `ElRadioButton` | button radio 形态，保持旧 API。 | `boolean` | `false` |
+| `label` | `label` | default slot visibility | 是否显示文本，保持旧 API。 | `boolean` | `true` |
 | `options` | group `options` | group options | RadioGroup 选项。 | `VisRadioOption[]` | `[]` |
 | `direction` | group `align` | class | 布局方向。 | `'horizontal' \| 'vertical'` | `'horizontal'` |
 | `name` / `ariaLabel` | 同名 | DOM attr | 原生和可访问属性。 | `string` | `undefined` |
@@ -509,7 +520,7 @@
 | `variant` | `variant` | 自研 | 阴影背景语义。 | `VisScrollShadowVariant` | `'surface'` |
 | `orientation` | `orientation` | 自研 | 滚动方向。 | `'vertical' \| 'horizontal'` | `'vertical'` |
 | `size` | `size` | CSS var | 阴影尺寸。 | `number` | `80` |
-| `hideScrollbar` | `hideScrollBar` | CSS | 统一 camelCase。 | `boolean` | `true` |
+| `hideScrollBar` | `hideScrollBar` | CSS | 隐藏滚动条，保持旧/Figma API。 | `boolean` | `true` |
 | `default` slot | default slot | slot | 滚动内容。 | slot | - |
 
 ## Segmented
@@ -520,8 +531,8 @@
 | `defaultValue` | `defaultValue` | initial value | 非受控初始值。 | `string \| number` | `undefined` |
 | `options` | `options` | `options` | 选项。 | `VisSegmentedOption[]` | demo options |
 | `size` | `size` | `size` / class | 尺寸。 | `'md' \| 'lg'` | `'md'` |
-| `showIcon` | `icon` | option icon slot | 是否显示图标。 | `boolean` | `true` |
-| `showText` | `text` | option label | 是否显示文字。 | `boolean` | `true` |
+| `icon` | `icon` | option icon slot | 是否显示图标，保持旧 API。 | `boolean` | `true` |
+| `text` | `text` | option label | 是否显示文字，保持旧 API。 | `boolean` | `true` |
 | `disabled` | `disabled` | `disabled` | 整体禁用。 | `boolean` | `false` |
 | `ariaLabel` | `ariaLabel` | `aria-label` | 可访问名称。 | `string` | `'分段控制器'` |
 | `label` slot | `label` slot | option slot | 自定义选项 label。 | slot | - |
@@ -533,13 +544,14 @@
 | --- | --- | --- | --- | --- | --- |
 | `modelValue` | `modelValue` | `model-value` | 选择值。 | `VisSelectValue \| VisSelectValue[] \| null` | `undefined` |
 | `options` | `options` | `ElOption` data | 选项。 | `VisSelectOption[]` | demo options |
-| `variant` | `type` | class / multiple | `default/customize` 为视觉形态，`multiSelect` 才是多选行为。 | `VisSelectVariant` | `'default'` |
-| `status` | `state` | class / validate state | 字段状态。 | `VisFieldStatus` | `'default'` |
+| `type` | `type` | class / multiple | `default/customize` 为视觉形态，保持旧 API；`multiSelect` 才是多选行为。 | `VisSelectType` | `'default'` |
+| `state` | `state` | class / validate state | 字段状态，保持旧 API。 | `VisFieldState` | `'default'` |
 | `placeholder` | `placeholder` | `placeholder` | 占位。 | `string` | `'请选择'` |
-| `prefixIcon` | `prefix` + `prefixIcon` | prefix slot | 前置图标。 | `IconName \| false` | `'user-01'` |
-| `multiple` | `multiSelect` | `multiple` | 多选。 | `boolean` | `false` |
+| `prefix` | `prefix` | prefix slot visibility | 是否显示前置图标，保持旧 API。 | `boolean` | `false` |
+| `prefixIcon` | `prefixIcon` | prefix slot | 前置图标名，保持旧 API。 | `IconName` | `'user-01'` |
+| `multiSelect` | `multiSelect` | `multiple` | 多选，保持旧 API。 | `boolean` | `false` |
 | `filterable` | `filterable` | `filterable` | 可搜索。 | `boolean` | `false` |
-| `readonlyView` | `readView` | readonly wrapper | 只读展示。 | `boolean` | `false` |
+| `readView` | `readView` | readonly wrapper | 只读展示，保持旧 API。 | `boolean` | `false` |
 | `disabled` | `disabled` | `disabled` | 禁用。 | `boolean` | `false` |
 | `loading` | `loading` | `loading` | 加载态。 | `boolean` | `false` |
 | `open` | `open` | `visible` | 受控打开。 | `boolean` | `undefined` |
@@ -605,11 +617,11 @@
 | --- | --- | --- | --- | --- | --- |
 | `modelValue` | `modelValue` | `model-value` | 时间值，range 时为元组。 | `string \| [string, string] \| null` | `null` |
 | `range` | `range` | `is-range` | 范围选择。 | `boolean` | `false` |
-| `format` | `type` | `format` | 旧 `HH MM SS` / `HH MM` 映射格式字符串。 | `'HH:mm:ss' \| 'HH:mm'` | `'HH:mm:ss'` |
+| `type` | `type` | `format` | 时间格式，保持旧 API；内部映射 Element Plus format。 | `'HH:mm:ss' \| 'HH:mm'` | `'HH:mm:ss'` |
 | `timeSelect` | `timeSelect` | picker type | 是否时间选择模式。 | `boolean` | `false` |
-| `status` | `state` | class | 字段状态。 | `VisFieldStatus` | `'default'` |
+| `state` | `state` | class | 字段状态，保持旧 API。 | `VisFieldState` | `'default'` |
 | `disabled` | `disabled` | `disabled` | 禁用。 | `boolean` | `false` |
-| `readonlyView` | `readView` | readonly wrapper | 只读展示。 | `boolean` | `false` |
+| `readView` | `readView` | readonly wrapper | 只读展示，保持旧 API。 | `boolean` | `false` |
 | `placeholder` | `placeholder` | `placeholder` | 单值占位。 | `string` | `'请选择时间'` |
 | `startPlaceholder` / `endPlaceholder` | 同名 | range placeholders | 范围占位。 | `string` | `'选择开始时间'` / `'选择结束时间'` |
 | `open` | `open` | visible | 受控打开。 | `boolean` | `undefined` |
@@ -621,10 +633,9 @@
 | --- | --- | --- | --- | --- | --- |
 | `modelValue` | `modelValue` | `model-value` | 开关值。 | `boolean` | `false` |
 | `disabled` | `disabled` | `disabled` | 禁用。 | `boolean` | `false` |
-| `loading` | `state="loading"` | `loading` / class | loading 从 `state` 拆出为正式 API。 | `boolean` | `false` |
-| `visualState` | `state` | class | hover/focus 演示态。 | `VisToggleVisualState` | `'default'` |
-| `showIcon` | `icon` | active/inactive icons | 是否显示图标。 | `boolean` | `false` |
-| `showText` | `text` | active/inactive text | 是否显示文字。 | `boolean` | `false` |
+| `state` | `state` | `loading` / class | 保持旧 API。`state="loading"` 内部映射 loading 行为，其余值映射视觉态。 | `VisToggleState` | `'default'` |
+| `icon` | `icon` | active/inactive icons | 是否显示图标，保持旧 API。 | `boolean` | `false` |
+| `text` | `text` | active/inactive text | 是否显示文字，保持旧 API。 | `boolean` | `false` |
 | `id` / `name` / `value` | 同名 | DOM attr | 表单属性。 | `string \| number \| boolean` | `undefined` |
 | `ariaLabel` | `ariaLabel` | `aria-label` | 可访问名称。 | `string` | `undefined` |
 | `change` | `change` | `change` | 事件保持。 | event | - |
@@ -636,13 +647,15 @@
 | `modelValue` | `modelValue` | 自研 pressed state | 受控按下状态。 | `boolean` | `undefined` |
 | `defaultPressed` | `defaultPressed` | initial state | 非受控初始状态。 | `boolean` | `false` |
 | `size` | `size` | class | 尺寸。 | `'sm' \| 'md' \| 'lg'` | `'md'` |
-| `visualState` | `state` | class | 视觉态。 | `VisToggleButtonVisualState` | `'default'` |
+| `state` | `state` | class | 视觉态，保持旧 API。 | `VisToggleButtonState` | `'default'` |
 | `disabled` | `disabled` | `disabled` | 禁用。 | `boolean` | `false` |
 | `iconOnly` | `iconOnly` | aria-label | 仅图标按钮。 | `boolean` | `false` |
-| `prefixIcon` | `prefix` + `iconName` | icon slot | 前置图标。 | `IconName` | `'plus'` |
-| `suffixIcon` | `suffix` + `suffixIconName` | icon slot | 后置图标。 | `IconName` | `'chevron-down'` |
+| `prefix` | `prefix` | icon slot visibility | 是否显示前置图标，保持旧 API。 | `boolean` | `false` |
+| `suffix` | `suffix` | icon slot visibility | 是否显示后置图标，保持旧 API。 | `boolean` | `false` |
+| `iconName` | `iconName` | icon slot | 前置图标名，保持旧 API。 | `IconName` | `'plus'` |
+| `suffixIconName` | `suffixIconName` | icon slot | 后置图标名，保持旧 API。 | `IconName` | `'chevron-down'` |
 | `label` | `label` | default slot | 文案。 | `string` | `undefined` |
-| `nativeType` | `htmlType` | native button type | 原生类型。 | `'button' \| 'submit' \| 'reset'` | `'button'` |
+| `htmlType` | `htmlType` | native button type | 原生类型，保持旧 API。 | `'button' \| 'submit' \| 'reset'` | `'button'` |
 | `change` | `change` | handler | 状态变化事件。 | event | - |
 
 ## Tooltip
@@ -698,159 +711,44 @@
 | --- | --- | --- | --- | --- | --- |
 | 不迁移 | `HelloWorld.vue` | 无 | 示例组件，不属于设计系统 API。 | - | - |
 
-## Figma API 同步改名清单
+## Figma API 对齐清单
 
-以下清单只列 Figma 设计稿中需要从旧 API 改名为 Vision API 的项。未出现在清单中的同名 API，例如 `modelValue`、`disabled`、`loading`、`placeholder`、`options`、`size`、`width`、`height` 等，默认保持不变。
+当前策略是不要求 Figma 设计稿批量改名。Figma 中已经存在的旧 API 名默认保持不变，Vision 组件实现负责在内部映射到 Element Plus 或 Vision token。只有在旧 API 明显无法表达组件能力、与 Vue 标准事件冲突、或确认为拼写错误时，才补充新别名。
 
-### 按新规则保持不变
+### 优先保持不变
 
-| 组件 | 旧 API | 新 API | 原因 |
+| 组件 | Figma / 旧 API | Vision 主 API | 备注 |
 | --- | --- | --- | --- |
-| Alert | `type` | `type` | 旧 API 与 Element Plus API 都是 `type`。 |
-| Message | `type` | `type` | 旧 API 与 Element Plus API 都是 `type`。 |
-| Notification | `type` | `type` | 旧 API 与 Element Plus API 都是 `type`。 |
-| Tag | `type` | `type` | 旧 API 与 Element Plus API 都是 `type`。 |
+| Badge | `colorType` / `type` / `solid` / `subtle` / `iconName` | 同名 | 已迁移组件按旧 API 实现。 |
+| Loading | `color` / `text` | 同名 | 已迁移组件按旧 API 实现。 |
+| Button | `variant` / `danger` / `state` / `prefix` / `suffix` / `iconName` / `suffixIconName` / `htmlType` | 同名 | `danger`、`state`、`htmlType` 不再要求改成 `tone`、`visualState`、`nativeType`。 |
+| Input | `valueText` / `state` / `readView` / `addonLeft` / `addonRight` / `addonLeftText` / `addonRightText` | 同名 | `readonlyValue`、`status`、`readonlyView`、`addonBefore/After` 只可作为代码别名。 |
+| Modal | `divider` / `twoLevel` / `withMenu` / `closeable` / `menu-select` | 同名 | `closable`、`showBack`、`menuSelect` 只可作为兼容别名。 |
+| FeaturedIcon | `color` / `type` | 同名 | 不再要求改为 `tone` / `variant`。 |
+| CodeBlock | `type` / `heading` / `copy` | 同名 | 不再要求改为 `variant` / `showHeader` / `copyable`。 |
+| ScrollShadow | `hideScrollBar` | 同名 | 保留旧 camelCase。 |
+| Alert / Message / Notification / Tag | `type` | 同名 | 旧 API 与 Element Plus 主 API 一致，保持不变。 |
+| 通用表单项 | `modelValue` / `disabled` / `placeholder` / `size` / `width` / `height` | 同名 | Vue 和 Element Plus 生态通用 API 保持不变。 |
 
-### 需要同步改名
+### 可新增别名但不要求 Figma 修改
 
-| 组件             | Figma 旧 API                                        | Figma 新 API        | 备注                                      |
-| -------------- | -------------------------------------------------- | ------------------ | --------------------------------------- |
-| Accordion      | `icon`                                             | `showIcon`         | 布尔显示控制。                                 |
-| Alert          | `description`                                      | `showDescription`  | 旧布尔控制项。                                 |
-| Alert          | `descriptionText`                                  | `description`      | 描述内容。                                   |
-| Alert          | `actions`                                          | `showActions`      | 默认操作区显示控制。                              |
-| Alert          | `closeable`                                        | `closable`         | 统一拼写。                                   |
-| Avatar         | `type`                                             | `variant`          | 自研头像形态，不映射 Element `type`。              |
-| Avatar         | `shapeSquare`                                      | `shape`            | 值改为 `circle/square`。                    |
-| Avatar         | `imageSrc`                                         | `src`              | 图片地址。                                   |
-| Avatar         | `imageAlt`                                         | `alt`              | 图片替代文本。                                 |
-| Avatar         | `text`                                             | `name`             | 文本头像名称。                                 |
-| AvatarLabel    | `title`                                            | `name`             | 主文本。                                    |
-| AvatarLabel    | `subtitle`                                         | `description`      | 副文本。                                    |
-| Avatar         | `badgeColorType`                                   | `badgeTone`        | 角标色彩语义。                                 |
-| Badge          | `colorType`                                        | `tone`             | 色彩语义。                                   |
-| Badge          | `type` / `solid` / `subtle`                        | `variant`          | 旧 Badge type 不直接映射 Element `type`。      |
-| Badge          | `iconName`                                         | `icon`             | 图标名统一。                                  |
-| Breadcrumb     | `type`                                             | `variant`          | 旧值为 `button/link`，不直接映射 Element `type`。 |
-| Button         | `danger`                                           | `tone`             | 危险意图色。                                  |
-| Button         | `state`                                            | `visualState`      | 仅视觉回归用。                                 |
-| Button         | `iconName`                                         | `prefixIcon`       | 前置/主图标。                                 |
-| Button         | `suffixIconName`                                   | `suffixIcon`       | 后置图标。                                   |
-| Button         | `htmlType`                                         | `nativeType`       | 原生按钮类型。                                 |
-| Checkbox       | `state`                                            | `visualState`      | 仅视觉回归用。                                 |
-| Checkbox       | `label`                                            | `showLabel`        | 旧布尔控制项。                                 |
-| CheckboxGroup  | `align`                                            | `direction`        | 布局方向。                                   |
-| CodeBlock      | `type`                                             | `variant`          | 自研视觉形态。                                 |
-| CodeBlock      | `heading`                                          | `showHeader`       | 头部显示控制。                                 |
-| CodeBlock      | `copy`                                             | `copyable`         | 复制能力开关。                                 |
-| DatePicker     | `readView`                                         | `readonlyView`     | 统一只读展示命名。                               |
-| DatePicker     | `state`                                            | `status`           | 字段状态。                                   |
-| Drawer         | `position`                                         | `placement`        | 浮层位置。                                   |
-| Drawer         | `divider`                                          | `divided`          | 分割线。                                    |
-| Drawer         | `actions`                                          | `showActions`      | 默认操作区显示控制。                              |
-| Drawer         | `iconName`                                         | `icon`             | 图标名统一。                                  |
-| Drawer         | `twoLevel`                                         | `showBack`         | 二级返回。                                   |
-| Drawer         | `closeable`                                        | `closable`         | 统一拼写。                                   |
-| Drawer         | `handle`                                           | `showHandle`       | handle 显示控制。                            |
-| DropdownItem   | `iconName`                                         | `icon`             | 图标名统一。                                  |
-| FeaturedIcon   | `color`                                            | `tone`             | 色彩语义。                                   |
-| FeaturedIcon   | `type`                                             | `variant`          | 自研容器形态。                                 |
-| Input          | `valueText`                                        | `readonlyValue`    | 只读展示值。                                  |
-| Input          | `state`                                            | `status`           | 字段状态。                                   |
-| Input          | `readView`                                         | `readonlyView`     | 只读展示。                                   |
-| Input          | `addonLeft` / `addonLeftText`                      | `addonBefore`      | 前置 addon。                               |
-| Input          | `addonRight` / `addonRightText`                    | `addonAfter`       | 后置 addon。                               |
-| InputNumber    | `position` / `rightControls`                       | `controlsPosition` | 控制器位置。                                  |
-| InputNumber    | `state`                                            | `status`           | 字段状态。                                   |
-| InputNumber    | `readView` / `readview`                            | `readonlyView`     | 只读展示。                                   |
-| InputNumber    | `prefixIconName`                                   | `prefixIcon`       | 前置图标。                                   |
-| InputNumber    | `suffixIconName`                                   | `suffixIcon`       | 后置图标。                                   |
-| InputSearchBox | `valueText`                                        | `readonlyValue`    | 展示值。                                    |
-| InputSearchBox | `filter`                                           | `showFilter`       | 过滤按钮显示控制。                               |
-| InputSearchBox | `state`                                            | `status`           | 字段状态。                                   |
-| InputTextarea  | `valueText`                                        | `readonlyValue`    | 只读展示值。                                  |
-| InputTextarea  | `state`                                            | `status`           | 字段状态。                                   |
-| InputTextarea  | `readView`                                         | `readonlyView`     | 只读展示。                                   |
-| Loading        | `color`                                            | `tone`             | 色彩语义。                                   |
-| Loading        | `text`                                             | `showText`         | 文本显示控制。                                 |
-| Menu           | `collapse`                                         | `collapsed`        | 折叠状态。                                   |
-| MenuItem       | `iconName`                                         | `icon`             | 图标名统一。                                  |
-| MenuItem       | `subLevel`                                         | `level`            | 层级。                                     |
-| Message        | `after-leave`                                      | `afterLeave`       | 事件名 camelCase。                          |
-| Modal          | `divider`                                          | `divided`          | 分割线。                                    |
-| Modal          | `twoLevel`                                         | `showBack`         | 二级返回。                                   |
-| Modal          | `withMenu` + `menuItems`                           | `menuItems`        | 有菜单数据即菜单模式。                             |
-| Modal          | `closeable`                                        | `closable`         | 统一拼写。                                   |
-| ModalConfirm   | `type`                                             | `status`           | 确认弹窗状态不直接映射 Element `type`。             |
-| Modal          | `menu-select`                                      | `menuSelect`       | 事件名 camelCase。                          |
-| Notification   | `actions`                                          | `showActions`      | 默认操作区显示控制。                              |
-| Notification   | `closeable`                                        | `closable`         | 统一拼写。                                   |
-| Notification   | `iconName`                                         | `icon`             | 图标名统一。                                  |
-| Notification   | `avatarImageVariant` / `avatarName` / `avatarTime` | `avatar`           | 合并为对象。                                  |
-| Notification   | `action-primary`                                   | `actionPrimary`    | 事件名 camelCase。                          |
-| Notification   | `action-secondary`                                 | `actionSecondary`  | 事件名 camelCase。                          |
-| PageHeader     | `descriptionText`                                  | `description`      | 描述文本。                                   |
-| PageHeader     | `description`                                      | `showDescription`  | 旧布尔控制项。                                 |
-| PageHeader     | `breadcrumbItems`                                  | `breadcrumbs`      | 面包屑数据。                                  |
-| PageHeader     | `breadcrumb`                                       | `showBreadcrumb`   | 面包屑显示控制。                                |
-| PageHeader     | `tabItems`                                         | `tabs`             | 标签页数据。                                  |
-| PageHeader     | `iconName`                                         | `icon`             | 图标名统一。                                  |
-| PageHeader     | `headerSuffix` / `tagLabel` / `tagIconName`        | `tag`              | 合并为标签对象。                                |
-| Pagination     | `count`                                            | `showTotal`        | 总数显示。                                   |
-| Pagination     | `quantity`                                         | `showSizeChanger`  | 每页数量选择。                                 |
-| Pagination     | `goto`                                             | `showJumper`       | 跳页输入。                                   |
-| Popover        | `position`                                         | `placement`        | 浮层位置。                                   |
-| Popover        | `iconName`                                         | `icon`             | 图标名统一。                                  |
-| Popover        | `actions`                                          | `showActions`      | 默认操作区显示控制。                              |
-| Popover        | `closeButton`                                      | `closable`         | 关闭按钮。                                   |
-| ProgressBar    | `label`                                            | `showLabel`        | 标签显示控制。                                 |
-| ProgressCircle | `label`                                            | `showLabel`        | 标签显示控制。                                 |
-| Radio          | `state`                                            | `visualState`      | 仅视觉回归用。                                 |
-| Radio          | `radioButton`                                      | `variant`          | button 形态。                              |
-| Radio          | `label`                                            | `showLabel`        | 文本显示控制。                                 |
-| RadioGroup     | `align`                                            | `direction`        | 布局方向。                                   |
-| RichTextEditor | `tooltip`                                          | `toolbar`          | 旧 Tooltip 实际是工具栏。                       |
-| ScrollShadow   | `hideScrollBar`                                    | `hideScrollbar`    | 统一 camelCase。                           |
-| Segmented      | `icon`                                             | `showIcon`         | 图标显示控制。                                 |
-| Segmented      | `text`                                             | `showText`         | 文本显示控制。                                 |
-| Select         | `type`                                             | `variant`          | 旧 Select type 不直接映射 Element `type`。     |
-| Select         | `state`                                            | `status`           | 字段状态。                                   |
-| Select         | `multiSelect`                                      | `multiple`         | 多选。                                     |
-| Select         | `readView`                                         | `readonlyView`     | 只读展示。                                   |
-| Slider         | `type`                                             | `range`            | 旧 `type="range"` 改为布尔。                  |
-| Slider         | `label`                                            | `showLabel`        | 标签显示控制。                                 |
-| Steps          | `type`                                             | `variant`          | 步骤视觉形态。                                 |
-| Tabs           | `actions`                                          | `showActions`      | 操作区显示控制。                                |
-| Tag            | `iconName`                                         | `icon`             | 图标名统一。                                  |
-| Tag            | `avatarSrc` / `avatarVariant` / `avatarAlt`        | `avatar`           | 合并为头像对象。                                |
-| TimePicker     | `type`                                             | `format`           | 时间格式。                                   |
-| TimePicker     | `state`                                            | `status`           | 字段状态。                                   |
-| TimePicker     | `readView`                                         | `readonlyView`     | 只读展示。                                   |
-| Toggle         | `state="loading"`                                  | `loading`          | loading 拆成正式 API。                       |
-| Toggle         | `state`                                            | `visualState`      | 其他视觉态。                                  |
-| Toggle         | `icon`                                             | `showIcon`         | 图标显示控制。                                 |
-| Toggle         | `text`                                             | `showText`         | 文本显示控制。                                 |
-| ToggleButton   | `state`                                            | `visualState`      | 视觉态。                                    |
-| ToggleButton   | `iconName`                                         | `prefixIcon`       | 前置图标。                                   |
-| ToggleButton   | `suffixIconName`                                   | `suffixIcon`       | 后置图标。                                   |
-| ToggleButton   | `htmlType`                                         | `nativeType`       | 原生按钮类型。                                 |
-| Tooltip        | `position`                                         | `placement`        | 浮层位置。                                   |
-| TreeView       | `icon`                                             | `showIcon`         | 图标显示控制。                                 |
-| TreeView       | `actions`                                          | `showActions`      | 节点操作显示控制。                               |
-| TreeView       | `folderType`                                       | `expanderVariant`  | 展开器形态。                                  |
-| TreeView       | `action-click`                                     | `actionClick`      | 事件名 camelCase。                          |
-| Upload         | `type`                                             | `variant`          | 上传形态。                                   |
-| Upload         | `description`                                      | `showDescription`  | 说明显示控制。                                 |
-| Upload         | `fileIconName`                                     | `fileIcon`         | 文件图标。                                   |
+| 组件                                       | 旧 API                                            | 可选别名                                          | 使用规则                                            |
+| ---------------------------------------- | ------------------------------------------------ | --------------------------------------------- | ----------------------------------------------- |
+| Button                                   | `htmlType`                                       | `nativeType`                                  | 代码侧如需贴近 Element Plus 可支持别名；Figma 仍用 `htmlType`。 |
+| Modal / Drawer / Alert / Notification    | `closeable`                                      | `closable`                                    | 可支持 Element/Vue 社区常见拼写；Figma 仍用 `closeable`。    |
+| Input / Select / TimePicker              | `readView`                                       | `readonlyView`                                | 可支持更完整语义别名；DatePicker 已按 Figma 移除此 prop。         |
+| 事件                                       | `menu-select` / `after-leave` / `action-primary` | `menuSelect` / `afterLeave` / `actionPrimary` | Vue 模板优先 kebab-case，TS emit 类型可额外声明 camelCase。  |
+| 色彩类 API                                  | `color` / `colorType`                            | `tone`                                        | 只作为内部 token 概念或未来新增 API；不作为迁移期主 API。            |
+| 状态类 API                                  | `state`                                          | `status` / `visualState`                      | 只作为内部分类概念；旧 `state` 继续作为 public API。            |
 
 ## 类型命名规则
 
 | API 名 | 旧 API | Element Plus API | 说明 | 类型 | 默认值 |
 | --- | --- | --- | --- | --- | --- |
-| `Vis*Type` | `Leo*Type` | Element `type` | 当旧 API 与 Element Plus API 都叫 `type` 时，类型也保留 `Type` 命名。 | type alias | - |
-| `Vis*Variant` | `Leo*Type` | class / 自研结构 | 旧 `type` 不直接映射 Element `type`、只表示视觉结构时改为 `Variant`。 | type alias | - |
-| `Vis*Status` | `Leo*State` / 非 Element `type` | Element status / validate state | 旧 `state` 或非 Element `type` 表示信息等级、校验状态时改为 `Status`。 | type alias | - |
-| `Vis*VisualState` | `Leo*State` | class | 强制视觉态只用于 demo 和视觉回归。 | type alias | - |
+| `Vis*Type` | `Leo*Type` | Element `type` / class | 当 public API 保留 `type` 时，类型也优先保留 `Type` 命名，即使内部是自研 class。 | type alias | - |
+| `Vis*State` | `Leo*State` | class / validate state | 当 public API 保留 `state` 时，类型保留 `State` 命名；内部可再细分 status 或 visual state。 | type alias | - |
+| `Vis*Color` / `Vis*ColorType` | `Leo*Color` / `Leo*ColorType` | CSS var / token | 当 public API 为 `color` 或 `colorType` 时，类型名跟随 public API。 | type alias | - |
+| `Vis*Variant` / `Vis*Status` / `Vis*VisualState` | 无或新增别名 | class / validate state | 仅用于没有旧 API 约束的新组件，或作为内部 adapter 类型，不作为默认迁移命名。 | type alias | - |
 | `IconName` | `IconName` | 自研 icon registry | 图标类型保持原名。 | type alias | - |
 
 ## 验收要求

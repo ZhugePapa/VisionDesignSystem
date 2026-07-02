@@ -27,13 +27,13 @@ const props = withDefaults(
   },
 )
 
-const sizeMap: Record<VisFeaturedIconSize, { box: string; icon: number; radius: string }> = {
-  xs: { box: '20px', icon: 12, radius: 'var(--radius-sm)' },
-  sm: { box: 'var(--space-24)', icon: 12, radius: 'var(--radius-sm)' },
-  md: { box: 'var(--space-32)', icon: 16, radius: 'var(--radius-md)' },
-  lg: { box: 'var(--space-40)', icon: 20, radius: '10px' },
-  xl: { box: 'var(--space-48)', icon: 24, radius: 'var(--radius-lg)' },
-  xxl: { box: 'var(--space-56)', icon: 28, radius: '14px' },
+const sizeMap: Record<VisFeaturedIconSize, { box: string; icon: number; radius: string; strokeWidth: number }> = {
+  xs: { box: '20px', icon: 12, radius: 'var(--radius-sm)', strokeWidth: 1.33333 },
+  sm: { box: 'var(--space-24)', icon: 12, radius: 'var(--radius-sm)', strokeWidth: 1.33333 },
+  md: { box: 'var(--space-32)', icon: 16, radius: 'var(--radius-md)', strokeWidth: 1.33333 },
+  lg: { box: 'var(--space-40)', icon: 20, radius: '10px', strokeWidth: 1.33333 },
+  xl: { box: 'var(--space-48)', icon: 24, radius: 'var(--radius-lg)', strokeWidth: 1.33333 },
+  xxl: { box: 'var(--space-56)', icon: 28, radius: '14px', strokeWidth: 1.33333 },
 }
 
 const colorMap: Record<
@@ -108,7 +108,7 @@ const iconStyle = computed<CSSProperties>(() => {
     :role="decorative ? undefined : 'img'"
   >
     <slot name="icon">
-      <Icon :name="icon" :size="metric.icon" decorative />
+      <Icon :name="icon" :size="metric.icon" :stroke-width="metric.strokeWidth" decorative />
     </slot>
   </span>
 </template>

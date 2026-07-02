@@ -12,9 +12,33 @@
       "types": "./dist/types/index.d.ts",
       "import": "./dist/lib/index.js"
     },
+    "./components/accordion": {
+      "types": "./dist/types/components/accordion/index.d.ts",
+      "import": "./dist/lib/components/accordion/index.js"
+    },
+    "./components/alert": {
+      "types": "./dist/types/components/alert/index.d.ts",
+      "import": "./dist/lib/components/alert/index.js"
+    },
+    "./components/avatar": {
+      "types": "./dist/types/components/avatar/index.d.ts",
+      "import": "./dist/lib/components/avatar/index.js"
+    },
+    "./components/badge": {
+      "types": "./dist/types/components/badge/index.d.ts",
+      "import": "./dist/lib/components/badge/index.js"
+    },
+    "./components/breadcrumb": {
+      "types": "./dist/types/components/breadcrumb/index.d.ts",
+      "import": "./dist/lib/components/breadcrumb/index.js"
+    },
     "./components/button": {
       "types": "./dist/types/components/button/index.d.ts",
       "import": "./dist/lib/components/button/index.js"
+    },
+    "./components/checkbox": {
+      "types": "./dist/types/components/checkbox/index.d.ts",
+      "import": "./dist/lib/components/checkbox/index.js"
     },
     "./components/code-block": {
       "types": "./dist/types/components/code-block/index.d.ts",
@@ -23,6 +47,22 @@
     "./components/config-provider": {
       "types": "./dist/types/components/config-provider/index.d.ts",
       "import": "./dist/lib/components/config-provider/index.js"
+    },
+    "./components/date-picker": {
+      "types": "./dist/types/components/date-picker/index.d.ts",
+      "import": "./dist/lib/components/date-picker/index.js"
+    },
+    "./components/divider": {
+      "types": "./dist/types/components/divider/index.d.ts",
+      "import": "./dist/lib/components/divider/index.js"
+    },
+    "./components/drawer": {
+      "types": "./dist/types/components/drawer/index.d.ts",
+      "import": "./dist/lib/components/drawer/index.js"
+    },
+    "./components/dropdown": {
+      "types": "./dist/types/components/dropdown/index.d.ts",
+      "import": "./dist/lib/components/dropdown/index.js"
     },
     "./components/featured-icon": {
       "types": "./dist/types/components/featured-icon/index.d.ts",
@@ -36,13 +76,25 @@
       "types": "./dist/types/components/input/index.d.ts",
       "import": "./dist/lib/components/input/index.js"
     },
+    "./components/loading": {
+      "types": "./dist/types/components/loading/index.d.ts",
+      "import": "./dist/lib/components/loading/index.js"
+    },
     "./components/modal": {
       "types": "./dist/types/components/modal/index.d.ts",
       "import": "./dist/lib/components/modal/index.js"
     },
+    "./components/radio": {
+      "types": "./dist/types/components/radio/index.d.ts",
+      "import": "./dist/lib/components/radio/index.js"
+    },
     "./components/scroll-shadow": {
       "types": "./dist/types/components/scroll-shadow/index.d.ts",
       "import": "./dist/lib/components/scroll-shadow/index.js"
+    },
+    "./components/tag": {
+      "types": "./dist/types/components/tag/index.d.ts",
+      "import": "./dist/lib/components/tag/index.js"
     },
     "./style.css": "./dist/lib/style.css",
     "./tokens.css": "./dist/lib/tokens.css"

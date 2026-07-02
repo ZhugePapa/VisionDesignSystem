@@ -3,6 +3,7 @@ import { computed } from 'vue'
 
 import Icon from '../icons/Icon.vue'
 import type { IconName } from '../icons/generated/registry.generated'
+import VisLoading, { type VisLoadingColor } from '../loading'
 
 export type VisButtonSize = 'sm' | 'md' | 'lg'
 export type VisButtonVariant = 'primary' | 'secondary' | 'text' | 'link-grey' | 'link-color' | 'link_grey' | 'link_color'
@@ -52,6 +53,12 @@ const showPrefix = computed(() => !props.iconOnly && props.prefix && !isLoading.
 const showSuffix = computed(() => !props.iconOnly && props.suffix && !isLoading.value)
 const iconSize = computed(() => (props.size === 'lg' ? 20 : 16))
 const defaultLabel = computed(() => props.label ?? '按钮')
+const loadingColor = computed<VisLoadingColor>(() => {
+  if (normalizedVariant.value === 'primary') return 'white'
+  if (isDanger.value) return 'danger'
+  if (normalizedVariant.value === 'link-color') return 'brand'
+  return 'grey'
+})
 </script>
 
 <template>
@@ -75,7 +82,7 @@ const defaultLabel = computed(() => props.label ?? '按钮')
   >
     <span v-if="isLoading" class="vis-button__loading" aria-hidden="true">
       <slot name="loading">
-        <span class="vis-button__spinner" />
+        <VisLoading :color="loadingColor" size="xs" decorative />
       </slot>
     </span>
 
@@ -370,19 +377,4 @@ const defaultLabel = computed(() => props.label ?? '按钮')
   block-size: var(--vis-button-loading-size);
 }
 
-.vis-button__spinner {
-  box-sizing: border-box;
-  inline-size: var(--vis-button-loading-size);
-  block-size: var(--vis-button-loading-size);
-  border: 2px solid color-mix(in srgb, currentColor 30%, transparent);
-  border-block-start-color: currentColor;
-  border-radius: var(--radius-full);
-  animation: vis-button-spin 800ms linear infinite;
-}
-
-@keyframes vis-button-spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
 </style>

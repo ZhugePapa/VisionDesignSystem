@@ -5,7 +5,11 @@
 html {
   color: var(--color-text-primary);
   background: var(--color-bg-canvas);
-  font-family: var(--font-family-text);
+  font-family: var(--font-family-sans);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 body {
