@@ -106,6 +106,10 @@
   "files": [
     "dist"
   ],
+  "engines": {
+    "node": ">=26.0.0",
+    "npm": ">=11.0.0"
+  },
   "scripts": {
     "dev": "vite --host 127.0.0.1",
     "typecheck": "vue-tsc --noEmit -p tsconfig.app.json",
