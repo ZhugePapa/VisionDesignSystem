@@ -76,25 +76,105 @@
       "types": "./dist/types/components/input/index.d.ts",
       "import": "./dist/lib/components/input/index.js"
     },
+    "./components/input-number": {
+      "types": "./dist/types/components/input-number/index.d.ts",
+      "import": "./dist/lib/components/input-number/index.js"
+    },
+    "./components/input-search-box": {
+      "types": "./dist/types/components/input-search-box/index.d.ts",
+      "import": "./dist/lib/components/input-search-box/index.js"
+    },
+    "./components/input-textarea": {
+      "types": "./dist/types/components/input-textarea/index.d.ts",
+      "import": "./dist/lib/components/input-textarea/index.js"
+    },
     "./components/loading": {
       "types": "./dist/types/components/loading/index.d.ts",
       "import": "./dist/lib/components/loading/index.js"
+    },
+    "./components/markdown": {
+      "types": "./dist/types/components/markdown/index.d.ts",
+      "import": "./dist/lib/components/markdown/index.js"
+    },
+    "./components/message": {
+      "types": "./dist/types/components/message/index.d.ts",
+      "import": "./dist/lib/components/message/index.js"
     },
     "./components/modal": {
       "types": "./dist/types/components/modal/index.d.ts",
       "import": "./dist/lib/components/modal/index.js"
     },
+    "./components/notification": {
+      "types": "./dist/types/components/notification/index.d.ts",
+      "import": "./dist/lib/components/notification/index.js"
+    },
+    "./components/pagination": {
+      "types": "./dist/types/components/pagination/index.d.ts",
+      "import": "./dist/lib/components/pagination/index.js"
+    },
+    "./components/popover": {
+      "types": "./dist/types/components/popover/index.d.ts",
+      "import": "./dist/lib/components/popover/index.js"
+    },
+    "./components/progress-bar": {
+      "types": "./dist/types/components/progress-bar/index.d.ts",
+      "import": "./dist/lib/components/progress-bar/index.js"
+    },
+    "./components/progress-circle": {
+      "types": "./dist/types/components/progress-circle/index.d.ts",
+      "import": "./dist/lib/components/progress-circle/index.js"
+    },
     "./components/radio": {
       "types": "./dist/types/components/radio/index.d.ts",
       "import": "./dist/lib/components/radio/index.js"
+    },
+    "./components/rate": {
+      "types": "./dist/types/components/rate/index.d.ts",
+      "import": "./dist/lib/components/rate/index.js"
     },
     "./components/scroll-shadow": {
       "types": "./dist/types/components/scroll-shadow/index.d.ts",
       "import": "./dist/lib/components/scroll-shadow/index.js"
     },
+    "./components/segmented": {
+      "types": "./dist/types/components/segmented/index.d.ts",
+      "import": "./dist/lib/components/segmented/index.js"
+    },
+    "./components/select": {
+      "types": "./dist/types/components/select/index.d.ts",
+      "import": "./dist/lib/components/select/index.js"
+    },
+    "./components/slider": {
+      "types": "./dist/types/components/slider/index.d.ts",
+      "import": "./dist/lib/components/slider/index.js"
+    },
+    "./components/tabs": {
+      "types": "./dist/types/components/tabs/index.d.ts",
+      "import": "./dist/lib/components/tabs/index.js"
+    },
     "./components/tag": {
       "types": "./dist/types/components/tag/index.d.ts",
       "import": "./dist/lib/components/tag/index.js"
+    },
+    "./components/toggle": {
+      "types": "./dist/types/components/toggle/index.d.ts",
+      "import": "./dist/lib/components/toggle/index.js"
+    },
+    "./components/toggle-button": {
+      "types": "./dist/types/components/toggle-button/index.d.ts",
+      "import": "./dist/lib/components/toggle-button/index.js"
+    },
+    "./components/tooltip": {
+      "types": "./dist/types/components/tooltip/index.d.ts",
+      "import": "./dist/lib/components/tooltip/index.js"
+    },
+    "./components/tree-view": {
+      "types": "./dist/types/components/tree-view/index.d.ts",
+      "import": "./dist/lib/components/tree-view/index.js"
+    },
+    "./components/upload": {
+      "types": "./dist/types/components/upload/index.d.ts",
+      "import": "./dist/lib/components/upload/index.js"
     },
     "./style.css": "./dist/lib/style.css",
     "./tokens.css": "./dist/lib/tokens.css"
@@ -122,7 +202,10 @@
     "element-plus": "^2.14.0",
     "vue": "^3.5.0"
   },
-  "dependencies": {},
+  "dependencies": {
+    "dompurify": "^3.4.11",
+    "marked": "^18.0.5"
+  },
   "devDependencies": {
     "@vitejs/plugin-vue": "^6.0.5",
     "@vue/tsconfig": "^0.9.1",

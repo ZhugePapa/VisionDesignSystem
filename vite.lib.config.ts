@@ -40,13 +40,49 @@ export default defineConfig({
         ),
         'components/icons/index': fileURLToPath(new URL('./src/components/icons/index.ts', import.meta.url)),
         'components/input/index': fileURLToPath(new URL('./src/components/input/index.ts', import.meta.url)),
+        'components/input-number/index': fileURLToPath(
+          new URL('./src/components/input-number/index.ts', import.meta.url),
+        ),
+        'components/input-search-box/index': fileURLToPath(
+          new URL('./src/components/input-search-box/index.ts', import.meta.url),
+        ),
+        'components/input-textarea/index': fileURLToPath(
+          new URL('./src/components/input-textarea/index.ts', import.meta.url),
+        ),
         'components/loading/index': fileURLToPath(new URL('./src/components/loading/index.ts', import.meta.url)),
+        'components/markdown/index': fileURLToPath(new URL('./src/components/markdown/index.ts', import.meta.url)),
+        'components/message/index': fileURLToPath(new URL('./src/components/message/index.ts', import.meta.url)),
         'components/modal/index': fileURLToPath(new URL('./src/components/modal/index.ts', import.meta.url)),
+        'components/notification/index': fileURLToPath(
+          new URL('./src/components/notification/index.ts', import.meta.url),
+        ),
+        'components/pagination/index': fileURLToPath(new URL('./src/components/pagination/index.ts', import.meta.url)),
+        'components/popover/index': fileURLToPath(new URL('./src/components/popover/index.ts', import.meta.url)),
+        'components/progress-bar/index': fileURLToPath(
+          new URL('./src/components/progress-bar/index.ts', import.meta.url),
+        ),
+        'components/progress-circle/index': fileURLToPath(
+          new URL('./src/components/progress-circle/index.ts', import.meta.url),
+        ),
         'components/radio/index': fileURLToPath(new URL('./src/components/radio/index.ts', import.meta.url)),
+        'components/rate/index': fileURLToPath(new URL('./src/components/rate/index.ts', import.meta.url)),
         'components/scroll-shadow/index': fileURLToPath(
           new URL('./src/components/scroll-shadow/index.ts', import.meta.url),
         ),
+        'components/segmented/index': fileURLToPath(
+          new URL('./src/components/segmented/index.ts', import.meta.url),
+        ),
+        'components/select/index': fileURLToPath(new URL('./src/components/select/index.ts', import.meta.url)),
+        'components/slider/index': fileURLToPath(new URL('./src/components/slider/index.ts', import.meta.url)),
+        'components/tabs/index': fileURLToPath(new URL('./src/components/tabs/index.ts', import.meta.url)),
         'components/tag/index': fileURLToPath(new URL('./src/components/tag/index.ts', import.meta.url)),
+        'components/toggle/index': fileURLToPath(new URL('./src/components/toggle/index.ts', import.meta.url)),
+        'components/toggle-button/index': fileURLToPath(
+          new URL('./src/components/toggle-button/index.ts', import.meta.url),
+        ),
+        'components/tooltip/index': fileURLToPath(new URL('./src/components/tooltip/index.ts', import.meta.url)),
+        'components/tree-view/index': fileURLToPath(new URL('./src/components/tree-view/index.ts', import.meta.url)),
+        'components/upload/index': fileURLToPath(new URL('./src/components/upload/index.ts', import.meta.url)),
       },
       name: 'VisionDesignSystem',
       formats: ['es'],

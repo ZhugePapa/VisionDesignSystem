@@ -17,13 +17,33 @@ import VisDrawer from './components/drawer/VisDrawer.vue'
 import { VisDropdown, VisDropdownDivider, VisDropdownHeader, VisDropdownItem } from './components/dropdown'
 import { VisFeaturedIcon } from './components/featured-icon'
 import VisInput from './components/input/VisInput.vue'
+import VisInputNumber from './components/input-number/VisInputNumber.vue'
+import VisInputSearchBox from './components/input-search-box/VisInputSearchBox.vue'
+import VisInputTextarea from './components/input-textarea/VisInputTextarea.vue'
 import VisLoading from './components/loading/VisLoading.vue'
+import { VisMarkdown } from './components/markdown'
+import VisMessage from './components/message/VisMessage.vue'
 import VisModal from './components/modal/VisModal.vue'
 import VisModalConfirm from './components/modal/VisModalConfirm.vue'
+import VisNotification from './components/notification/VisNotification.vue'
+import VisPagination from './components/pagination/VisPagination.vue'
+import VisPopover from './components/popover/VisPopover.vue'
+import { VisProgressBar, VisProgressBarMultiple } from './components/progress-bar'
+import { VisProgressCircle } from './components/progress-circle'
 import VisRadio from './components/radio/VisRadio.vue'
 import VisRadioGroup from './components/radio/VisRadioGroup.vue'
+import VisRate from './components/rate/VisRate.vue'
 import VisScrollShadow from './components/scroll-shadow/VisScrollShadow.vue'
+import VisSegmented from './components/segmented/VisSegmented.vue'
+import VisSelect from './components/select/VisSelect.vue'
+import { VisSlider } from './components/slider'
+import VisTabs from './components/tabs/VisTabs.vue'
 import VisTag from './components/tag/VisTag.vue'
+import VisToggle from './components/toggle/VisToggle.vue'
+import VisToggleButton from './components/toggle-button/VisToggleButton.vue'
+import VisTooltip from './components/tooltip/VisTooltip.vue'
+import VisTreeView from './components/tree-view/VisTreeView.vue'
+import VisUpload from './components/upload/VisUpload.vue'
 import { Icon } from './components/icons'
 import './styles/style.css'
 
@@ -51,13 +71,34 @@ export {
   VisDropdownItem,
   VisFeaturedIcon,
   VisInput,
+  VisInputNumber,
+  VisInputSearchBox,
+  VisInputTextarea,
   VisLoading,
+  VisMarkdown,
+  VisMessage,
   VisModal,
   VisModalConfirm,
+  VisNotification,
+  VisPagination,
+  VisPopover,
+  VisProgressBar,
+  VisProgressBarMultiple,
+  VisProgressCircle,
   VisRadio,
   VisRadioGroup,
+  VisRate,
   VisScrollShadow,
+  VisSegmented,
+  VisSelect,
+  VisSlider,
+  VisTabs,
   VisTag,
+  VisToggle,
+  VisToggleButton,
+  VisTooltip,
+  VisTreeView,
+  VisUpload,
 }
 export type {
   VisAccordionItemData,
@@ -137,13 +178,45 @@ export type {
 } from './components/featured-icon/featured-icon.types'
 export type { IconComponentProps, IconName } from './components/icons'
 export type { VisInputProps, VisInputState } from './components/input/input.types'
+export type {
+  VisInputNumberPosition,
+  VisInputNumberProps,
+  VisInputNumberState,
+} from './components/input-number/input-number.types'
+export type { VisInputSearchBoxProps, VisInputSearchBoxState } from './components/input-search-box/input-search-box.types'
+export type { VisInputTextareaProps, VisInputTextareaState } from './components/input-textarea/input-textarea.types'
 export type { VisLoadingColor, VisLoadingProps, VisLoadingSize } from './components/loading/loading.types'
+export type {
+  VisMarkdownComponentMap,
+  VisMarkdownIncompleteType,
+  VisMarkdownStreamingOption,
+  VisMarkdownStreamStatus,
+  VisMarkdownTailConfig,
+  VisMarkdownTheme,
+} from './components/markdown'
+export type { VisMessageProps, VisMessageType } from './components/message/message.types'
 export type {
   VisModalConfirmProps,
   VisModalConfirmType,
   VisModalMenuItem,
   VisModalProps,
 } from './components/modal/modal.types'
+export type { VisNotificationProps, VisNotificationType } from './components/notification/notification.types'
+export type { VisPaginationProps, VisPaginationSize } from './components/pagination/pagination.types'
+export type { VisPopoverPosition, VisPopoverProps, VisPopoverTrigger } from './components/popover/popover.types'
+export type {
+  VisProgressBarColor,
+  VisProgressBarLabel,
+  VisProgressBarMultipleProps,
+  VisProgressBarProps,
+  VisProgressBarSegment,
+  VisProgressBarStatus,
+} from './components/progress-bar/progress-bar.types'
+export type {
+  VisProgressCircleProps,
+  VisProgressCircleSize,
+  VisProgressCircleStatus,
+} from './components/progress-circle/progress-circle.types'
 export type {
   VisRadioGroupAlign,
   VisRadioGroupProps,
@@ -152,12 +225,44 @@ export type {
   VisRadioState,
   VisRadioValue,
 } from './components/radio/radio.types'
+export type { VisRateProps } from './components/rate/rate.types'
 export type {
   VisScrollShadowOrientation,
   VisScrollShadowProps,
   VisScrollShadowVariant,
 } from './components/scroll-shadow/scroll-shadow.types'
+export type {
+  VisSegmentedOption,
+  VisSegmentedProps,
+  VisSegmentedSize,
+  VisSegmentedValue,
+} from './components/segmented/segmented.types'
+export type {
+  VisSelectModelValue,
+  VisSelectOption,
+  VisSelectProps,
+  VisSelectState,
+  VisSelectType,
+  VisSelectValue,
+} from './components/select/select.types'
+export type { VisSliderProps, VisSliderType, VisSliderValue } from './components/slider/slider.types'
+export type { VisTabsAlign, VisTabsItem, VisTabsProps, VisTabsValue } from './components/tabs/tabs.types'
 export type { VisTagAvatarVariant, VisTagCloseState, VisTagProps, VisTagType } from './components/tag/tag.types'
+export type { VisToggleChangePayload, VisToggleProps, VisToggleState } from './components/toggle/toggle.types'
+export type {
+  VisToggleButtonNativeType,
+  VisToggleButtonProps,
+  VisToggleButtonSize,
+  VisToggleButtonState,
+} from './components/toggle-button/toggle-button.types'
+export type { VisTooltipPosition, VisTooltipProps, VisTooltipTrigger } from './components/tooltip/tooltip.types'
+export type {
+  VisTreeViewFolderType,
+  VisTreeViewItem,
+  VisTreeViewKey,
+  VisTreeViewProps,
+} from './components/tree-view/tree-view.types'
+export type { VisUploadFileItem, VisUploadFileStatus, VisUploadProps, VisUploadType } from './components/upload/upload.types'
 
 const components = [
   VisConfigProvider,
@@ -180,15 +285,36 @@ const components = [
   VisDropdownHeader,
   VisDropdownItem,
   VisInput,
+  VisInputNumber,
+  VisInputSearchBox,
+  VisInputTextarea,
   VisLoading,
+  VisMarkdown,
+  VisMessage,
   VisModal,
   VisModalConfirm,
+  VisNotification,
+  VisPagination,
+  VisPopover,
+  VisProgressBar,
+  VisProgressBarMultiple,
+  VisProgressCircle,
   VisRadio,
   VisRadioGroup,
+  VisRate,
   Icon,
   VisFeaturedIcon,
   VisScrollShadow,
+  VisSegmented,
+  VisSelect,
+  VisSlider,
+  VisTabs,
   VisTag,
+  VisToggle,
+  VisToggleButton,
+  VisTooltip,
+  VisTreeView,
+  VisUpload,
   VisCodeBlock,
 ]
 
