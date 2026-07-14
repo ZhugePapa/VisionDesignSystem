@@ -12,10 +12,12 @@ import VisCheckboxGroup from './components/checkbox/VisCheckboxGroup.vue'
 import VisCodeBlock from './components/code-block/VisCodeBlock.vue'
 import VisConfigProvider from './components/config-provider/VisConfigProvider.vue'
 import VisDatePicker from './components/date-picker/VisDatePicker.vue'
+import { VisDescription, VisDescriptionItem } from './components/description'
 import VisDivider from './components/divider/VisDivider.vue'
 import VisDrawer from './components/drawer/VisDrawer.vue'
 import { VisDropdown, VisDropdownItem } from './components/dropdown'
 import { VisFeaturedIcon } from './components/featured-icon'
+import { VisForm, VisFormItem } from './components/form'
 import Icon from './components/icons/Icon.vue'
 import VisInput from './components/input/VisInput.vue'
 import VisInputNumber from './components/input-number/VisInputNumber.vue'
@@ -37,8 +39,10 @@ import VisScrollShadow from './components/scroll-shadow/VisScrollShadow.vue'
 import VisSegmented from './components/segmented/VisSegmented.vue'
 import VisSelect from './components/select/VisSelect.vue'
 import { VisSlider } from './components/slider'
+import { VisTable, VisTableHeader, VisTableItem } from './components/table'
 import VisTabs from './components/tabs/VisTabs.vue'
 import VisTag from './components/tag/VisTag.vue'
+import VisTimePicker from './components/time-picker/VisTimePicker.vue'
 import VisToggle from './components/toggle/VisToggle.vue'
 import VisToggleButton from './components/toggle-button/VisToggleButton.vue'
 import VisTooltip from './components/tooltip/VisTooltip.vue'
@@ -47,7 +51,10 @@ import VisUpload from './components/upload/VisUpload.vue'
 import type { VisAccordionItemData, VisAccordionItemKey } from './components/accordion/accordion.types'
 import type { VisAlertType } from './components/alert/alert.types'
 import type { VisTheme } from './components/config-provider/config-provider.types'
+import type { VisDescriptionDirection, VisDescriptionTag } from './components/description/description.types'
+import type { VisDividerType } from './components/divider/divider.types'
 import type { VisDropdownEntry } from './components/dropdown/dropdown.types'
+import type { VisFormRules } from './components/form/form.types'
 import type { VisInputNumberPosition, VisInputNumberState } from './components/input-number/input-number.types'
 import type { VisInputSearchBoxState } from './components/input-search-box/input-search-box.types'
 import type { VisInputTextareaState } from './components/input-textarea/input-textarea.types'
@@ -63,7 +70,17 @@ import type { VisProgressCircleSize } from './components/progress-circle/progres
 import type { VisSegmentedOption, VisSegmentedSize } from './components/segmented/segmented.types'
 import type { VisSelectOption, VisSelectValue } from './components/select/select.types'
 import type { VisSliderType, VisSliderValue } from './components/slider/slider.types'
+import type {
+  VisTableAppearance,
+  VisTableColumn,
+  VisTableHeaderType,
+  VisTableItemProps,
+  VisTableItemType,
+  VisTableRowData,
+  VisTableRowKey,
+} from './components/table/table.types'
 import type { VisTabsAlign, VisTabsItem } from './components/tabs/tabs.types'
+import type { VisTimePickerRangeValue } from './components/time-picker/time-picker.types'
 import type { VisToggleButtonSize, VisToggleButtonState } from './components/toggle-button/toggle-button.types'
 import type { VisToggleState } from './components/toggle/toggle.types'
 import type { VisTooltipPosition, VisTooltipTrigger } from './components/tooltip/tooltip.types'
@@ -95,16 +112,20 @@ type DemoPageId =
   | 'rate'
   | 'checkbox'
   | 'date-picker'
+  | 'description'
   | 'divider'
   | 'drawer'
   | 'dropdown'
   | 'featured-icon'
+  | 'form'
   | 'code-block'
   | 'scroll-shadow'
   | 'segmented'
   | 'select'
   | 'slider'
+  | 'table'
   | 'tabs'
+  | 'time-picker'
   | 'toggle'
   | 'toggle-button'
   | 'tooltip'
@@ -125,6 +146,7 @@ interface SidebarGroup {
 }
 
 interface ApiRow {
+  component?: string
   visionApi: string
   elementApi: string
   description: string
@@ -133,6 +155,7 @@ interface ApiRow {
 }
 
 interface ElementApiRow {
+  component?: string
   category: string
   api: string
   description: string
@@ -261,8 +284,56 @@ const rateEmptyValue = ref(0)
 const checkboxValue = ref<(string | number)[]>(['option-1', 'option-3'])
 const datePickerValue = ref<string | null>('2026/07/02')
 const datePickerRangeValue = ref<[string, string] | null>(['2026/07/01', '2026/07/07'])
-const dividerOrientation = ref<'horizontal' | 'vertical'>('horizontal')
+const timePickerValue = ref<string | null>('15:46:32')
+const timePickerMinuteValue = ref<string | null>('09:30')
+const timePickerRangeValue = ref<VisTimePickerRangeValue>(['08:30:00', '18:00:00'])
+const timePickerMinuteRangeValue = ref<VisTimePickerRangeValue>(['09:00', '17:30'])
+const formDemoRef = ref<InstanceType<typeof VisForm> | null>(null)
+const formDemoStatus = ref('')
+const formDemoModel = ref({
+  name: '',
+  password: '',
+  region: '',
+  categories: ['online'] as Array<string | number>,
+  channel: 'online' as string | number | boolean,
+  enabled: true,
+  quantity: 0,
+  date: null as string | null,
+  time: null as string | null,
+  description: '',
+  score: 0,
+  files: [] as VisUploadFileItem[],
+})
+const formDemoRules: VisFormRules = {
+  name: [
+    { required: true, message: '请输入项目名称', trigger: 'blur' },
+    { min: 2, max: 20, message: '长度应为 2 到 20 个字符', trigger: 'blur' },
+  ],
+  region: [{ required: true, message: '请选择所属区域', trigger: 'change' }],
+}
+const formRegionOptions: VisSelectOption[] = [
+  { label: '华东区域', value: 'east' },
+  { label: '华南区域', value: 'south' },
+  { label: '华北区域', value: 'north' },
+]
+const formCategoryOptions = [
+  { label: '线上', value: 'online' },
+  { label: '线下', value: 'offline' },
+  { label: '品牌', value: 'brand' },
+]
+const formChannelOptions = [
+  { label: '线上', value: 'online' },
+  { label: '线下', value: 'offline' },
+  { label: '混合', value: 'hybrid' },
+]
+const timePickerQuickValue = ref<string | null>('06:00:00')
+const dividerType = ref<VisDividerType>('horizontal')
 const dividerDashed = ref(false)
+const descriptionDirection = ref<VisDescriptionDirection>('horizontal')
+const descriptionBorder = ref(false)
+const descriptionAlert = ref(false)
+const descriptionFoldable = ref(false)
+const descriptionCollapsed = ref(false)
 const dropdownOpen = ref(true)
 const dropdownSearchValue = ref('')
 const selectValue = ref<VisSelectValue>('option-1')
@@ -274,6 +345,9 @@ const sliderValue = ref<VisSliderValue>(50)
 const sliderType = ref<VisSliderType>('single')
 const sliderDisabled = ref(false)
 const sliderLabel = ref(false)
+const tableAppearance = ref<VisTableAppearance>('horizontal')
+const tableActiveRowKey = ref<VisTableRowKey | null>(null)
+const tableHighlightActiveRow = ref(false)
 
 const accordionContent =
   '设计系统（Design System） 是一套用于指导产品设计和开发的标准化工具、规则和组件集合。它的核心目标是确保产品在视觉、交互和功能上保持一致性，同时提升团队协作效率。以下是设计系统的关键要素和意义。'
@@ -305,6 +379,32 @@ const progressCircleSizes: VisProgressCircleSize[] = ['xs', 'sm', 'md', 'lg']
 const progressValues = [25, 50, 75, 100]
 const segmentedSizes: VisSegmentedSize[] = ['md', 'lg']
 const sliderTypes: VisSliderType[] = ['single', 'range']
+const dividerTypes: VisDividerType[] = ['horizontal', 'vertical', 'content']
+const descriptionDirections: VisDescriptionDirection[] = ['horizontal', 'vertical']
+const descriptionTags: VisDescriptionTag[] = [
+  { label: '已启用', iconName: 'check-circle' },
+]
+const tableAppearances: VisTableAppearance[] = ['horizontal', 'grid']
+const tableHeaderPreviewTypes: VisTableHeaderType[] = ['default', 'checkbox', 'radio', 'shortcuts', 'empty']
+const tableItemPreviews: Array<{
+  type: VisTableItemType
+  value?: unknown
+  props?: Omit<VisTableItemProps, 'appearance' | 'type' | 'value'>
+}> = [
+  { type: 'tree', value: '树形标题', props: { treeLevel: 2, treeWithFolder: true, prefix: true } },
+  { type: 'heading', value: '标题文本', props: { prefix: true, suffix: true } },
+  { type: 'text', value: '正文文本' },
+  { type: 'checkbox', props: { checked: true } },
+  { type: 'radio', props: { radioChecked: true } },
+  { type: 'drag' },
+  { type: 'shortcuts' },
+  { type: 'rate', props: { rateValue: 3.5 } },
+  { type: 'actions' },
+  { type: 'number', props: { numberValue: 32, trend: 'up' } },
+  { type: 'badge', value: '进行中', props: { badgeType: 'status', badgeColorType: 'brand' } },
+  { type: 'tag', value: '标签' },
+  { type: 'avatar', props: { avatarTitle: '张大山', avatarAddition: false } },
+]
 const tabsAligns: VisTabsAlign[] = ['horizontal', 'right']
 const toggleStates: VisToggleState[] = ['default', 'hover', 'focus', 'loading']
 const toggleButtonSizes: VisToggleButtonSize[] = ['sm', 'md', 'lg']
@@ -344,6 +444,57 @@ function selectSliderType(type: VisSliderType): void {
   sliderType.value = type
   sliderValue.value = type === 'range' ? [25, 75] : 50
 }
+
+const tableColumns: VisTableColumn[] = [
+  {
+    key: 'title',
+    label: '标题',
+    minWidth: 272,
+    cellType: 'heading',
+    itemProps: { prefix: true, prefixIcon: 'zap' },
+  },
+  { key: 'code', label: '编号', width: 160, cellType: 'text' },
+  {
+    key: 'priority',
+    label: '优先级',
+    width: 160,
+    cellType: 'badge',
+    itemProps: { badgeType: 'text', badgeColorType: 'danger', badgeSolid: true },
+  },
+  {
+    key: 'status',
+    label: '状态',
+    width: 160,
+    cellType: 'badge',
+    itemProps: { badgeType: 'status', badgeColorType: 'brand' },
+  },
+  {
+    key: 'owner',
+    label: '负责人',
+    width: 160,
+    cellType: 'avatar',
+    itemProps: (row) => ({
+      avatarTitle: String(row.owner),
+      avatarAddition: false,
+      avatarImageVariant: row.avatar === '05' ? '05' : '09',
+    }),
+  },
+  { key: 'remaining', label: '剩余工时', width: 160, cellType: 'text' },
+  { key: 'createdAt', label: '创建时间', width: 160, cellType: 'text' },
+  { key: 'actions', label: '操作', width: 160, cellType: 'actions' },
+]
+
+const tableData: VisTableRowData[] = Array.from({ length: 10 }, (_, index) => ({
+  id: index + 1,
+  title: ['支持商家查看已发放优惠券', '优化退款审核工作流', '补充会员等级配置能力'][index % 3],
+  code: `FJXH-${18 + index}`,
+  priority: index % 3 === 0 ? '最高' : index % 3 === 1 ? '高' : '普通',
+  status: index % 2 === 0 ? '进行中' : '待处理',
+  owner: index % 2 === 0 ? '张大山' : '李小明',
+  avatar: index % 2 === 0 ? '09' : '05',
+  remaining: `${index * 2} 小时`,
+  createdAt: `2026/07/${String(index + 1).padStart(2, '0')}`,
+}))
 
 const breadcrumbItems = [
   { label: '菜单名称', iconName: 'file-06' as const },
@@ -519,10 +670,12 @@ const pages: Array<{ id: DemoPageId; title: string; subtitle: string }> = [
   { id: 'checkbox', title: 'Checkbox', subtitle: '复选框' },
   { id: 'code-block', title: 'Code Block', subtitle: '代码块' },
   { id: 'date-picker', title: 'Date Picker', subtitle: '日期选择器' },
+  { id: 'description', title: 'Description', subtitle: '描述列表' },
   { id: 'divider', title: 'Divider', subtitle: '分割线' },
   { id: 'drawer', title: 'Drawer', subtitle: '抽屉' },
   { id: 'dropdown', title: 'Dropdown', subtitle: '下拉菜单' },
   { id: 'featured-icon', title: 'Featured Icon', subtitle: '特征图标' },
+  { id: 'form', title: 'Form', subtitle: '表单' },
   { id: 'input', title: 'Input', subtitle: '输入框' },
   { id: 'input-number', title: 'InputNumber', subtitle: '数字输入框' },
   { id: 'input-search-box', title: 'InputSearchBox', subtitle: '搜索输入框' },
@@ -542,8 +695,10 @@ const pages: Array<{ id: DemoPageId; title: string; subtitle: string }> = [
   { id: 'segmented', title: 'Segmented', subtitle: '分段控制器' },
   { id: 'select', title: 'Select', subtitle: '选择器' },
   { id: 'slider', title: 'Slider', subtitle: '滑动输入' },
+  { id: 'table', title: 'Table', subtitle: '表格' },
   { id: 'tabs', title: 'Tabs', subtitle: '标签页' },
   { id: 'tag', title: 'Tag', subtitle: '标签' },
+  { id: 'time-picker', title: 'Time Picker', subtitle: '时间选择器' },
   { id: 'toggle', title: 'Toggle', subtitle: '开关' },
   { id: 'toggle-button', title: 'ToggleButton', subtitle: '切换按钮' },
   { id: 'tooltip', title: 'Tooltip', subtitle: '文字提示' },
@@ -585,10 +740,12 @@ const sidebarGroups: SidebarGroup[] = [
       { title: 'Checkbox', subtitle: '复选框', page: 'checkbox' },
       { title: 'CodeBlock', subtitle: '代码块', page: 'code-block' },
       { title: 'DatePicker', subtitle: '日期选择器', page: 'date-picker' },
+      { title: 'Description', subtitle: '描述列表', page: 'description' },
       { title: 'Divider', subtitle: '分割线', page: 'divider' },
       { title: 'Drawer', subtitle: '抽屉', page: 'drawer' },
       { title: 'Dropdown', subtitle: '下拉菜单', page: 'dropdown' },
       { title: 'FeaturedIcon', subtitle: '特征图标', page: 'featured-icon' },
+      { title: 'Form', subtitle: '表单', page: 'form' },
       { title: 'Input', subtitle: '输入框', page: 'input' },
       { title: 'InputNumber', subtitle: '数字输入框', page: 'input-number' },
       { title: 'InputSearchBox', subtitle: '搜索输入框', page: 'input-search-box' },
@@ -609,8 +766,10 @@ const sidebarGroups: SidebarGroup[] = [
       { title: 'Segmented', subtitle: '分段控制器', page: 'segmented' },
       { title: 'Select', subtitle: '选择器', page: 'select' },
       { title: 'Slider', subtitle: '滑动输入', page: 'slider' },
+      { title: 'Table', subtitle: '表格', page: 'table' },
       { title: 'Tabs', subtitle: '标签页', page: 'tabs' },
       { title: 'Tag', subtitle: '标签', page: 'tag' },
+      { title: 'TimePicker', subtitle: '时间选择器', page: 'time-picker' },
       { title: 'Toggle', subtitle: '开关', page: 'toggle' },
       { title: 'ToggleButton', subtitle: '切换按钮', page: 'toggle-button' },
       { title: 'Tooltip', subtitle: '文字提示', page: 'tooltip' },
@@ -960,13 +1119,6 @@ const apiTables: Record<DemoPageId, ApiRow[]> = {
       visionApi: 'disabled',
       elementApi: 'disabled',
       description: '禁用输入框和清除按钮。',
-      type: 'boolean',
-      defaultValue: 'false',
-    },
-    {
-      visionApi: 'readView',
-      elementApi: 'readonly',
-      description: '旧项目只读展示态，视觉上弱化边框和背景。',
       type: 'boolean',
       defaultValue: 'false',
     },
@@ -1759,6 +1911,248 @@ const apiTables: Record<DemoPageId, ApiRow[]> = {
       description: '默认按钮和返回入口文案。',
       type: 'string',
       defaultValue: "'按钮' / '按钮' / '返回'",
+    },
+  ],
+  form: [
+    {
+      component: 'VisForm',
+      visionApi: 'model',
+      elementApi: 'model',
+      description: '表单数据对象，作为字段校验、重置和取值的数据源。',
+      type: 'Record<string, any>',
+      defaultValue: '{}',
+    },
+    {
+      component: 'VisForm',
+      visionApi: 'rules',
+      elementApi: 'rules',
+      description: '基于 async-validator 的表单校验规则。',
+      type: 'VisFormRules',
+      defaultValue: 'undefined',
+    },
+    {
+      component: 'VisForm',
+      visionApi: 'alignLeft',
+      elementApi: 'label-position="left"',
+      description: '按 Figma API 控制标签左置；关闭时标签位于字段上方。',
+      type: 'boolean',
+      defaultValue: 'false',
+    },
+    {
+      component: 'VisForm',
+      visionApi: 'column',
+      elementApi: '无直接对应',
+      description: '控制表单为一列或二列布局，对应 Figma Column 变体。',
+      type: '1 | 2',
+      defaultValue: '1',
+    },
+    {
+      component: 'VisForm',
+      visionApi: 'button',
+      elementApi: 'default slot',
+      description: '展示由 VisButton 构成的默认确认和取消操作组。',
+      type: 'boolean',
+      defaultValue: 'false',
+    },
+    {
+      component: 'VisForm',
+      visionApi: 'width',
+      elementApi: 'style',
+      description: '覆盖表单宽度；默认一列 400px、二列 800px。',
+      type: 'number | string',
+      defaultValue: '按 column 推导',
+    },
+    {
+      component: 'VisForm',
+      visionApi: 'labelWidth',
+      elementApi: 'label-width',
+      description: '左侧标签布局的标签宽度，并向 VisFormItem 继承。',
+      type: 'number | string',
+      defaultValue: '84',
+    },
+    {
+      component: 'VisForm',
+      visionApi: 'submitText',
+      elementApi: '无直接对应',
+      description: '默认确认按钮文案。',
+      type: 'string',
+      defaultValue: "'确认'",
+    },
+    {
+      component: 'VisForm',
+      visionApi: 'cancelText',
+      elementApi: '无直接对应',
+      description: '默认取消按钮文案。',
+      type: 'string',
+      defaultValue: "'取消'",
+    },
+    {
+      component: 'VisForm',
+      visionApi: 'disabled',
+      elementApi: 'disabled',
+      description: '将禁用状态传递给 Element Plus 表单上下文。',
+      type: 'boolean',
+      defaultValue: 'false',
+    },
+    {
+      component: 'VisForm',
+      visionApi: 'showMessage',
+      elementApi: 'show-message',
+      description: '是否显示 Vision 样式的校验错误信息。',
+      type: 'boolean',
+      defaultValue: 'true',
+    },
+    {
+      component: 'VisForm',
+      visionApi: 'validateOnRuleChange',
+      elementApi: 'validate-on-rule-change',
+      description: '校验规则变化时是否立即触发验证。',
+      type: 'boolean',
+      defaultValue: 'true',
+    },
+    {
+      component: 'VisForm',
+      visionApi: 'scrollToError',
+      elementApi: 'scroll-to-error',
+      description: '校验失败时是否滚动到首个错误表单项。',
+      type: 'boolean',
+      defaultValue: 'false',
+    },
+    {
+      component: 'VisForm',
+      visionApi: 'scrollIntoViewOptions',
+      elementApi: 'scroll-into-view-options',
+      description: '滚动至错误字段时使用的 scrollIntoView 配置。',
+      type: 'boolean | ScrollIntoViewOptions',
+      defaultValue: 'true',
+    },
+    {
+      component: 'VisFormItem',
+      visionApi: 'prop',
+      elementApi: 'prop',
+      description: 'model 中对应字段的键名或路径。',
+      type: 'string | string[]',
+      defaultValue: 'undefined',
+    },
+    {
+      component: 'VisFormItem',
+      visionApi: 'label',
+      elementApi: 'label',
+      description: '表单项标签文本。',
+      type: 'string',
+      defaultValue: "'输入框'",
+    },
+    {
+      component: 'VisFormItem',
+      visionApi: 'type',
+      elementApi: '无直接对应',
+      description: '匹配 Figma FormItem 字段类型，并为引用的 Vision 组件应用准确尺寸。',
+      type: 'VisFormItemType',
+      defaultValue: "'input'",
+    },
+    {
+      component: 'VisFormItem',
+      visionApi: 'alignLeft',
+      elementApi: 'label-position',
+      description: '覆盖当前表单项的标签位置；未设置时继承 VisForm。',
+      type: 'boolean',
+      defaultValue: 'undefined',
+    },
+    {
+      component: 'VisFormItem',
+      visionApi: 'labelWidth',
+      elementApi: 'label-width',
+      description: '覆盖当前表单项的左侧标签宽度。',
+      type: 'number | string',
+      defaultValue: 'undefined',
+    },
+    {
+      component: 'VisFormItem',
+      visionApi: 'span',
+      elementApi: '无直接对应',
+      description: '在二列表单中占据一列或两列。',
+      type: '1 | 2',
+      defaultValue: '1',
+    },
+    {
+      component: 'VisFormItem',
+      visionApi: 'required',
+      elementApi: 'required',
+      description: '标记必填并显示危险色星号；未设置时可从规则推导。',
+      type: 'boolean',
+      defaultValue: 'undefined',
+    },
+    {
+      component: 'VisFormItem',
+      visionApi: 'optional',
+      elementApi: 'label slot',
+      description: '在标签后展示 Figma 定义的“(选填)”文本。',
+      type: 'boolean',
+      defaultValue: 'false',
+    },
+    {
+      component: 'VisFormItem',
+      visionApi: 'tooltip',
+      elementApi: 'label slot',
+      description: '使用 VisTooltip 和 Vision help-circle 图标展示标签提示。',
+      type: 'boolean',
+      defaultValue: 'false',
+    },
+    {
+      component: 'VisFormItem',
+      visionApi: 'tooltipText',
+      elementApi: 'label slot',
+      description: '标签提示浮层内容。',
+      type: 'string',
+      defaultValue: "'提示信息'",
+    },
+    {
+      component: 'VisFormItem',
+      visionApi: 'description',
+      elementApi: '无直接对应',
+      description: '字段下方的辅助说明；传 true 时使用 Figma 默认文案。',
+      type: 'boolean | string',
+      defaultValue: 'false',
+    },
+    {
+      component: 'VisFormItem',
+      visionApi: 'rules',
+      elementApi: 'rules',
+      description: '当前字段独立的校验规则。',
+      type: 'VisFormItemRule | VisFormItemRule[]',
+      defaultValue: 'undefined',
+    },
+    {
+      component: 'VisFormItem',
+      visionApi: 'error',
+      elementApi: 'error',
+      description: '直接设置错误信息并进入危险状态。',
+      type: 'string',
+      defaultValue: "''",
+    },
+    {
+      component: 'VisFormItem',
+      visionApi: 'showMessage',
+      elementApi: 'show-message',
+      description: '覆盖当前字段是否显示校验错误信息。',
+      type: 'boolean',
+      defaultValue: 'undefined',
+    },
+    {
+      component: 'VisFormItem',
+      visionApi: 'validateStatus',
+      elementApi: 'validate-status',
+      description: '直接设置字段校验状态。',
+      type: 'FormItemValidateState',
+      defaultValue: 'undefined',
+    },
+    {
+      component: 'VisFormItem',
+      visionApi: 'for',
+      elementApi: 'for',
+      description: '将标签与指定原生控件 id 关联。',
+      type: 'string',
+      defaultValue: 'undefined',
     },
   ],
   badge: [
@@ -2682,27 +3076,314 @@ const apiTables: Record<DemoPageId, ApiRow[]> = {
       defaultValue: 'undefined',
     },
   ],
-  divider: [
+  'time-picker': [
     {
-      visionApi: 'orientation',
+      visionApi: 'modelValue',
+      elementApi: 'model-value / v-model',
+      description: '时间选择器受控值；单值为时间字符串，范围模式为开始和结束时间元组。',
+      type: 'string | [string, string] | null',
+      defaultValue: 'null',
+    },
+    {
+      visionApi: 'range',
+      elementApi: 'is-range',
+      description: '切换单时间或时间范围选择。',
+      type: 'boolean',
+      defaultValue: 'false',
+    },
+    {
+      visionApi: 'type',
+      elementApi: 'format',
+      description: '保持旧项目与 Figma 的格式枚举，分别输出时分秒或时分。',
+      type: "'HH MM SS' | 'HH MM'",
+      defaultValue: "'HH MM SS'",
+    },
+    {
+      visionApi: 'timeSelect',
+      elementApi: 'ElTimeSelect',
+      description: '切换为整点快捷选择列表；关闭时显示独立的时、分、秒滚动列。',
+      type: 'boolean',
+      defaultValue: 'false',
+    },
+    {
+      visionApi: 'state',
+      elementApi: 'validate-event / class',
+      description: '按 Figma 变体呈现 default、hover、focus、danger 视觉状态。',
+      type: "'default' | 'hover' | 'focus' | 'danger'",
+      defaultValue: "'default'",
+    },
+    {
+      visionApi: 'disabled',
+      elementApi: 'disabled',
+      description: '禁用控制项并阻止面板展开。',
+      type: 'boolean',
+      defaultValue: 'false',
+    },
+    {
+      visionApi: 'readView',
+      elementApi: 'readonly',
+      description: '保留旧项目的只读展示样式；无值时显示短横线。',
+      type: 'boolean',
+      defaultValue: 'false',
+    },
+    {
+      visionApi: 'placeholder',
+      elementApi: 'placeholder',
+      description: '单时间模式的占位文本。',
+      type: 'string',
+      defaultValue: "'请选择时间'",
+    },
+    {
+      visionApi: 'startPlaceholder',
+      elementApi: 'start-placeholder',
+      description: '范围模式的开始时间占位文本。',
+      type: 'string',
+      defaultValue: "'选择开始时间'",
+    },
+    {
+      visionApi: 'endPlaceholder',
+      elementApi: 'end-placeholder',
+      description: '范围模式的结束时间占位文本。',
+      type: 'string',
+      defaultValue: "'选择结束时间'",
+    },
+    {
+      visionApi: 'open',
+      elementApi: 'visible-change',
+      description: '外部控制面板展开状态；配合 update:open 使用。',
+      type: 'boolean',
+      defaultValue: 'undefined',
+    },
+  ],
+  description: [
+    {
+      component: 'VisDescription',
+      visionApi: 'border',
+      elementApi: 'border',
+      description: '切换无边框列表与带网格边框的描述表格，对应 Figma Border 变体。',
+      type: 'boolean',
+      defaultValue: 'false',
+    },
+    {
+      component: 'VisDescription',
+      visionApi: 'direction',
       elementApi: 'direction',
-      description: '控制分割线方向，保持旧项目 horizontal/vertical 命名。',
+      description: '控制字段名和值横向排列或纵向堆叠。',
       type: "'horizontal' | 'vertical'",
       defaultValue: "'horizontal'",
     },
     {
+      component: 'VisDescription',
+      visionApi: 'columns',
+      elementApi: 'column',
+      description: '每行显示的描述项数量，窄屏下自动收敛为一列。',
+      type: 'number',
+      defaultValue: '3',
+    },
+    {
+      component: 'VisDescription',
+      visionApi: 'title',
+      elementApi: 'title slot',
+      description: '是否显示描述列表标题。',
+      type: 'boolean',
+      defaultValue: 'true',
+    },
+    {
+      component: 'VisDescription',
+      visionApi: 'titleText',
+      elementApi: 'title slot',
+      description: '标题默认文案，也可由 title 插槽覆盖。',
+      type: 'string',
+      defaultValue: "'基本信息'",
+    },
+    {
+      component: 'VisDescription',
+      visionApi: 'foldable',
+      elementApi: '无直接对应',
+      description: '显示设计稿中的标题折叠按钮。',
+      type: 'boolean',
+      defaultValue: 'false',
+    },
+    {
+      component: 'VisDescription',
+      visionApi: 'collapsed',
+      elementApi: '无直接对应',
+      description: '受控折叠状态，配合 update:collapsed 使用。',
+      type: 'boolean',
+      defaultValue: 'undefined',
+    },
+    {
+      component: 'VisDescription',
+      visionApi: 'alert',
+      elementApi: '无直接对应',
+      description: '在标题与描述项之间显示 Vision 品牌信息提示。',
+      type: 'boolean',
+      defaultValue: 'false',
+    },
+    {
+      component: 'VisDescription',
+      visionApi: 'alertText',
+      elementApi: '无直接对应',
+      description: '默认提示文案，也可由 alert 插槽覆盖。',
+      type: 'string',
+      defaultValue: "'信息提示'",
+    },
+    {
+      component: 'VisDescription',
+      visionApi: 'labelWidth',
+      elementApi: 'label-width',
+      description: '统一设置字段名区域宽度，数字按 px 处理。',
+      type: 'number | string',
+      defaultValue: '84 / 120',
+    },
+    {
+      component: 'VisDescription',
+      visionApi: 'ariaLabel',
+      elementApi: '无直接对应',
+      description: '描述列表区域的无障碍名称，默认使用 titleText。',
+      type: 'string',
+      defaultValue: 'undefined',
+    },
+    {
+      component: 'VisDescriptionItem',
+      visionApi: 'label',
+      elementApi: 'label',
+      description: '字段名，可由 label 插槽覆盖。',
+      type: 'string',
+      defaultValue: "'字段名'",
+    },
+    {
+      component: 'VisDescriptionItem',
+      visionApi: 'value',
+      elementApi: 'default slot',
+      description: '文本类型的字段值，可由默认插槽覆盖。',
+      type: 'string | number',
+      defaultValue: "'字段值'",
+    },
+    {
+      component: 'VisDescriptionItem',
+      visionApi: 'type',
+      elementApi: 'default slot',
+      description: '控制字段值为普通文本、标签组或自定义内容。',
+      type: "'text' | 'tag' | 'customize'",
+      defaultValue: "'text'",
+    },
+    {
+      component: 'VisDescriptionItem',
+      visionApi: 'tags',
+      elementApi: 'default slot',
+      description: 'tag 类型的数据源，内部复用 VisTag。',
+      type: 'VisDescriptionTag[]',
+      defaultValue: '内置 3 项示例',
+    },
+    {
+      component: 'VisDescriptionItem',
+      visionApi: 'icon',
+      elementApi: 'label slot',
+      description: '在字段名前显示图标。',
+      type: 'boolean',
+      defaultValue: 'false',
+    },
+    {
+      component: 'VisDescriptionItem',
+      visionApi: 'iconName',
+      elementApi: 'label slot',
+      description: '字段名前的 Vision 图标名称。',
+      type: 'IconName',
+      defaultValue: "'user-01'",
+    },
+    {
+      component: 'VisDescriptionItem',
+      visionApi: 'span',
+      elementApi: 'span',
+      description: '当前描述项占据的列数。',
+      type: 'number',
+      defaultValue: '1',
+    },
+    {
+      component: 'VisDescriptionItem',
+      visionApi: 'border',
+      elementApi: 'border',
+      description: '独立使用条目时覆盖边框模式；放在 VisDescription 中会继承容器样式。',
+      type: 'boolean',
+      defaultValue: 'undefined',
+    },
+    {
+      component: 'VisDescriptionItem',
+      visionApi: 'direction',
+      elementApi: 'direction',
+      description: '独立使用条目时覆盖排列方向；放在 VisDescription 中会继承容器样式。',
+      type: "'horizontal' | 'vertical'",
+      defaultValue: 'undefined',
+    },
+    {
+      component: 'VisDescriptionItem',
+      visionApi: 'labelWidth',
+      elementApi: 'label-width',
+      description: '覆盖当前描述项的字段名宽度。',
+      type: 'number | string',
+      defaultValue: 'undefined',
+    },
+    {
+      component: 'VisDescriptionTitle',
+      visionApi: 'title',
+      elementApi: 'title slot',
+      description: '独立标题组件的显示文案。',
+      type: 'string',
+      defaultValue: "'基本信息'",
+    },
+    {
+      component: 'VisDescriptionTitle',
+      visionApi: 'foldable',
+      elementApi: '无直接对应',
+      description: '是否显示 24px 折叠控制按钮。',
+      type: 'boolean',
+      defaultValue: 'false',
+    },
+    {
+      component: 'VisDescriptionTitle',
+      visionApi: 'collapsed',
+      elementApi: '无直接对应',
+      description: '为折叠按钮提供 aria-expanded 与无障碍文案。',
+      type: 'boolean',
+      defaultValue: 'false',
+    },
+  ],
+  divider: [
+    {
+      visionApi: 'type',
+      elementApi: 'direction',
+      description: '控制分割线变体；content 为设计稿新增的带内容水平分割线。',
+      type: "'horizontal' | 'vertical' | 'content'",
+      defaultValue: "'horizontal'",
+    },
+    {
+      visionApi: 'orientation',
+      elementApi: 'direction',
+      description: '旧项目兼容别名；新代码使用 type。type 与 orientation 同时传入时以 type 为准。',
+      type: "'horizontal' | 'vertical'",
+      defaultValue: 'undefined',
+    },
+    {
       visionApi: 'dashed',
       elementApi: 'border-style',
-      description: '切换旧项目虚线样式，水平虚线默认长度为 27px。',
+      description: '切换虚线样式；实线使用 border-default，虚线使用 border-strong。',
       type: 'boolean',
       defaultValue: 'false',
     },
     {
       visionApi: 'length',
       elementApi: '无直接对应',
-      description: '自定义分割线长度，number 会转换为 px。',
+      description: '自定义分割线长度，number 会转换为 px；水平/content 控制宽度，垂直控制高度。',
       type: 'number | string',
-      defaultValue: 'horizontal dashed 为 27，其余为 16',
+      defaultValue: "'100%'",
+    },
+    {
+      visionApi: 'content',
+      elementApi: 'default slot',
+      description: 'content 变体的默认文案，可由默认插槽覆盖。',
+      type: 'string',
+      defaultValue: "'内容分割'",
     },
     {
       visionApi: 'decorative',
@@ -3095,6 +3776,120 @@ const apiTables: Record<DemoPageId, ApiRow[]> = {
       description: '滑动输入条宽度，数字按 px 处理。',
       type: 'number | string',
       defaultValue: '240',
+    },
+  ],
+  table: [
+    {
+      visionApi: 'data',
+      elementApi: 'data',
+      description: '表格行数据源，每一项为一个对象。',
+      type: 'VisTableRowData[]',
+      defaultValue: '[]',
+    },
+    {
+      visionApi: 'columns',
+      elementApi: 'ElTableColumn props',
+      description: '声明式列配置，支持字段、宽度、对齐、固定列、排序、子组件类型和溢出提示。',
+      type: 'VisTableColumn[]',
+      defaultValue: '[]',
+    },
+    {
+      visionApi: 'columns[].headerType',
+      elementApi: 'header slot',
+      description: '指定表头子组件类型，对应设计稿中的 default、checkbox、radio、shortcuts 与 empty。',
+      type: 'VisTableHeaderType',
+      defaultValue: "'default'",
+    },
+    {
+      visionApi: 'columns[].cellType',
+      elementApi: 'default slot',
+      description: '指定单元格子组件类型，完整覆盖设计稿中的 13 种 Table Item。',
+      type: 'VisTableItemType',
+      defaultValue: "'text'",
+    },
+    {
+      visionApi: 'columns[].itemProps',
+      elementApi: 'default slot scope',
+      description: '配置单元格子组件，支持静态对象或基于当前行和行索引返回配置的函数。',
+      type: 'VisTableItemProps | ((row, rowIndex) => VisTableItemProps)',
+      defaultValue: 'undefined',
+    },
+    {
+      visionApi: 'appearance',
+      elementApi: 'border',
+      description: 'horizontal 仅显示行分割线；grid 同时显示列分割线。',
+      type: "'horizontal' | 'grid'",
+      defaultValue: "'horizontal'",
+    },
+    {
+      visionApi: 'rowKey',
+      elementApi: 'row-key',
+      description: '行数据的唯一标识字段或取值函数。',
+      type: 'string | ((row) => string)',
+      defaultValue: "'id'",
+    },
+    {
+      visionApi: 'selectable',
+      elementApi: 'ElTableColumn type="selection"',
+      description: '是否显示 48px 宽的多选列。',
+      type: 'boolean',
+      defaultValue: 'false',
+    },
+    {
+      visionApi: 'highlightActiveRow',
+      elementApi: 'highlight-current-row',
+      description: '是否展示当前激活行的品牌浅色背景；关闭时仍可通过 active-change 获取当前行。',
+      type: 'boolean',
+      defaultValue: 'false',
+    },
+    {
+      visionApi: 'activeRowKey',
+      elementApi: 'current-row-key',
+      description: '指定当前激活行的 key；仅在 highlightActiveRow 开启时展示品牌浅色背景。',
+      type: 'string | number | null',
+      defaultValue: 'null',
+    },
+    {
+      visionApi: 'defaultSort',
+      elementApi: 'default-sort',
+      description: '表格初始排序字段和顺序。',
+      type: 'VisTableSort',
+      defaultValue: 'undefined',
+    },
+    {
+      visionApi: 'emptyText',
+      elementApi: 'empty-text',
+      description: '空数据状态的提示文字。',
+      type: 'string',
+      defaultValue: "'暂无数据'",
+    },
+    {
+      visionApi: 'height',
+      elementApi: 'height',
+      description: '表格固定高度。',
+      type: 'string | number',
+      defaultValue: 'undefined',
+    },
+    {
+      visionApi: 'maxHeight',
+      elementApi: 'max-height',
+      description: '表格最大高度，超出后表体滚动。',
+      type: 'string | number',
+      defaultValue: 'undefined',
+    },
+    {
+      visionApi: 'showHeader',
+      elementApi: 'show-header',
+      description: '是否显示表头。',
+      type: 'boolean',
+      defaultValue: 'true',
+    },
+    {
+      visionApi: 'ariaLabel',
+      elementApi: 'aria-label',
+      description: '表格的无障碍名称。',
+      type: 'string',
+      defaultValue: "'表格'",
     },
   ],
 }
@@ -3877,6 +4672,65 @@ const elementApiTables: Record<DemoPageId, ElementApiRow[]> = {
     { category: 'Event', api: 'panel-change', description: '日期面板改变时触发', type: '(date, mode, view) => void', defaultValue: '-' },
     { category: 'Event', api: 'visible-change', description: '当 DatePicker 的下拉列表出现或消失时触发', type: '(visibility: boolean) => void', defaultValue: '-' },
   ],
+  'time-picker': [
+    { category: 'Attribute', api: 'model-value', description: '绑定值；范围模式下为包含两个时间值的数组。', type: 'string | number | Date | [Date, Date]', defaultValue: "''" },
+    { category: 'Attribute', api: 'readonly', description: '完全只读。', type: 'boolean', defaultValue: 'false' },
+    { category: 'Attribute', api: 'disabled', description: '是否禁用时间选择器。', type: 'boolean', defaultValue: 'false' },
+    { category: 'Attribute', api: 'editable', description: '文本框是否可输入。', type: 'boolean', defaultValue: 'true' },
+    { category: 'Attribute', api: 'clearable', description: '是否显示清除按钮。', type: 'boolean', defaultValue: 'true' },
+    { category: 'Attribute', api: 'size', description: '输入框尺寸。', type: "'large' | 'default' | 'small'", defaultValue: "'default'" },
+    { category: 'Attribute', api: 'placeholder', description: '非范围选择时的占位内容。', type: 'string', defaultValue: '-' },
+    { category: 'Attribute', api: 'start-placeholder', description: '范围选择时开始时间的占位内容。', type: 'string', defaultValue: '-' },
+    { category: 'Attribute', api: 'end-placeholder', description: '范围选择时结束时间的占位内容。', type: 'string', defaultValue: '-' },
+    { category: 'Attribute', api: 'is-range', description: '是否为时间范围选择。', type: 'boolean', defaultValue: 'false' },
+    { category: 'Attribute', api: 'arrow-control', description: '是否使用箭头进行时间选择。', type: 'boolean', defaultValue: 'false' },
+    { category: 'Attribute', api: 'popper-class', description: 'TimePicker 下拉框的自定义类名。', type: 'string', defaultValue: '-' },
+    { category: 'Attribute', api: 'range-separator', description: '选择范围时的分隔符。', type: 'string', defaultValue: "'-'" },
+    { category: 'Attribute', api: 'format', description: '显示在输入框中的时间格式。', type: 'string', defaultValue: "'HH:mm:ss'" },
+    { category: 'Attribute', api: 'value-format', description: '绑定值的格式；不指定时绑定值为 Date 对象。', type: 'string', defaultValue: '-' },
+    { category: 'Attribute', api: 'default-value', description: '选择器打开时默认显示的时间。', type: 'Date | [Date, Date]', defaultValue: '-' },
+    { category: 'Attribute', api: 'prefix-icon', description: '自定义前缀图标组件。', type: 'string | Component', defaultValue: "'Clock'" },
+    { category: 'Attribute', api: 'clear-icon', description: '自定义清除图标组件。', type: 'string | Component', defaultValue: "'CircleClose'" },
+    { category: 'Attribute', api: 'disabled-hours', description: '禁止选择部分小时的回调。', type: '(role: string, comparingDate?: Dayjs) => number[]', defaultValue: '-' },
+    { category: 'Attribute', api: 'disabled-minutes', description: '禁止选择部分分钟的回调。', type: '(hour: number, role: string, comparingDate?: Dayjs) => number[]', defaultValue: '-' },
+    { category: 'Attribute', api: 'disabled-seconds', description: '禁止选择部分秒的回调。', type: '(hour: number, minute: number, role: string, comparingDate?: Dayjs) => number[]', defaultValue: '-' },
+    { category: 'Attribute', api: 'teleported', description: '是否将下拉面板插入至 body。', type: 'boolean', defaultValue: 'true' },
+    { category: 'Event', api: 'change', description: '用户确认选定的值时触发。', type: '(value) => void', defaultValue: '-' },
+    { category: 'Event', api: 'blur', description: '输入框失去焦点时触发。', type: '(event: FocusEvent) => void', defaultValue: '-' },
+    { category: 'Event', api: 'focus', description: '输入框获得焦点时触发。', type: '(event: FocusEvent) => void', defaultValue: '-' },
+    { category: 'Event', api: 'clear', description: '点击清除按钮时触发。', type: '() => void', defaultValue: '-' },
+    { category: 'Event', api: 'visible-change', description: '下拉面板出现或隐藏时触发。', type: '(visibility: boolean) => void', defaultValue: '-' },
+  ],
+  form: [
+    { component: 'ElForm', category: 'Attribute', api: 'model', description: '表单数据对象。', type: 'object', defaultValue: '-' },
+    { component: 'ElForm', category: 'Attribute', api: 'rules', description: '表单验证规则。', type: 'object', defaultValue: '-' },
+    { component: 'ElForm', category: 'Attribute', api: 'inline', description: '是否启用行内表单模式。', type: 'boolean', defaultValue: 'false' },
+    { component: 'ElForm', category: 'Attribute', api: 'label-position', description: '表单域标签的位置；设为 left 或 right 时还需设置 label-width。', type: "'left' | 'right' | 'top'", defaultValue: "'right'" },
+    { component: 'ElForm', category: 'Attribute', api: 'label-width', description: '标签长度，例如 50px；直属 FormItem 会继承，也可以使用 auto。', type: 'string | number', defaultValue: "''" },
+    { component: 'ElForm', category: 'Attribute', api: 'label-suffix', description: '表单域标签的后缀。', type: 'string', defaultValue: "''" },
+    { component: 'ElForm', category: 'Attribute', api: 'hide-required-asterisk', description: '是否隐藏必填字段标签旁边的红色星号。', type: 'boolean', defaultValue: 'false' },
+    { component: 'ElForm', category: 'Attribute', api: 'require-asterisk-position', description: '必填星号的位置。', type: "'left' | 'right'", defaultValue: "'left'" },
+    { component: 'ElForm', category: 'Attribute', api: 'show-message', description: '是否显示校验错误信息。', type: 'boolean', defaultValue: 'true' },
+    { component: 'ElForm', category: 'Attribute', api: 'inline-message', description: '是否以行内形式展示校验信息。', type: 'boolean', defaultValue: 'false' },
+    { component: 'ElForm', category: 'Attribute', api: 'status-icon', description: '是否在输入框中显示校验结果反馈图标。', type: 'boolean', defaultValue: 'false' },
+    { component: 'ElForm', category: 'Attribute', api: 'validate-on-rule-change', description: 'rules 改变后是否立即触发验证。', type: 'boolean', defaultValue: 'true' },
+    { component: 'ElForm', category: 'Attribute', api: 'size', description: '控制该表单内组件的尺寸。', type: "'large' | 'default' | 'small'", defaultValue: '-' },
+    { component: 'ElForm', category: 'Attribute', api: 'disabled', description: '是否禁用该表单内的所有组件。', type: 'boolean', defaultValue: 'false' },
+    { component: 'ElForm', category: 'Attribute', api: 'scroll-to-error', description: '校验失败时是否滚动到第一个错误表单项。', type: 'boolean', defaultValue: 'false' },
+    { component: 'ElForm', category: 'Attribute', api: 'scroll-into-view-options', description: '滚动到第一个失败表单项时使用的 scrollIntoView 配置。', type: 'object | boolean', defaultValue: 'true' },
+    { component: 'ElFormItem', category: 'Attribute', api: 'prop', description: 'model 的键名或属性路径；使用 validate、resetFields 时必填。', type: 'string | string[]', defaultValue: '-' },
+    { component: 'ElFormItem', category: 'Attribute', api: 'label', description: '标签文本。', type: 'string', defaultValue: '-' },
+    { component: 'ElFormItem', category: 'Attribute', api: 'label-position', description: '当前表单域标签的位置，默认继承 Form。', type: "'' | 'left' | 'right' | 'top'", defaultValue: "''" },
+    { component: 'ElFormItem', category: 'Attribute', api: 'label-width', description: '标签宽度，例如 50px，也可以使用 auto。', type: 'string | number', defaultValue: '-' },
+    { component: 'ElFormItem', category: 'Attribute', api: 'required', description: '是否为必填项；未设置时根据校验规则确认。', type: 'boolean', defaultValue: '-' },
+    { component: 'ElFormItem', category: 'Attribute', api: 'rules', description: '当前表单项的校验规则。', type: 'object | object[]', defaultValue: '-' },
+    { component: 'ElFormItem', category: 'Attribute', api: 'error', description: '直接设置验证错误提示，并将状态设为 error。', type: 'string', defaultValue: '-' },
+    { component: 'ElFormItem', category: 'Attribute', api: 'show-message', description: '是否显示校验错误信息。', type: 'boolean', defaultValue: 'true' },
+    { component: 'ElFormItem', category: 'Attribute', api: 'inline-message', description: '是否在行内显示校验信息。', type: 'boolean', defaultValue: 'false' },
+    { component: 'ElFormItem', category: 'Attribute', api: 'size', description: '控制该表单域下组件的默认尺寸。', type: "'large' | 'default' | 'small'", defaultValue: '-' },
+    { component: 'ElFormItem', category: 'Attribute', api: 'for', description: '与原生 label 的 for 属性具有相同能力。', type: 'string', defaultValue: '-' },
+    { component: 'ElFormItem', category: 'Attribute', api: 'validate-status', description: '表单项的校验状态。', type: "'' | 'error' | 'validating' | 'success'", defaultValue: '-' },
+  ],
   'featured-icon': noElementApiRows(),
   'code-block': noElementApiRows(),
   'scroll-shadow': [
@@ -4004,6 +4858,79 @@ const elementApiTables: Record<DemoPageId, ElementApiRow[]> = {
     { category: 'Event', api: 'change', description: '值改变时触发，使用鼠标拖曳时在松开鼠标后触发。', type: '(value: number | number[]) => void', defaultValue: '-' },
     { category: 'Event', api: 'input', description: '数据改变时触发，使用鼠标拖曳时实时触发。', type: '(value: number | number[]) => void', defaultValue: '-' },
   ],
+  table: [
+    { category: 'Attribute', api: 'data', description: '显示的数据。', type: 'array', defaultValue: '[]' },
+    { category: 'Attribute', api: 'height', description: 'Table 的高度，默认为自动高度；设置为数字时单位为 px。', type: 'string | number', defaultValue: '-' },
+    { category: 'Attribute', api: 'max-height', description: 'Table 的最大高度，合法值为数字或单位为 px 的高度。', type: 'string | number', defaultValue: '-' },
+    { category: 'Attribute', api: 'stripe', description: '是否为斑马纹表格。', type: 'boolean', defaultValue: 'false' },
+    { category: 'Attribute', api: 'border', description: '是否带有纵向边框。', type: 'boolean', defaultValue: 'false' },
+    { category: 'Attribute', api: 'size', description: 'Table 的尺寸。', type: "'large' | 'default' | 'small'", defaultValue: "''" },
+    { category: 'Attribute', api: 'fit', description: '列的宽度是否自撑开。', type: 'boolean', defaultValue: 'true' },
+    { category: 'Attribute', api: 'show-header', description: '是否显示表头。', type: 'boolean', defaultValue: 'true' },
+    { category: 'Attribute', api: 'highlight-current-row', description: '是否高亮当前行。', type: 'boolean', defaultValue: 'false' },
+    { category: 'Attribute', api: 'current-row-key', description: '当前行的 key，只写属性。', type: 'string | number', defaultValue: '-' },
+    { category: 'Attribute', api: 'row-class-name', description: '行的 className 回调或固定类名。', type: 'string | Function', defaultValue: '-' },
+    { category: 'Attribute', api: 'row-style', description: '行的 style 回调或固定样式。', type: 'object | Function', defaultValue: '-' },
+    { category: 'Attribute', api: 'cell-class-name', description: '单元格的 className 回调或固定类名。', type: 'string | Function', defaultValue: '-' },
+    { category: 'Attribute', api: 'cell-style', description: '单元格的 style 回调或固定样式。', type: 'object | Function', defaultValue: '-' },
+    { category: 'Attribute', api: 'header-row-class-name', description: '表头行的 className 回调或固定类名。', type: 'string | Function', defaultValue: '-' },
+    { category: 'Attribute', api: 'header-row-style', description: '表头行的 style 回调或固定样式。', type: 'object | Function', defaultValue: '-' },
+    { category: 'Attribute', api: 'header-cell-class-name', description: '表头单元格的 className 回调或固定类名。', type: 'string | Function', defaultValue: '-' },
+    { category: 'Attribute', api: 'header-cell-style', description: '表头单元格的 style 回调或固定样式。', type: 'object | Function', defaultValue: '-' },
+    { category: 'Attribute', api: 'row-key', description: '行数据的 Key，用于优化渲染及树形数据。', type: 'string | Function', defaultValue: '-' },
+    { category: 'Attribute', api: 'empty-text', description: '空数据时显示的文本内容，也可以通过 empty 插槽自定义。', type: 'string', defaultValue: "'暂无数据'" },
+    { category: 'Attribute', api: 'default-expand-all', description: '是否默认展开所有行。', type: 'boolean', defaultValue: 'false' },
+    { category: 'Attribute', api: 'expand-row-keys', description: '通过 row-key 控制展开行的 key 数组。', type: 'array', defaultValue: '-' },
+    { category: 'Attribute', api: 'default-sort', description: '默认排序列的 prop 和顺序。', type: 'object', defaultValue: '-' },
+    { category: 'Attribute', api: 'tooltip-effect', description: '溢出 Tooltip 的主题。', type: "'dark' | 'light'", defaultValue: "'dark'" },
+    { category: 'Attribute', api: 'show-summary', description: '是否在表尾显示合计行。', type: 'boolean', defaultValue: 'false' },
+    { category: 'Attribute', api: 'sum-text', description: '合计行第一列的文本。', type: 'string', defaultValue: "'合计'" },
+    { category: 'Attribute', api: 'summary-method', description: '自定义合计计算方法。', type: 'Function', defaultValue: '-' },
+    { category: 'Attribute', api: 'span-method', description: '合并行或列的计算方法。', type: 'Function', defaultValue: '-' },
+    { category: 'Attribute', api: 'lazy', description: '是否懒加载子节点数据。', type: 'boolean', defaultValue: 'false' },
+    { category: 'Attribute', api: 'load', description: '加载子节点数据的方法，lazy 为 true 时生效。', type: 'Function', defaultValue: '-' },
+    { category: 'Attribute', api: 'tree-props', description: '渲染嵌套数据的配置项。', type: 'object', defaultValue: "{ hasChildren: 'hasChildren', children: 'children' }" },
+    { category: 'Attribute', api: 'show-overflow-tooltip', description: '是否隐藏过长内容，并在悬停时以 Tooltip 显示。', type: 'boolean | object', defaultValue: 'false' },
+    { category: 'Event', api: 'select', description: '手动勾选某一行 Checkbox 时触发。', type: '(selection, row) => void', defaultValue: '-' },
+    { category: 'Event', api: 'select-all', description: '手动勾选全选 Checkbox 时触发。', type: '(selection) => void', defaultValue: '-' },
+    { category: 'Event', api: 'selection-change', description: '表格选择项发生变化时触发。', type: '(selection) => void', defaultValue: '-' },
+    { category: 'Event', api: 'cell-click', description: '单元格被点击时触发。', type: '(row, column, cell, event) => void', defaultValue: '-' },
+    { category: 'Event', api: 'row-click', description: '某一行被点击时触发。', type: '(row, column, event) => void', defaultValue: '-' },
+    { category: 'Event', api: 'sort-change', description: '排序条件发生变化时触发。', type: '({ column, prop, order }) => void', defaultValue: '-' },
+    { category: 'Event', api: 'filter-change', description: '筛选条件发生变化时触发。', type: '(filters) => void', defaultValue: '-' },
+    { category: 'Event', api: 'current-change', description: '当前行发生变化时触发。', type: '(currentRow, oldCurrentRow) => void', defaultValue: '-' },
+    { category: 'Event', api: 'expand-change', description: '展开行状态变化时触发。', type: '(row, expanded) => void', defaultValue: '-' },
+    { category: 'Slot', api: 'append', description: '插入至表格最后一行之后的内容。', type: 'slot', defaultValue: '-' },
+    { category: 'Slot', api: 'empty', description: '数据为空时显示的内容。', type: 'slot', defaultValue: '-' },
+    { category: 'Expose', api: 'clearSelection', description: '清空用户选择。', type: 'Function', defaultValue: '-' },
+    { category: 'Expose', api: 'getSelectionRows', description: '返回当前选中的行。', type: 'Function', defaultValue: '-' },
+    { category: 'Expose', api: 'toggleRowSelection', description: '切换某一行的选中状态。', type: 'Function', defaultValue: '-' },
+    { category: 'Expose', api: 'toggleAllSelection', description: '切换全选状态。', type: 'Function', defaultValue: '-' },
+    { category: 'Expose', api: 'toggleRowExpansion', description: '切换某一行的展开状态。', type: 'Function', defaultValue: '-' },
+    { category: 'Expose', api: 'setCurrentRow', description: '设置当前高亮行。', type: 'Function', defaultValue: '-' },
+    { category: 'Expose', api: 'clearSort', description: '清除排序条件。', type: 'Function', defaultValue: '-' },
+    { category: 'Expose', api: 'clearFilter', description: '清除筛选条件。', type: 'Function', defaultValue: '-' },
+    { category: 'Expose', api: 'doLayout', description: '重新计算表格布局。', type: 'Function', defaultValue: '-' },
+    { category: 'Expose', api: 'sort', description: '手动排序表格。', type: 'Function', defaultValue: '-' },
+  ],
+  description: [
+    { component: 'ElDescriptions', category: 'Attribute', api: 'border', description: '是否带有边框。', type: 'boolean', defaultValue: 'false' },
+    { component: 'ElDescriptions', category: 'Attribute', api: 'column', description: '一行 Descriptions Item 的数量。', type: 'number', defaultValue: '3' },
+    { component: 'ElDescriptions', category: 'Attribute', api: 'direction', description: '排列方向。', type: "'vertical' | 'horizontal'", defaultValue: "'horizontal'" },
+    { component: 'ElDescriptions', category: 'Attribute', api: 'size', description: '列表的尺寸。', type: "'large' | 'default' | 'small'", defaultValue: "''" },
+    { component: 'ElDescriptions', category: 'Attribute', api: 'title', description: '标题文本，显示在左上方。', type: 'string', defaultValue: "''" },
+    { component: 'ElDescriptions', category: 'Attribute', api: 'extra', description: '操作区文本，显示在右上方。', type: 'string', defaultValue: "''" },
+    { component: 'ElDescriptions', category: 'Attribute', api: 'label-width', description: '标签宽度，不同列中的同名标签会采用最大值。', type: 'string | number', defaultValue: "''" },
+    { component: 'ElDescriptionsItem', category: 'Attribute', api: 'label', description: '标签文本。', type: 'string', defaultValue: "''" },
+    { component: 'ElDescriptionsItem', category: 'Attribute', api: 'width', description: '列的宽度。', type: 'string | number', defaultValue: "''" },
+    { component: 'ElDescriptionsItem', category: 'Attribute', api: 'min-width', description: '列的最小宽度。', type: 'string | number', defaultValue: "''" },
+    { component: 'ElDescriptionsItem', category: 'Attribute', api: 'span', description: '列占据的单元格数量。', type: 'number', defaultValue: '1' },
+    { component: 'ElDescriptionsItem', category: 'Attribute', api: 'rowspan', description: '列占据的行数。', type: 'number', defaultValue: '1' },
+    { component: 'ElDescriptionsItem', category: 'Attribute', api: 'align', description: '列内容的对齐方式。', type: "'left' | 'center' | 'right'", defaultValue: "'left'" },
+    { component: 'ElDescriptionsItem', category: 'Attribute', api: 'label-align', description: '列标签的对齐方式。', type: "'left' | 'center' | 'right'", defaultValue: "''" },
+    { component: 'ElDescriptionsItem', category: 'Attribute', api: 'class-name', description: '列内容的自定义类名。', type: 'string', defaultValue: "''" },
+    { component: 'ElDescriptionsItem', category: 'Attribute', api: 'label-class-name', description: '列标签的自定义类名。', type: 'string', defaultValue: "''" },
+  ],
   divider: [
     { category: 'Attribute', api: 'direction', description: '设置分割线方向', type: "'horizontal' | 'vertical'", defaultValue: "'horizontal'" },
     { category: 'Attribute', api: 'content-position', description: '自定义内容的位置', type: "'left' | 'right' | 'center'", defaultValue: "'center'" },
@@ -4059,16 +4986,20 @@ const visionComponentNames: Record<DemoPageId, string> = {
   rate: 'VisRate',
   checkbox: 'VisCheckbox',
   'date-picker': 'VisDatePicker',
+  description: 'VisDescription / VisDescriptionItem / VisDescriptionTitle',
   divider: 'VisDivider',
   drawer: 'VisDrawer',
   dropdown: 'VisDropdown',
   'featured-icon': 'VisFeaturedIcon',
+  form: 'VisForm / VisFormItem',
   'code-block': 'VisCodeBlock',
   'scroll-shadow': 'VisScrollShadow',
   segmented: 'VisSegmented',
   select: 'VisSelect',
   slider: 'VisSlider',
+  table: 'VisTable',
   tabs: 'VisTabs',
+  'time-picker': 'VisTimePicker',
   toggle: 'VisToggle',
   'toggle-button': 'VisToggleButton',
   tooltip: 'VisTooltip',
@@ -4098,14 +5029,18 @@ const elementComponentNames: Partial<Record<DemoPageId, string>> = {
   rate: 'ElRate',
   checkbox: 'ElCheckbox',
   'date-picker': 'ElDatePicker',
+  description: 'ElDescriptions / ElDescriptionsItem',
   divider: 'ElDivider',
   drawer: 'ElDrawer',
   dropdown: 'ElDropdown',
+  form: 'ElForm / ElFormItem',
   'scroll-shadow': 'ElScrollbar',
   segmented: 'ElSegmented',
   select: 'ElSelect',
   slider: 'ElSlider',
+  table: 'ElTable',
   tabs: 'ElTabs',
+  'time-picker': 'ElTimePicker / ElTimeSelect',
   toggle: 'ElSwitch',
   'toggle-button': 'ElButton',
   tooltip: 'ElTooltip',
@@ -4501,8 +5436,61 @@ const visionEventTables: Record<DemoPageId, ApiDisplayRow[]> = {
       type: '(value: boolean) => void',
     },
   ],
+  'time-picker': [
+    {
+      api: 'update:modelValue',
+      description: '时间值变化时触发，用于 v-model 双向绑定。',
+      type: '(value: VisTimePickerValue) => void',
+    },
+    {
+      api: 'change',
+      description: '确认时间、选择快捷时间或清空后触发。',
+      type: '(value: VisTimePickerValue) => void',
+    },
+    {
+      api: 'update:open',
+      description: '面板展开状态变化时触发，可用于受控 open。',
+      type: '(value: boolean) => void',
+    },
+    {
+      api: 'clear',
+      description: '用户点击清除按钮时触发。',
+      type: '() => void',
+    },
+  ],
+  description: [
+    {
+      api: 'update:collapsed',
+      description: '折叠状态变化时触发，用于 v-model:collapsed。',
+      type: '(value: boolean) => void',
+    },
+    {
+      api: 'toggle',
+      description: '点击标题折叠按钮后触发，返回最新折叠状态。',
+      type: '(value: boolean) => void',
+    },
+  ],
   divider: [],
   'featured-icon': [],
+  form: [
+    {
+      api: 'submit',
+      elementApi: 'native submit',
+      description: '默认确认按钮或原生提交行为触发。',
+      type: '(event: Event) => void',
+    },
+    {
+      api: 'cancel',
+      description: '点击默认取消按钮时触发。',
+      type: '() => void',
+    },
+    {
+      api: 'validate',
+      elementApi: 'validate',
+      description: '任一表单项完成校验后触发。',
+      type: '(prop, isValid, message) => void',
+    },
+  ],
   dropdown: [
     {
       api: 'update:open',
@@ -4576,6 +5564,28 @@ const visionEventTables: Record<DemoPageId, ApiDisplayRow[]> = {
       api: 'change',
       description: '点击轨道或拖动滑块改变数值时触发。',
       type: '(value: VisSliderValue) => void',
+    },
+  ],
+  table: [
+    {
+      api: 'selection-change',
+      description: '选择项变化时触发，返回当前选中的行数据。',
+      type: '(selection: VisTableRowData[]) => void',
+    },
+    {
+      api: 'sort-change',
+      description: '排序条件变化时触发，返回列、字段和排序方向。',
+      type: '(sort: VisTableSortChange) => void',
+    },
+    {
+      api: 'row-click',
+      description: '点击数据行时触发。',
+      type: '(row, column, event) => void',
+    },
+    {
+      api: 'active-change',
+      description: '点击有效数据行后触发，返回行 key 和行数据，可用于控制 activeRowKey。',
+      type: '(key: VisTableRowKey, row: VisTableRowData) => void',
     },
   ],
   tabs: [
@@ -4823,6 +5833,19 @@ const elementExtraApiRows: Record<DemoPageId, ElementApiRow[]> = {
     { category: 'Expose', api: 'handleOpen', description: '打开日期选择面板', type: 'Function', defaultValue: '-' },
     { category: 'Expose', api: 'handleClose', description: '关闭日期选择面板', type: 'Function', defaultValue: '-' },
   ],
+  'time-picker': [
+    { category: 'Expose', api: 'focus', description: '使输入框获取焦点。', type: 'Function', defaultValue: '-' },
+    { category: 'Expose', api: 'blur', description: '使输入框失去焦点。', type: 'Function', defaultValue: '-' },
+    { category: 'Expose', api: 'handleOpen', description: '打开时间选择面板。', type: 'Function', defaultValue: '-' },
+    { category: 'Expose', api: 'handleClose', description: '关闭时间选择面板。', type: 'Function', defaultValue: '-' },
+  ],
+  description: [
+    { component: 'ElDescriptions', category: 'Slot', api: 'default', description: '自定义描述列表内容，通常放置 Descriptions Item。', type: 'slot', defaultValue: '-' },
+    { component: 'ElDescriptions', category: 'Slot', api: 'title', description: '自定义标题内容。', type: 'slot', defaultValue: '-' },
+    { component: 'ElDescriptions', category: 'Slot', api: 'extra', description: '自定义操作区内容。', type: 'slot', defaultValue: '-' },
+    { component: 'ElDescriptionsItem', category: 'Slot', api: 'default', description: '自定义当前描述项的值。', type: 'slot', defaultValue: '-' },
+    { component: 'ElDescriptionsItem', category: 'Slot', api: 'label', description: '自定义当前描述项的标签。', type: 'slot', defaultValue: '-' },
+  ],
   divider: [
     { category: 'Slot', api: 'default', description: 'Element Divider 中间内容', type: 'slot', defaultValue: '-' },
   ],
@@ -4831,6 +5854,28 @@ const elementExtraApiRows: Record<DemoPageId, ElementApiRow[]> = {
     { category: 'Slot', api: 'dropdown', description: 'Dropdown 下拉菜单内容，通常放置 Dropdown Menu', type: 'slot', defaultValue: '-' },
     { category: 'Expose', api: 'handleOpen', description: '打开下拉菜单', type: 'Function', defaultValue: '-' },
     { category: 'Expose', api: 'handleClose', description: '关闭下拉菜单', type: 'Function', defaultValue: '-' },
+  ],
+  form: [
+    { component: 'ElForm', category: 'Event', api: 'validate', description: '任一表单项被校验后触发。', type: 'Function', defaultValue: '-' },
+    { component: 'ElForm', category: 'Slot', api: 'default', description: '自定义表单内容，通常放置 FormItem。', type: 'slot', defaultValue: '-' },
+    { component: 'ElForm', category: 'Expose', api: 'validate', description: '验证整个表单；接收回调或返回 Promise。', type: 'Function', defaultValue: '-' },
+    { component: 'ElForm', category: 'Expose', api: 'validateField', description: '验证指定字段。', type: 'Function', defaultValue: '-' },
+    { component: 'ElForm', category: 'Expose', api: 'resetFields', description: '重置指定字段并移除校验结果。', type: 'Function', defaultValue: '-' },
+    { component: 'ElForm', category: 'Expose', api: 'scrollToField', description: '滚动到指定字段。', type: 'Function', defaultValue: '-' },
+    { component: 'ElForm', category: 'Expose', api: 'clearValidate', description: '清理指定字段的验证信息。', type: 'Function', defaultValue: '-' },
+    { component: 'ElForm', category: 'Expose', api: 'fields', description: '获取所有字段的 context。', type: 'array', defaultValue: '-' },
+    { component: 'ElForm', category: 'Expose', api: 'getField', description: '获取指定字段的 context。', type: 'Function', defaultValue: '-' },
+    { component: 'ElForm', category: 'Expose', api: 'setInitialValues', description: '设置 resetFields 使用的表单初始值。', type: 'Function', defaultValue: '-' },
+    { component: 'ElFormItem', category: 'Slot', api: 'default', description: '表单项的字段内容。', type: 'slot', defaultValue: '-' },
+    { component: 'ElFormItem', category: 'Slot', api: 'label', description: '自定义标签内容。', type: 'slot', defaultValue: '-' },
+    { component: 'ElFormItem', category: 'Slot', api: 'error', description: '自定义验证错误信息内容。', type: 'slot', defaultValue: '-' },
+    { component: 'ElFormItem', category: 'Expose', api: 'size', description: '表单项大小。', type: 'object', defaultValue: '-' },
+    { component: 'ElFormItem', category: 'Expose', api: 'validateMessage', description: '当前校验消息。', type: 'object', defaultValue: '-' },
+    { component: 'ElFormItem', category: 'Expose', api: 'validateState', description: '当前校验状态。', type: 'object', defaultValue: '-' },
+    { component: 'ElFormItem', category: 'Expose', api: 'validate', description: '验证当前表单项。', type: 'Function', defaultValue: '-' },
+    { component: 'ElFormItem', category: 'Expose', api: 'resetField', description: '重置当前字段并移除校验结果。', type: 'Function', defaultValue: '-' },
+    { component: 'ElFormItem', category: 'Expose', api: 'clearValidate', description: '移除当前字段的校验结果。', type: 'Function', defaultValue: '-' },
+    { component: 'ElFormItem', category: 'Expose', api: 'setInitialValue', description: '设置当前字段重置时使用的初始值。', type: 'Function', defaultValue: '-' },
   ],
   'featured-icon': [],
   'code-block': [],
@@ -4861,6 +5906,7 @@ const elementExtraApiRows: Record<DemoPageId, ElementApiRow[]> = {
     { category: 'Expose', api: 'selectedLabel', description: '当前选中项的文本。', type: 'object', defaultValue: '-' },
   ],
   slider: [],
+  table: [],
   tabs: [
     { category: 'Slot', api: 'default', description: 'Tabs 默认内容，通常放置 Tab Pane。', type: 'slot', defaultValue: '-' },
     { category: 'Slot', api: 'label', description: 'Tab Pane 自定义标题内容。', type: 'slot', defaultValue: '-' },
@@ -5089,6 +6135,25 @@ function createSection(title: string, columns: ApiColumn[], rows: ApiDisplayRow[
 }
 
 const currentVisionApiSections = computed(() => {
+  if (activePage.value === 'description') {
+    const rows = apiTables.description
+    return [
+      createSection('VisDescription Attributes', visionAttributeColumns, toVisionAttributeRows(rows.filter((row) => row.component === 'VisDescription'))),
+      createSection('VisDescriptionItem Attributes', visionAttributeColumns, toVisionAttributeRows(rows.filter((row) => row.component === 'VisDescriptionItem'))),
+      createSection('VisDescriptionTitle Attributes', visionAttributeColumns, toVisionAttributeRows(rows.filter((row) => row.component === 'VisDescriptionTitle'))),
+      createSection('VisDescription Events', eventColumns, visionEventTables.description),
+    ].filter((section): section is ApiTableSection => Boolean(section))
+  }
+
+  if (activePage.value === 'form') {
+    const rows = apiTables.form
+    return [
+      createSection('VisForm Attributes', visionAttributeColumns, toVisionAttributeRows(rows.filter((row) => row.component === 'VisForm'))),
+      createSection('VisFormItem Attributes', visionAttributeColumns, toVisionAttributeRows(rows.filter((row) => row.component === 'VisFormItem'))),
+      createSection('VisForm Events', eventColumns, visionEventTables.form),
+    ].filter((section): section is ApiTableSection => Boolean(section))
+  }
+
   const componentName = visionComponentNames[activePage.value]
   return [
     createSection(`${componentName} Attributes`, visionAttributeColumns, toVisionAttributeRows(apiTables[activePage.value])),
@@ -5101,6 +6166,33 @@ const currentElementApiSections = computed(() => {
   if (!componentName) return []
 
   const rows = getElementRows(activePage.value)
+  if (activePage.value === 'description') {
+    const descriptionRows = rows.filter((row) => row.component === 'ElDescriptions')
+    const itemRows = rows.filter((row) => row.component === 'ElDescriptionsItem')
+
+    return [
+      createSection('ElDescriptions Attributes', apiColumns, toElementRows(descriptionRows.filter((row) => row.category === 'Attribute'))),
+      createSection('ElDescriptions Slots', slotColumns, toElementRows(descriptionRows.filter((row) => row.category === 'Slot'))),
+      createSection('ElDescriptionsItem Attributes', apiColumns, toElementRows(itemRows.filter((row) => row.category === 'Attribute'))),
+      createSection('ElDescriptionsItem Slots', slotColumns, toElementRows(itemRows.filter((row) => row.category === 'Slot'))),
+    ].filter((section): section is ApiTableSection => Boolean(section))
+  }
+
+  if (activePage.value === 'form') {
+    const formRows = rows.filter((row) => row.component === 'ElForm')
+    const itemRows = rows.filter((row) => row.component === 'ElFormItem')
+
+    return [
+      createSection('ElForm Attributes', apiColumns, toElementRows(formRows.filter((row) => row.category === 'Attribute'))),
+      createSection('ElForm Events', eventColumns, toElementRows(formRows.filter((row) => row.category === 'Event'))),
+      createSection('ElForm Slots', slotColumns, toElementRows(formRows.filter((row) => row.category === 'Slot'))),
+      createSection('ElForm Exposes', exposeColumns, toElementRows(formRows.filter((row) => row.category === 'Expose'))),
+      createSection('ElFormItem Attributes', apiColumns, toElementRows(itemRows.filter((row) => row.category === 'Attribute'))),
+      createSection('ElFormItem Slots', slotColumns, toElementRows(itemRows.filter((row) => row.category === 'Slot'))),
+      createSection('ElFormItem Exposes', exposeColumns, toElementRows(itemRows.filter((row) => row.category === 'Expose'))),
+    ].filter((section): section is ApiTableSection => Boolean(section))
+  }
+
   const rowsByCategory = {
     Attribute: rows.filter((row) => row.category === 'Attribute'),
     Event: rows.filter((row) => row.category === 'Event'),
@@ -5118,6 +6210,20 @@ const currentElementApiSections = computed(() => {
 
 function toggleTheme() {
   theme.value = theme.value === 'light' ? 'dark' : 'light'
+}
+
+async function submitFormDemo(): Promise<void> {
+  try {
+    const valid = await formDemoRef.value?.validate()
+    formDemoStatus.value = valid ? '表单校验通过' : '请检查表单内容'
+  } catch {
+    formDemoStatus.value = '请检查表单内容'
+  }
+}
+
+function resetFormDemo(): void {
+  formDemoRef.value?.resetFields()
+  formDemoStatus.value = ''
 }
 
 function isGroupCollapsed(title: string) {
@@ -5261,10 +6367,114 @@ function selectPage(page: SidebarPageId | undefined) {
                 <VisButton icon-only icon-name="plus" label="新增" />
               </div>
 
+              <div v-else-if="activePage === 'form'" class="form-demo">
+                <section class="form-demo__section" aria-labelledby="form-columns-title">
+                  <h4 id="form-columns-title" class="ld-heading-h4">Two columns</h4>
+                  <VisForm
+                    ref="formDemoRef"
+                    :model="formDemoModel"
+                    :rules="formDemoRules"
+                    :column="2"
+                    button
+                    @submit="submitFormDemo"
+                    @cancel="resetFormDemo"
+                  >
+                    <VisFormItem
+                      label="项目名称"
+                      prop="name"
+                      type="input"
+                      required
+                      tooltip
+                      tooltip-text="用于识别该项目的名称"
+                    >
+                      <VisInput v-model="formDemoModel.name" aria-label="项目名称" />
+                    </VisFormItem>
+
+                    <VisFormItem label="访问密码" prop="password" type="password" optional>
+                      <VisInput v-model="formDemoModel.password" type="password" placeholder="请输入密码" aria-label="访问密码" />
+                    </VisFormItem>
+
+                    <VisFormItem label="所属区域" prop="region" type="select" required>
+                      <VisSelect v-model="formDemoModel.region" :options="formRegionOptions" placeholder="请选择" />
+                    </VisFormItem>
+
+                    <VisFormItem label="数量" prop="quantity" type="input_number">
+                      <VisInputNumber v-model="formDemoModel.quantity" prefix-icon prefix-icon-name="currency-yen-circle" />
+                    </VisFormItem>
+
+                    <VisFormItem label="活动类型" prop="categories" type="checkbox">
+                      <VisCheckboxGroup v-model="formDemoModel.categories" :options="formCategoryOptions" />
+                    </VisFormItem>
+
+                    <VisFormItem label="活动渠道" prop="channel" type="radio">
+                      <VisRadioGroup v-model="formDemoModel.channel" :options="formChannelOptions" />
+                    </VisFormItem>
+
+                    <VisFormItem label="启用项目" prop="enabled" type="switch">
+                      <VisToggle v-model="formDemoModel.enabled" aria-label="启用项目" />
+                    </VisFormItem>
+
+                    <VisFormItem label="评分" prop="score" type="rate">
+                      <VisRate v-model="formDemoModel.score" />
+                    </VisFormItem>
+
+                    <VisFormItem label="开始日期" prop="date" type="date_picker">
+                      <VisDatePicker v-model="formDemoModel.date" placeholder="请选择日期" />
+                    </VisFormItem>
+
+                    <VisFormItem label="开始时间" prop="time" type="time_picker">
+                      <VisTimePicker v-model="formDemoModel.time" placeholder="请选择时间" />
+                    </VisFormItem>
+
+                    <VisFormItem label="项目说明" prop="description" type="textarea" optional :span="2">
+                      <VisInputTextarea
+                        v-model="formDemoModel.description"
+                        placeholder="请输入文字"
+                        :max-length="200"
+                        text-count
+                      />
+                    </VisFormItem>
+
+                    <VisFormItem label="附件" prop="files" type="upload" :span="2">
+                      <VisUpload
+                        v-model="formDemoModel.files"
+                        type="button"
+                        button-text="点击上传"
+                        accept=".jpg,.jpeg,.png"
+                      />
+                    </VisFormItem>
+                  </VisForm>
+                  <p v-if="formDemoStatus" class="form-demo__status" role="status">{{ formDemoStatus }}</p>
+                </section>
+
+                <section class="form-demo__section" aria-labelledby="form-left-title">
+                  <h4 id="form-left-title" class="ld-heading-h4">Align left</h4>
+                  <VisForm :model="formDemoModel" align-left>
+                    <VisFormItem label="输入框" type="input" description>
+                      <VisInput v-model="formDemoModel.name" aria-label="输入框" />
+                    </VisFormItem>
+                    <VisFormItem label="选择器" type="select">
+                      <VisSelect v-model="formDemoModel.region" :options="formRegionOptions" placeholder="请选择" />
+                    </VisFormItem>
+                    <VisFormItem label="复选框" type="checkbox">
+                      <VisCheckboxGroup v-model="formDemoModel.categories" :options="formCategoryOptions" />
+                    </VisFormItem>
+                  </VisForm>
+                </section>
+              </div>
+
               <div v-else-if="activePage === 'input'" class="input-demo">
                 <VisInput v-model="inputValue" prefix suffix :max-length="20" />
                 <VisInput state="danger" placeholder="危险态" :max-length="20" />
-                <VisInput read-view :model-value="inputValue" />
+                <VisInput
+                  :model-value="inputValue"
+                  type="password"
+                  prefix
+                  prefix-icon="lock-01"
+                  suffix
+                  suffix-icon="eye-off"
+                  aria-label="密码输入框"
+                />
                 <VisInput addon-left addon-right addon-left-text="https://" addon-right-text=".com" />
               </div>
 
@@ -5899,6 +7109,60 @@ function selectPage(page: SidebarPageId | undefined) {
                 </div>
               </div>
 
+              <div v-else-if="activePage === 'table'" class="table-demo">
+                <div class="table-demo__controls">
+                  <div class="avatar-demo__control-row" aria-label="Table appearance">
+                    <button
+                      v-for="appearance in tableAppearances"
+                      :key="appearance"
+                      type="button"
+                      :class="{ active: tableAppearance === appearance }"
+                      @click="tableAppearance = appearance"
+                    >
+                      {{ appearance }}
+                    </button>
+                  </div>
+                  <label class="avatar-demo__toggle">
+                    <input v-model="tableHighlightActiveRow" type="checkbox">
+                    Highlight active row
+                  </label>
+                </div>
+
+                <VisTable
+                  :data="tableData"
+                  :columns="tableColumns"
+                  :appearance="tableAppearance"
+                  selectable
+                  :highlight-active-row="tableHighlightActiveRow"
+                  :active-row-key="tableActiveRowKey"
+                  aria-label="任务列表"
+                  @active-change="tableActiveRowKey = $event"
+                />
+
+                <section class="table-demo__variants" aria-labelledby="table-header-preview-title">
+                  <h4 id="table-header-preview-title" class="ld-heading-h4">Table Header</h4>
+                  <div class="table-demo__variant-grid table-demo__variant-grid--header">
+                    <div v-for="type in tableHeaderPreviewTypes" :key="type" class="table-demo__variant-cell">
+                      <VisTableHeader :type="type" :appearance="tableAppearance" :label="type" />
+                    </div>
+                  </div>
+                </section>
+
+                <section class="table-demo__variants" aria-labelledby="table-item-preview-title">
+                  <h4 id="table-item-preview-title" class="ld-heading-h4">Table Item</h4>
+                  <div class="table-demo__variant-grid">
+                    <div v-for="item in tableItemPreviews" :key="item.type" class="table-demo__variant-cell">
+                      <VisTableItem
+                        :type="item.type"
+                        :appearance="tableAppearance"
+                        :value="item.value"
+                        v-bind="item.props"
+                      />
+                    </div>
+                  </div>
+                </section>
+              </div>
+
               <div v-else-if="activePage === 'tabs'" class="tabs-demo">
                 <div class="tabs-demo__controls">
                   <div class="avatar-demo__control-row" aria-label="Tabs align">
@@ -6362,22 +7626,107 @@ function selectPage(page: SidebarPageId | undefined) {
                 </div>
               </div>
 
+              <div v-else-if="activePage === 'description'" class="description-demo">
+                <div class="description-demo__controls">
+                  <div class="avatar-demo__control-row" aria-label="Description direction">
+                    <button
+                      v-for="direction in descriptionDirections"
+                      :key="direction"
+                      type="button"
+                      :class="{ active: descriptionDirection === direction }"
+                      @click="descriptionDirection = direction"
+                    >
+                      {{ direction }}
+                    </button>
+                  </div>
+                  <label class="avatar-demo__toggle">
+                    <input v-model="descriptionBorder" type="checkbox">
+                    <span>Border</span>
+                  </label>
+                  <label class="avatar-demo__toggle">
+                    <input v-model="descriptionAlert" type="checkbox">
+                    <span>Alert</span>
+                  </label>
+                  <label class="avatar-demo__toggle">
+                    <input v-model="descriptionFoldable" type="checkbox">
+                    <span>Foldable</span>
+                  </label>
+                </div>
+
+                <VisDescription
+                  v-model:collapsed="descriptionCollapsed"
+                  :border="descriptionBorder"
+                  :direction="descriptionDirection"
+                  :alert="descriptionAlert"
+                  :foldable="descriptionFoldable"
+                  title-text="基本信息"
+                >
+                  <VisDescriptionItem label="项目名称" value="Vision Design System" icon icon-name="layers-three-01" />
+                  <VisDescriptionItem label="项目编号" value="VIS-2026" />
+                  <VisDescriptionItem label="状态" type="tag" :tags="descriptionTags" />
+                  <VisDescriptionItem label="创建人" value="张大山" icon />
+                  <VisDescriptionItem label="所属团队" value="Design Platform" />
+                  <VisDescriptionItem label="更新时间" value="2026-07-13" />
+                  <VisDescriptionItem
+                    label="项目说明"
+                    value="用于统一产品视觉、交互与前端实现规范的企业级设计系统。"
+                    :span="2"
+                  />
+                  <VisDescriptionItem label="操作" type="customize">
+                    <VisButton variant="link-color" size="sm">查看详情</VisButton>
+                  </VisDescriptionItem>
+                </VisDescription>
+              </div>
+
+              <div v-else-if="activePage === 'time-picker'" class="time-picker-demo">
+                <section class="time-picker-demo__section" aria-labelledby="time-picker-basic-title">
+                  <h4 id="time-picker-basic-title" class="ld-heading-h4">Basic</h4>
+                  <div class="time-picker-demo__row">
+                    <VisTimePicker v-model="timePickerValue" />
+                    <VisTimePicker v-model="timePickerMinuteValue" type="HH MM" />
+                    <VisTimePicker v-model="timePickerRangeValue" range />
+                    <VisTimePicker v-model="timePickerMinuteRangeValue" range type="HH MM" />
+                  </div>
+                </section>
+
+                <section class="time-picker-demo__section" aria-labelledby="time-picker-states-title">
+                  <h4 id="time-picker-states-title" class="ld-heading-h4">States</h4>
+                  <div class="time-picker-demo__row">
+                    <VisTimePicker state="hover" placeholder="Hover" />
+                    <VisTimePicker state="focus" placeholder="Focus" />
+                    <VisTimePicker state="danger" placeholder="Danger" />
+                    <VisTimePicker model-value="12:00:00" disabled />
+                    <VisTimePicker model-value="12:00:00" read-view />
+                  </div>
+                </section>
+
+                <section class="time-picker-demo__section" aria-labelledby="time-picker-panels-title">
+                  <h4 id="time-picker-panels-title" class="ld-heading-h4">Panels</h4>
+                  <div class="time-picker-demo__panel-row">
+                    <div class="time-picker-demo__panel-cell">
+                      <VisTimePicker v-model="timePickerValue" open />
+                    </div>
+                    <div class="time-picker-demo__panel-cell">
+                      <VisTimePicker v-model="timePickerRangeValue" range open />
+                    </div>
+                    <div class="time-picker-demo__panel-cell is-shortcut">
+                      <VisTimePicker v-model="timePickerQuickValue" time-select open />
+                    </div>
+                  </div>
+                </section>
+              </div>
+
               <div v-else-if="activePage === 'divider'" class="divider-demo">
                 <div class="divider-demo__controls">
-                  <div class="avatar-demo__control-row" aria-label="Divider orientation">
+                  <div class="avatar-demo__control-row" aria-label="Divider type">
                     <button
+                      v-for="type in dividerTypes"
+                      :key="type"
                       type="button"
-                      :class="{ active: dividerOrientation === 'horizontal' }"
-                      @click="dividerOrientation = 'horizontal'"
+                      :class="{ active: dividerType === type }"
+                      @click="dividerType = type"
                     >
-                      horizontal
-                    </button>
-                    <button
-                      type="button"
-                      :class="{ active: dividerOrientation === 'vertical' }"
-                      @click="dividerOrientation = 'vertical'"
-                    >
-                      vertical
+                      {{ type }}
                     </button>
                   </div>
                   <label class="avatar-demo__toggle">
@@ -6386,28 +7735,38 @@ function selectPage(page: SidebarPageId | undefined) {
                   </label>
                 </div>
 
-                <div class="divider-demo__preview">
-                  <span>菜单名称</span>
-                  <VisDivider :orientation="dividerOrientation" :dashed="dividerDashed" />
-                  <span>菜单名称</span>
+                <div class="divider-demo__preview" :class="`is-${dividerType}`">
+                  <VisDivider
+                    :type="dividerType"
+                    :dashed="dividerDashed"
+                    :length="dividerType === 'vertical' ? '120px' : '100%'"
+                  />
                 </div>
 
                 <div class="divider-demo__matrix">
                   <div class="divider-demo__sample">
                     <span>horizontal</span>
-                    <VisDivider />
+                    <VisDivider type="horizontal" />
                   </div>
                   <div class="divider-demo__sample">
                     <span>horizontal dashed</span>
-                    <VisDivider dashed />
+                    <VisDivider type="horizontal" dashed />
                   </div>
                   <div class="divider-demo__sample divider-demo__sample--vertical">
                     <span>vertical</span>
-                    <VisDivider orientation="vertical" />
+                    <VisDivider type="vertical" length="48px" />
                   </div>
                   <div class="divider-demo__sample divider-demo__sample--vertical">
                     <span>vertical dashed</span>
-                    <VisDivider orientation="vertical" dashed length="32px" />
+                    <VisDivider type="vertical" dashed length="48px" />
+                  </div>
+                  <div class="divider-demo__sample">
+                    <span>content</span>
+                    <VisDivider type="content" />
+                  </div>
+                  <div class="divider-demo__sample">
+                    <span>content dashed</span>
+                    <VisDivider type="content" dashed />
                   </div>
                 </div>
               </div>
@@ -7060,6 +8419,11 @@ function selectPage(page: SidebarPageId | undefined) {
   inline-size: 100%;
 }
 
+.demo-panel:has(.time-picker-demo) {
+  max-inline-size: 1120px;
+  inline-size: 100%;
+}
+
 .demo-panel:has(.divider-demo) {
   max-inline-size: 760px;
   inline-size: 100%;
@@ -7128,6 +8492,7 @@ function selectPage(page: SidebarPageId | undefined) {
 }
 
 .demo-panel:has(.segmented-demo),
+.demo-panel:has(.table-demo),
 .demo-panel:has(.tabs-demo),
 .demo-panel:has(.toggle-demo),
 .demo-panel:has(.toggle-button-demo),
@@ -7144,8 +8509,17 @@ function selectPage(page: SidebarPageId | undefined) {
   overflow: visible;
 }
 
+.demo-panel:has(.table-demo) {
+  max-inline-size: 1440px;
+}
+
 .demo-panel:has(.rate-demo) {
   max-inline-size: 760px;
+  inline-size: 100%;
+}
+
+.demo-panel:has(.description-demo) {
+  max-inline-size: 1120px;
   inline-size: 100%;
 }
 
@@ -7265,6 +8639,7 @@ function selectPage(page: SidebarPageId | undefined) {
 .checkbox-demo__row,
 .date-picker-demo__row,
 .date-picker-demo__panel-row,
+.time-picker-demo__row,
 .divider-demo__controls,
 .divider-demo__preview,
 .badge-demo__row,
@@ -7276,6 +8651,7 @@ function selectPage(page: SidebarPageId | undefined) {
   .progress-circle-demo__controls,
   .segmented-demo__controls,
   .slider-demo__controls,
+  .table-demo__controls,
   .tabs-demo__controls,
   .toggle-demo__controls,
   .toggle-button-demo__controls,
@@ -7301,6 +8677,7 @@ function selectPage(page: SidebarPageId | undefined) {
   .progress-circle-demo,
   .segmented-demo,
   .slider-demo,
+  .table-demo,
   .tabs-demo,
   .toggle-demo,
   .toggle-button-demo,
@@ -7318,11 +8695,88 @@ function selectPage(page: SidebarPageId | undefined) {
 .radio-demo,
 .checkbox-demo,
 .date-picker-demo,
+.description-demo,
+.time-picker-demo,
+.form-demo,
 .divider-demo,
 .drawer-demo,
 .select-demo {
   display: grid;
   gap: var(--space-20);
+}
+
+.description-demo {
+  inline-size: 100%;
+  max-inline-size: 1120px;
+  gap: var(--space-24);
+}
+
+.description-demo__controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-12);
+}
+
+.description-demo > :deep(.vis-description) {
+  max-inline-size: 800px;
+}
+
+.form-demo {
+  inline-size: 100%;
+  max-inline-size: 1120px;
+  gap: var(--space-32);
+}
+
+.form-demo__section {
+  min-inline-size: 0;
+  display: grid;
+  justify-items: start;
+  gap: var(--space-12);
+}
+
+.form-demo__section h4 {
+  margin: 0;
+  color: var(--color-text-primary);
+}
+
+.form-demo__status {
+  min-block-size: var(--space-20);
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-text-md-size);
+  line-height: var(--font-text-md-line-height);
+}
+
+.time-picker-demo {
+  inline-size: 100%;
+}
+
+.time-picker-demo__section {
+  min-inline-size: 0;
+  display: grid;
+  gap: var(--space-12);
+}
+
+.time-picker-demo__section h4 {
+  margin: 0;
+  color: var(--color-text-primary);
+}
+
+.time-picker-demo__panel-row {
+  min-inline-size: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--space-16);
+}
+
+.time-picker-demo__panel-cell {
+  min-block-size: 444px;
+}
+
+.time-picker-demo__panel-cell.is-shortcut {
+  min-block-size: 280px;
 }
 
 .dropdown-demo {
@@ -7465,6 +8919,7 @@ function selectPage(page: SidebarPageId | undefined) {
 }
 
 .segmented-demo,
+.table-demo,
 .tabs-demo,
 .toggle-demo,
 .toggle-button-demo,
@@ -7473,6 +8928,88 @@ function selectPage(page: SidebarPageId | undefined) {
 .upload-demo {
   inline-size: 100%;
   max-inline-size: 1120px;
+}
+
+.table-demo {
+  inline-size: 100%;
+  max-inline-size: 1440px;
+  display: grid;
+  gap: var(--space-20);
+}
+
+.table-demo__controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-12);
+}
+
+.table-demo__variants {
+  min-inline-size: 0;
+  display: grid;
+  gap: var(--space-12);
+}
+
+.table-demo__variants h4 {
+  margin: 0;
+  color: var(--color-text-primary);
+}
+
+.table-demo__variant-grid {
+  overflow: hidden;
+  border-radius: var(--radius-sm);
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  background: var(--color-bg-surface);
+  box-shadow: inset 0 0 0 1px var(--color-border-default);
+}
+
+.table-demo__variant-grid--header {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.table-demo__variant-cell {
+  min-inline-size: 0;
+}
+
+.table-demo__variant-cell > :deep(*) {
+  border-inline-start: 0;
+}
+
+@media (max-width: 720px) {
+  .table-demo__variant-grid,
+  .table-demo__variant-grid--header {
+    grid-template-columns: minmax(160px, 1fr);
+    overflow-x: auto;
+  }
+}
+
+.table-demo__title-cell,
+.table-demo__owner-cell,
+.table-demo__actions {
+  min-inline-size: 0;
+  display: flex;
+  align-items: center;
+}
+
+.table-demo__title-cell {
+  gap: var(--space-4);
+  color: var(--color-text-primary);
+}
+
+.table-demo__title-cell span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.table-demo__owner-cell,
+.table-demo__actions {
+  gap: var(--space-8);
+}
+
+.table-demo__owner-cell {
+  color: var(--color-text-primary);
 }
 
 .tooltip-demo {
@@ -7700,8 +9237,8 @@ function selectPage(page: SidebarPageId | undefined) {
   border: 1px solid var(--color-border-default);
   border-radius: var(--radius-sm);
   padding: var(--space-16);
-  display: flex;
-  align-items: center;
+  display: grid;
+  align-content: center;
   gap: var(--space-12);
   color: var(--color-text-tertiary);
   background: var(--color-bg-surface);
@@ -7710,11 +9247,12 @@ function selectPage(page: SidebarPageId | undefined) {
 }
 
 .divider-demo__sample--vertical {
-  align-items: stretch;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
 }
 
 .divider-demo__sample--vertical .vis-divider {
-  align-self: center;
+  justify-self: start;
 }
 
 .dropdown-demo {

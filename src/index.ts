@@ -12,10 +12,12 @@ import VisCheckboxGroup from './components/checkbox/VisCheckboxGroup.vue'
 import VisCodeBlock from './components/code-block/VisCodeBlock.vue'
 import VisConfigProvider from './components/config-provider/VisConfigProvider.vue'
 import VisDatePicker from './components/date-picker/VisDatePicker.vue'
+import { VisDescription, VisDescriptionItem, VisDescriptionTitle } from './components/description'
 import VisDivider from './components/divider/VisDivider.vue'
 import VisDrawer from './components/drawer/VisDrawer.vue'
 import { VisDropdown, VisDropdownDivider, VisDropdownHeader, VisDropdownItem } from './components/dropdown'
 import { VisFeaturedIcon } from './components/featured-icon'
+import { VisForm, VisFormItem } from './components/form'
 import VisInput from './components/input/VisInput.vue'
 import VisInputNumber from './components/input-number/VisInputNumber.vue'
 import VisInputSearchBox from './components/input-search-box/VisInputSearchBox.vue'
@@ -38,7 +40,18 @@ import VisSegmented from './components/segmented/VisSegmented.vue'
 import VisSelect from './components/select/VisSelect.vue'
 import { VisSlider } from './components/slider'
 import VisTabs from './components/tabs/VisTabs.vue'
+import {
+  VisTable,
+  VisTableHeader,
+  VisTableItem,
+  VisTableLink,
+  VisTableRow,
+  VisTableSortIcon,
+  VisTableTreePrefix,
+  VisTableTrendIcon,
+} from './components/table'
 import VisTag from './components/tag/VisTag.vue'
+import VisTimePicker from './components/time-picker/VisTimePicker.vue'
 import VisToggle from './components/toggle/VisToggle.vue'
 import VisToggleButton from './components/toggle-button/VisToggleButton.vue'
 import VisTooltip from './components/tooltip/VisTooltip.vue'
@@ -63,6 +76,9 @@ export {
   VisCodeBlock,
   VisConfigProvider,
   VisDatePicker,
+  VisDescription,
+  VisDescriptionItem,
+  VisDescriptionTitle,
   VisDivider,
   VisDrawer,
   VisDropdown,
@@ -70,6 +86,8 @@ export {
   VisDropdownHeader,
   VisDropdownItem,
   VisFeaturedIcon,
+  VisForm,
+  VisFormItem,
   VisInput,
   VisInputNumber,
   VisInputSearchBox,
@@ -93,7 +111,16 @@ export {
   VisSelect,
   VisSlider,
   VisTabs,
+  VisTable,
+  VisTableHeader,
+  VisTableItem,
+  VisTableLink,
+  VisTableRow,
+  VisTableSortIcon,
+  VisTableTreePrefix,
+  VisTableTrendIcon,
   VisTag,
+  VisTimePicker,
   VisToggle,
   VisToggleButton,
   VisTooltip,
@@ -156,8 +183,17 @@ export type {
   VisDatePickerValue,
 } from './components/date-picker/date-picker.types'
 export type {
+  VisDescriptionDirection,
+  VisDescriptionItemProps,
+  VisDescriptionItemType,
+  VisDescriptionProps,
+  VisDescriptionTag,
+  VisDescriptionTitleProps,
+} from './components/description/description.types'
+export type {
   VisDividerOrientation,
   VisDividerProps,
+  VisDividerType,
 } from './components/divider/divider.types'
 export type { VisDrawerPosition, VisDrawerProps } from './components/drawer/drawer.types'
 export type {
@@ -176,6 +212,19 @@ export type {
   VisFeaturedIconSize,
   VisFeaturedIconType,
 } from './components/featured-icon/featured-icon.types'
+export type {
+  VisFormColumn,
+  VisFormItemProp,
+  VisFormItemProps,
+  VisFormItemRule,
+  VisFormItemSpan,
+  VisFormItemType,
+  VisFormItemValidateState,
+  VisFormProps,
+  VisFormRules,
+  VisFormValidateCallback,
+  VisFormValidationResult,
+} from './components/form/form.types'
 export type { IconComponentProps, IconName } from './components/icons'
 export type { VisInputProps, VisInputState } from './components/input/input.types'
 export type {
@@ -247,7 +296,43 @@ export type {
 } from './components/select/select.types'
 export type { VisSliderProps, VisSliderType, VisSliderValue } from './components/slider/slider.types'
 export type { VisTabsAlign, VisTabsItem, VisTabsProps, VisTabsValue } from './components/tabs/tabs.types'
+export type {
+  VisTableAction,
+  VisTableAlign,
+  VisTableAppearance,
+  VisTableColumn,
+  VisTableDefaultSortOrder,
+  VisTableFixed,
+  VisTableHeaderProps,
+  VisTableHeaderType,
+  VisTableItemProps,
+  VisTableItemPropsResolver,
+  VisTableItemType,
+  VisTableLinkProps,
+  VisTableProps,
+  VisTableRowData,
+  VisTableRowKey,
+  VisTableRowProps,
+  VisTableSort,
+  VisTableSortIconProps,
+  VisTableSortOrder,
+  VisTableSortable,
+  VisTableSortChange,
+  VisTableState,
+  VisTableTreeLevel,
+  VisTableTreePrefixProps,
+  VisTableTrend,
+  VisTableTrendIconProps,
+} from './components/table/table.types'
 export type { VisTagAvatarVariant, VisTagCloseState, VisTagProps, VisTagType } from './components/tag/tag.types'
+export type {
+  VisTimePickerProps,
+  VisTimePickerRangeValue,
+  VisTimePickerSingleValue,
+  VisTimePickerState,
+  VisTimePickerType,
+  VisTimePickerValue,
+} from './components/time-picker/time-picker.types'
 export type { VisToggleChangePayload, VisToggleProps, VisToggleState } from './components/toggle/toggle.types'
 export type {
   VisToggleButtonNativeType,
@@ -278,12 +363,17 @@ const components = [
   VisCheckbox,
   VisCheckboxGroup,
   VisDatePicker,
+  VisDescription,
+  VisDescriptionItem,
+  VisDescriptionTitle,
   VisDivider,
   VisDrawer,
   VisDropdown,
   VisDropdownDivider,
   VisDropdownHeader,
   VisDropdownItem,
+  VisForm,
+  VisFormItem,
   VisInput,
   VisInputNumber,
   VisInputSearchBox,
@@ -310,6 +400,7 @@ const components = [
   VisSlider,
   VisTabs,
   VisTag,
+  VisTimePicker,
   VisToggle,
   VisToggleButton,
   VisTooltip,

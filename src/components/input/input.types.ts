@@ -10,7 +10,6 @@ export interface VisInputProps {
   state?: VisInputState
   disabled?: boolean
   filled?: boolean
-  readView?: boolean
   prefix?: boolean
   suffix?: boolean
   prefixIcon?: IconName

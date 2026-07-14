@@ -23,7 +23,7 @@
 | `type` | `type` | `type` / class | 旧项目大量组件使用 `type` 表达视觉形态或状态。即使内部不直接映射 Element Plus `type`，对外也优先保留 `type`。 | `string` | 视组件而定 |
 | `state` | `state` | class / validate state | 旧 `state` 优先保留为视觉状态或字段状态 API；内部可映射为 hover/focus/error/danger 等 class 或 Element validate state。 | `string` | `'default'` |
 | `color` / `colorType` | `color` / `colorType` | class / CSS var | 旧项目中 `color` 与 `colorType` 语义不同，均按原名保留；内部可归一到 tone token。旧 `grey` 在视觉 token 层映射，不改 public API。 | `string` | 视组件而定 |
-| `readView` / `readview` | `readView` / `readview` | `readonly` + wrapper view | 旧只读展示 API 保留旧拼写；如新增 `readonlyView`，只作为别名，不作为 Figma 主名。 | `boolean` | `false` |
+| `readView` / `readview` | `readView` / `readview` | `readonly` + wrapper view | 仅在组件自身 Figma API 仍包含该语义时保留；Input、Input Password 和 DatePicker 已按设计稿移除。 | `boolean` | `false` |
 | `iconName` / `suffixIconName` | 同名 | icon slot / prefix icon | 旧图标命名保留。新组件可支持 `icon` 作为补充别名，但 Figma 对齐以旧名为准。 | `IconName` | 视组件而定 |
 | `htmlType` | `htmlType` | `native-type` | 原生 button type 对外保留旧名 `htmlType`；内部映射 Element Plus `native-type`。 | `'button' \| 'submit' \| 'reset'` | `'button'` |
 | `closeable` | `closeable` | `show-close` / close icon | 旧项目使用 `closeable` 时保留旧拼写；`closable` 可作为 Vue/Element 生态别名。 | `boolean` | 视组件而定 |
@@ -167,6 +167,50 @@
 | `disabledDate` | `disabledDate` | `disabled-date` | 禁用日期函数。 | `(date: Date) => boolean` | `undefined` |
 | `change` / `update:open` | 同名 | `change` / visible change | 事件保持。 | event | - |
 
+## Description
+
+旧项目无 Description 源码，Vision API 以 Figma `Description 描述列表` 组件属性为基线，并与 Element Plus Descriptions 语义对齐。
+
+| API 名 | 旧 API | Element Plus API | 说明 | 类型 | 默认值 |
+| --- | --- | --- | --- | --- | --- |
+| `border` | Figma `Border` | `border` | 切换无边框列表与网格边框样式。 | `boolean` | `false` |
+| `direction` | Figma `Direction` | `direction` | 字段名和值横向排列或纵向堆叠。 | `'horizontal' \| 'vertical'` | `'horizontal'` |
+| `columns` | Figma layout | `column` | 每行描述项数量。 | `number` | `3` |
+| `title` | Figma `Title` | title slot | 是否显示标题。 | `boolean` | `true` |
+| `titleText` | Figma title text | title slot | 默认标题文案。 | `string` | `'基本信息'` |
+| `foldable` | Figma `Foldable` | 无直接对应 | 是否显示标题折叠按钮。 | `boolean` | `false` |
+| `collapsed` | Figma fold state | 无直接对应 | 受控折叠状态。 | `boolean` | `undefined` |
+| `alert` | Figma `Alert` | 无直接对应 | 是否显示品牌信息提示。 | `boolean` | `false` |
+| `alertText` | Figma alert text | 无直接对应 | 默认提示文案。 | `string` | `'信息提示'` |
+| `labelWidth` | Figma label width | `label-width` | 统一字段名宽度。 | `number \| string` | `84` / `120` |
+| `ariaLabel` | 无 | `aria-label` | 描述列表区域的可访问名称。 | `string` | `titleText` |
+| `update:collapsed` | 无 | 无直接对应 | 折叠状态变化事件。 | event | - |
+| `toggle` | 无 | 无直接对应 | 点击折叠按钮后触发。 | event | - |
+
+## DescriptionItem
+
+| API 名 | 旧 API | Element Plus API | 说明 | 类型 | 默认值 |
+| --- | --- | --- | --- | --- | --- |
+| `label` | Figma label | `label` | 字段名，可由 label 插槽覆盖。 | `string` | `'字段名'` |
+| `value` | Figma value | default slot | 普通文本字段值。 | `string \| number` | `'字段值'` |
+| `type` | Figma `type` | default slot | 文本、标签组或自定义内容。 | `'text' \| 'tag' \| 'customize'` | `'text'` |
+| `tags` | Figma TagGroup | default slot | tag 类型的数据源，内部复用 `VisTag`。 | `VisDescriptionTag[]` | 内置示例 |
+| `icon` | Figma `icon` | label slot | 是否显示字段图标。 | `boolean` | `false` |
+| `iconName` | Figma icon instance | label slot | 字段图标名称。 | `IconName` | `'user-01'` |
+| `span` | Figma grid span | `span` | 描述项占据的列数。 | `number` | `1` |
+| `border` | Figma `Border` | parent `border` | 独立使用时覆盖边框模式。 | `boolean` | `undefined` |
+| `direction` | Figma `Direction` | parent `direction` | 独立使用时覆盖排列方向。 | `VisDescriptionDirection` | `undefined` |
+| `labelWidth` | Figma label width | `label-width` | 覆盖当前项字段名宽度。 | `number \| string` | `undefined` |
+
+## DescriptionTitle
+
+| API 名 | 旧 API | Element Plus API | 说明 | 类型 | 默认值 |
+| --- | --- | --- | --- | --- | --- |
+| `title` | Figma title text | title slot | 标题文案。 | `string` | `'基本信息'` |
+| `foldable` | Figma `Foldable` | 无直接对应 | 是否显示折叠按钮。 | `boolean` | `false` |
+| `collapsed` | Figma fold state | 无直接对应 | 折叠按钮的可访问状态。 | `boolean` | `false` |
+| `toggle` | 无 | 无直接对应 | 点击折叠按钮时触发。 | event | - |
+
 ## Divider
 
 | API 名 | 旧 API | Element Plus API | 说明 | 类型 | 默认值 |
@@ -224,6 +268,51 @@
 | `label` | `label` | `aria-label` | 非 decorative 时作为可访问名称。 | `string` | `undefined` |
 | `decorative` | `decorative` | `aria-hidden` | 装饰性图标。 | `boolean` | `true` |
 
+## Form
+
+旧项目无 Form 源码，Vision API 以 Figma `Form` 组件属性为兼容基线，并复用 Element Plus 校验能力。
+
+| API 名 | 旧 API | Element Plus API | 说明 | 类型 | 默认值 |
+| --- | --- | --- | --- | --- | --- |
+| `model` | Figma data | `model` | 表单数据对象。 | `Record<string, any>` | `{}` |
+| `rules` | Figma validation | `rules` | async-validator 校验规则。 | `VisFormRules` | `undefined` |
+| `alignLeft` | `AlignLeft` | `label-position="left"` | 标签左置；关闭时标签位于字段上方。 | `boolean` | `false` |
+| `column` | `Column` | wrapper grid | 一列或二列布局。 | `1 \| 2` | `1` |
+| `button` | `Button` | actions/default slot | 展示由 `VisButton` 构成的默认操作组。 | `boolean` | `false` |
+| `width` | component width | style | 覆盖宽度；一列默认 400px，二列默认 800px。 | `number \| string` | 按 `column` 推导 |
+| `labelWidth` | left label width | `label-width` | 左侧标签宽度并向 FormItem 继承。 | `number \| string` | `84` |
+| `submitText` | button label | actions slot | 默认确认按钮文案。 | `string` | `'确认'` |
+| `cancelText` | button label | actions slot | 默认取消按钮文案。 | `string` | `'取消'` |
+| `disabled` | `disabled` | `disabled` | 表单禁用上下文。 | `boolean` | `false` |
+| `showMessage` | message visibility | `show-message` | 是否显示 Vision 校验信息。 | `boolean` | `true` |
+| `validateOnRuleChange` | validation behavior | `validate-on-rule-change` | rules 变化后是否立即校验。 | `boolean` | `true` |
+| `scrollToError` | validation behavior | `scroll-to-error` | 校验失败时滚动到首个错误项。 | `boolean` | `false` |
+| `scrollIntoViewOptions` | validation behavior | `scroll-into-view-options` | 错误项滚动配置。 | `boolean \| ScrollIntoViewOptions` | `true` |
+| `submit` | confirm action | native submit | 默认确认或原生提交事件。 | event | - |
+| `cancel` | cancel action | 无直接对应 | 默认取消事件。 | event | - |
+| `validate` | validation event | `validate` | 任一字段完成校验后触发。 | event | - |
+
+## FormItem
+
+| API 名 | 旧 API | Element Plus API | 说明 | 类型 | 默认值 |
+| --- | --- | --- | --- | --- | --- |
+| `prop` | field binding | `prop` | model 字段键名或路径。 | `string \| string[]` | `undefined` |
+| `label` | label text | `label` | 标签文本。 | `string` | `'输入框'` |
+| `type` | `Type` | wrapper class | Figma 字段类型，用于匹配引用组件尺寸。 | `VisFormItemType` | `'input'` |
+| `alignLeft` | `AlignLeft` | `label-position` | 覆盖当前项标签位置。 | `boolean` | `undefined` |
+| `labelWidth` | left label width | `label-width` | 覆盖当前项标签宽度。 | `number \| string` | `undefined` |
+| `span` | form layout | wrapper grid | 二列布局中的占列数。 | `1 \| 2` | `1` |
+| `required` | `Required` | `required` | 显示必填星号并参与规则校验。 | `boolean` | 按规则推导 |
+| `optional` | `Optional` | label slot | 展示“(选填)”。 | `boolean` | `false` |
+| `tooltip` | `Tooltip` | label slot | 使用 `VisTooltip` 和 `help-circle` 图标。 | `boolean` | `false` |
+| `tooltipText` | tooltip content | label slot | 标签提示内容。 | `string` | `'提示信息'` |
+| `description` | `Description` | 无直接对应 | 辅助说明；true 使用 Figma 默认文案。 | `boolean \| string` | `false` |
+| `rules` | field rules | `rules` | 当前字段独立校验规则。 | `VisFormItemRule \| VisFormItemRule[]` | `undefined` |
+| `error` | validation error | `error` | 直接设置错误文本和危险态。 | `string` | `''` |
+| `showMessage` | message visibility | `show-message` | 覆盖当前项错误信息可见性。 | `boolean` | `undefined` |
+| `validateStatus` | validation state | `validate-status` | 直接设置字段校验状态。 | `FormItemValidateState` | `undefined` |
+| `for` | label target | `for` | 标签关联的原生控件 id。 | `string` | `undefined` |
+
 ## Icon
 
 | API 名 | 旧 API | Element Plus API | 说明 | 类型 | 默认值 |
@@ -240,11 +329,10 @@
 | --- | --- | --- | --- | --- | --- |
 | `modelValue` | `modelValue` | `model-value` | 输入值。 | `string` | `undefined` |
 | `placeholder` | `placeholder` | `placeholder` | 占位文案。 | `string` | `'请输入'` |
-| `valueText` | `valueText` | wrapper text | 只读展示文案，保持旧/Figma API。 | `string` | `'已输入内容'` |
+| `valueText` | `valueText` | wrapper text | 非受控 `filled=true` 演示态的默认填充文案。 | `string` | `'已输入内容'` |
 | `state` | `state` | class / validate state | 保持旧/Figma API。`error` 内部映射危险态或 Element validate state。 | `VisInputState` | `'default'` |
 | `disabled` | `disabled` | `disabled` | 禁用。 | `boolean` | `false` |
 | `filled` | `filled` | class | 填充背景样式。 | `boolean` | `false` |
-| `readView` | `readView` | `readonly` + wrapper | 只读展示态，保持旧/Figma API。 | `boolean` | `false` |
 | `prefix` | `prefix` | prefix slot visibility | 是否显示前缀图标，保持旧布尔 API。 | `boolean` | `false` |
 | `suffix` | `suffix` | suffix slot visibility | 是否显示后缀图标，保持旧布尔 API。 | `boolean` | `false` |
 | `prefixIcon` | `prefixIcon` | `prefix-icon` / slot | 前缀图标名；旧项目当前输入框已使用该名。 | `IconName` | `'user-01'` |
@@ -617,7 +705,7 @@
 | --- | --- | --- | --- | --- | --- |
 | `modelValue` | `modelValue` | `model-value` | 时间值，range 时为元组。 | `string \| [string, string] \| null` | `null` |
 | `range` | `range` | `is-range` | 范围选择。 | `boolean` | `false` |
-| `type` | `type` | `format` | 时间格式，保持旧 API；内部映射 Element Plus format。 | `'HH:mm:ss' \| 'HH:mm'` | `'HH:mm:ss'` |
+| `type` | `type` | `format` | 时间格式，保持旧项目与 Figma 的枚举；适配 Element Plus 时分别映射为 `HH:mm:ss` 和 `HH:mm`。 | `'HH MM SS' \| 'HH MM'` | `'HH MM SS'` |
 | `timeSelect` | `timeSelect` | picker type | 是否时间选择模式。 | `boolean` | `false` |
 | `state` | `state` | class | 字段状态，保持旧 API。 | `VisFieldState` | `'default'` |
 | `disabled` | `disabled` | `disabled` | 禁用。 | `boolean` | `false` |
@@ -722,7 +810,7 @@
 | Badge | `colorType` / `type` / `solid` / `subtle` / `iconName` | 同名 | 已迁移组件按旧 API 实现。 |
 | Loading | `color` / `text` | 同名 | 已迁移组件按旧 API 实现。 |
 | Button | `variant` / `danger` / `state` / `prefix` / `suffix` / `iconName` / `suffixIconName` / `htmlType` | 同名 | `danger`、`state`、`htmlType` 不再要求改成 `tone`、`visualState`、`nativeType`。 |
-| Input | `valueText` / `state` / `readView` / `addonLeft` / `addonRight` / `addonLeftText` / `addonRightText` | 同名 | `readonlyValue`、`status`、`readonlyView`、`addonBefore/After` 只可作为代码别名。 |
+| Input | `valueText` / `state` / `addonLeft` / `addonRight` / `addonLeftText` / `addonRightText` | 同名 | Input 与 Input Password 已按 Figma 移除 `readView`，不再支持 `readonlyView` 别名。 |
 | Modal | `divider` / `twoLevel` / `withMenu` / `closeable` / `menu-select` | 同名 | `closable`、`showBack`、`menuSelect` 只可作为兼容别名。 |
 | FeaturedIcon | `color` / `type` | 同名 | 不再要求改为 `tone` / `variant`。 |
 | CodeBlock | `type` / `heading` / `copy` | 同名 | 不再要求改为 `variant` / `showHeader` / `copyable`。 |
@@ -736,7 +824,7 @@
 | ---------------------------------------- | ------------------------------------------------ | --------------------------------------------- | ----------------------------------------------- |
 | Button                                   | `htmlType`                                       | `nativeType`                                  | 代码侧如需贴近 Element Plus 可支持别名；Figma 仍用 `htmlType`。 |
 | Modal / Drawer / Alert / Notification    | `closeable`                                      | `closable`                                    | 可支持 Element/Vue 社区常见拼写；Figma 仍用 `closeable`。    |
-| Input / Select / TimePicker              | `readView`                                       | `readonlyView`                                | 可支持更完整语义别名；DatePicker 已按 Figma 移除此 prop。         |
+| Select / TimePicker                      | `readView`                                       | `readonlyView`                                | 仅作为可选语义别名；Input、Input Password 和 DatePicker 已按 Figma 移除此 prop。 |
 | 事件                                       | `menu-select` / `after-leave` / `action-primary` | `menuSelect` / `afterLeave` / `actionPrimary` | Vue 模板优先 kebab-case，TS emit 类型可额外声明 camelCase。  |
 | 色彩类 API                                  | `color` / `colorType`                            | `tone`                                        | 只作为内部 token 概念或未来新增 API；不作为迁移期主 API。            |
 | 状态类 API                                  | `state`                                          | `status` / `visualState`                      | 只作为内部分类概念；旧 `state` 继续作为 public API。            |

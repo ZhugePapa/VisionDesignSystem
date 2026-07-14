@@ -432,7 +432,7 @@ function cellClasses(cell: DayCell): Record<string, boolean> {
 </script>
 
 <template>
-  <div ref="rootRef" class="vis-date-picker">
+  <div ref="rootRef" class="vis-date-picker" :class="{ 'is-open': panelOpen }">
     <div
       class="vis-date-picker__control"
       :class="controlClasses"

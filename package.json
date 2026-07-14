@@ -52,6 +52,10 @@
       "types": "./dist/types/components/date-picker/index.d.ts",
       "import": "./dist/lib/components/date-picker/index.js"
     },
+    "./components/description": {
+      "types": "./dist/types/components/description/index.d.ts",
+      "import": "./dist/lib/components/description/index.js"
+    },
     "./components/divider": {
       "types": "./dist/types/components/divider/index.d.ts",
       "import": "./dist/lib/components/divider/index.js"
@@ -67,6 +71,10 @@
     "./components/featured-icon": {
       "types": "./dist/types/components/featured-icon/index.d.ts",
       "import": "./dist/lib/components/featured-icon/index.js"
+    },
+    "./components/form": {
+      "types": "./dist/types/components/form/index.d.ts",
+      "import": "./dist/lib/components/form/index.js"
     },
     "./components/icons": {
       "types": "./dist/types/components/icons/index.d.ts",
@@ -148,6 +156,10 @@
       "types": "./dist/types/components/slider/index.d.ts",
       "import": "./dist/lib/components/slider/index.js"
     },
+    "./components/table": {
+      "types": "./dist/types/components/table/index.d.ts",
+      "import": "./dist/lib/components/table/index.js"
+    },
     "./components/tabs": {
       "types": "./dist/types/components/tabs/index.d.ts",
       "import": "./dist/lib/components/tabs/index.js"
@@ -155,6 +167,10 @@
     "./components/tag": {
       "types": "./dist/types/components/tag/index.d.ts",
       "import": "./dist/lib/components/tag/index.js"
+    },
+    "./components/time-picker": {
+      "types": "./dist/types/components/time-picker/index.d.ts",
+      "import": "./dist/lib/components/time-picker/index.js"
     },
     "./components/toggle": {
       "types": "./dist/types/components/toggle/index.d.ts",

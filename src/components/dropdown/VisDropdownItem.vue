@@ -27,7 +27,14 @@ const emit = defineEmits<{
 const isDisabled = computed(() => props.disabled || props.state === 'disabled')
 const isHoverPreview = computed(() => props.state === 'hover' && !isDisabled.value)
 const isAvatar = computed(() => props.type === 'avatar')
-const textColor = computed(() => (isDisabled.value ? 'var(--color-text-disabled)' : 'var(--color-text-primary)'))
+const isActiveSelection = computed(() => props.active && !props.checkable)
+const textColor = computed(() => {
+  if (isDisabled.value) {
+    return isActiveSelection.value ? 'var(--color-text-brand-disabled)' : 'var(--color-text-disabled)'
+  }
+
+  return isActiveSelection.value ? 'var(--color-text-brand-primary)' : 'var(--color-text-primary)'
+})
 const rootClasses = computed(() => ({
   [`type-${props.type}`]: true,
   'is-active': props.active,
@@ -154,6 +161,11 @@ function onSelect(): void {
   color: var(--color-fg-brand-primary);
 }
 
+.vis-dropdown-item.is-active:not(.is-checkable):not(.is-disabled) .vis-dropdown-item__icon,
+.vis-dropdown-item.is-active:not(.is-checkable):not(.is-disabled) .vis-dropdown-item__trailing--active {
+  color: var(--color-fg-brand-primary);
+}
+
 .vis-dropdown-item__label {
   min-inline-size: 0;
   flex: 1 1 0;
@@ -176,5 +188,10 @@ function onSelect(): void {
 .vis-dropdown-item.is-disabled :deep(.vis-avatar-label__title),
 .vis-dropdown-item.is-disabled :deep(.vis-avatar-label__subtitle) {
   color: var(--color-text-disabled);
+}
+
+.vis-dropdown-item.is-active:not(.is-checkable).is-disabled .vis-dropdown-item__icon,
+.vis-dropdown-item.is-active:not(.is-checkable).is-disabled .vis-dropdown-item__trailing--active {
+  color: var(--color-fg-brand-disabled);
 }
 </style>

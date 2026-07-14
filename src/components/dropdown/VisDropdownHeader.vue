@@ -29,29 +29,35 @@ withDefaults(defineProps<VisDropdownHeaderProps>(), {
 .vis-dropdown-header {
   box-sizing: border-box;
   inline-size: 100%;
-  border-block-end: 1px solid var(--color-border-default);
   display: flex;
   background: var(--color-bg-surface);
   font-family: var(--font-family-sans);
 }
 
 .vis-dropdown-header.type-group {
-  block-size: 44px;
-  padding-block: var(--space-12);
-  padding-inline: var(--space-16);
-  align-items: center;
+  block-size: 46px;
+  padding-block: 0 var(--space-4);
+  padding-inline: 0;
+  align-items: flex-end;
+  gap: var(--space-8);
 }
 
 .vis-dropdown-header.type-avatar {
   block-size: var(--space-64);
+  border-block-end: 1px solid var(--color-border-default);
   padding: var(--space-12);
   align-items: center;
   gap: var(--space-8);
 }
 
 .vis-dropdown-header__label {
+  box-sizing: border-box;
+  block-size: calc(100% - var(--space-4));
   min-inline-size: 0;
   flex: 1 1 0;
+  border-block-end: 1px solid var(--color-border-default);
+  padding-block: var(--space-12);
+  padding-inline: var(--space-16);
   overflow: hidden;
   color: var(--color-text-tertiary);
   font-size: var(--font-text-sm-size);

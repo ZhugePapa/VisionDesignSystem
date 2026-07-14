@@ -14,7 +14,6 @@ const props = withDefaults(
     state?: VisInputState
     disabled?: boolean
     filled?: boolean
-    readView?: boolean
     prefix?: boolean
     suffix?: boolean
     prefixIcon?: IconName
@@ -35,7 +34,6 @@ const props = withDefaults(
     state: 'default',
     disabled: false,
     filled: false,
-    readView: false,
     prefix: false,
     suffix: false,
     prefixIcon: 'user-01',
@@ -77,12 +75,10 @@ const isFocusable = computed(() => !props.disabled)
 const isFocusPreview = computed(() => (props.state === 'focus' || isFocused.value) && isFocusable.value)
 const isHoverPreview = computed(() => props.state === 'hover' && !props.disabled)
 const showClear = computed(() => hasValue.value && !props.disabled)
-const resolvedPlaceholder = computed(() => (props.readView ? '—' : props.placeholder))
 
 const rootClasses = computed(() => ({
   'is-filled': hasValue.value,
   'is-disabled': props.disabled,
-  'is-read-view': props.readView,
   'is-hover': isHoverPreview.value,
   'is-focus': isFocusPreview.value,
   'is-danger': props.state === 'danger' && !props.disabled,
@@ -167,7 +163,7 @@ watch(
         :type="type"
         :name="name"
         :value="displayValue"
-        :placeholder="resolvedPlaceholder"
+        :placeholder="placeholder"
         :disabled="disabled"
         :maxlength="maxLengthValue"
         :aria-label="ariaLabel ?? placeholder"
@@ -282,12 +278,6 @@ watch(
   background: var(--color-bg-secondary);
 }
 
-.vis-input.is-read-view:is(:hover, .is-hover):not(.is-disabled):not(.is-focus):not(.is-danger) .vis-input__field {
-  padding-inline: var(--space-8) var(--space-12);
-  border-color: transparent;
-  background: var(--color-bg-secondary);
-}
-
 .vis-input:is(:focus-within, .is-focus):not(.is-disabled) .vis-input__field {
   border-color: var(--color-border-brand);
   background: var(--color-bg-surface);
@@ -304,13 +294,6 @@ watch(
   background: var(--color-bg-secondary);
   color: var(--color-text-disabled);
   cursor: not-allowed;
-}
-
-.vis-input.is-read-view:not(:hover):not(:focus-within):not(.is-hover):not(.is-focus):not(.is-danger):not(.is-disabled)
-  .vis-input__field {
-  padding-inline: var(--space-8) var(--space-12);
-  border-color: transparent;
-  background: var(--color-bg-surface);
 }
 
 .vis-input__icon,

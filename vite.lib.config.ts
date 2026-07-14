@@ -32,6 +32,9 @@ export default defineConfig({
         'components/date-picker/index': fileURLToPath(
           new URL('./src/components/date-picker/index.ts', import.meta.url),
         ),
+        'components/description/index': fileURLToPath(
+          new URL('./src/components/description/index.ts', import.meta.url),
+        ),
         'components/divider/index': fileURLToPath(new URL('./src/components/divider/index.ts', import.meta.url)),
         'components/drawer/index': fileURLToPath(new URL('./src/components/drawer/index.ts', import.meta.url)),
         'components/dropdown/index': fileURLToPath(new URL('./src/components/dropdown/index.ts', import.meta.url)),
@@ -64,6 +67,7 @@ export default defineConfig({
         'components/progress-circle/index': fileURLToPath(
           new URL('./src/components/progress-circle/index.ts', import.meta.url),
         ),
+        'components/form/index': fileURLToPath(new URL('./src/components/form/index.ts', import.meta.url)),
         'components/radio/index': fileURLToPath(new URL('./src/components/radio/index.ts', import.meta.url)),
         'components/rate/index': fileURLToPath(new URL('./src/components/rate/index.ts', import.meta.url)),
         'components/scroll-shadow/index': fileURLToPath(
@@ -74,8 +78,12 @@ export default defineConfig({
         ),
         'components/select/index': fileURLToPath(new URL('./src/components/select/index.ts', import.meta.url)),
         'components/slider/index': fileURLToPath(new URL('./src/components/slider/index.ts', import.meta.url)),
+        'components/table/index': fileURLToPath(new URL('./src/components/table/index.ts', import.meta.url)),
         'components/tabs/index': fileURLToPath(new URL('./src/components/tabs/index.ts', import.meta.url)),
         'components/tag/index': fileURLToPath(new URL('./src/components/tag/index.ts', import.meta.url)),
+        'components/time-picker/index': fileURLToPath(
+          new URL('./src/components/time-picker/index.ts', import.meta.url),
+        ),
         'components/toggle/index': fileURLToPath(new URL('./src/components/toggle/index.ts', import.meta.url)),
         'components/toggle-button/index': fileURLToPath(
           new URL('./src/components/toggle-button/index.ts', import.meta.url),

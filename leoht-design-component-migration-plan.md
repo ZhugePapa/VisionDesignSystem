@@ -33,10 +33,11 @@ These components should not use Element Plus as the visual/behavior base because
 | Old component | Migration mode | Priority | Status | Implementation note |
 | --- | --- | --- | --- | --- |
 | button | Self-rendered from correct source | P0 | Done | Rebuilt from correct `LeoButton`; no Element Plus wrapper in current pass to preserve visual parity. |
-| input | Self-rendered from correct source | P0 | Done | Rebuilt from correct `LeoInput`; keeps addon/readView/icon/count behavior. |
+| input | Self-rendered from correct source | P0 | Done | Rebuilt from correct `LeoInput`; keeps addon/icon/count behavior and removes `readView` from Input and Input Password per Figma. |
 | modal | Self-rendered from correct source | P0 | Done | Rebuilt `VisModal` and `VisModalConfirm`; menu item dependency is internalized. |
 | icons | Direct self-rendered | P0 | Done | Full generated icon components copied and renamed to Vision classes. |
 | featured-icon | Direct self-rendered | P0 | Done | Uses correct old token semantics. |
+| form | Element Plus validation adapter + Vision presentation | P1 | Done | Adds `VisForm` and `VisFormItem`; matches Figma one/two-column and top/left label variants while retaining Element validation methods. |
 | code-block | Direct self-rendered | P1 | Done | Copy/toggle/scroll behavior migrated. |
 | scroll-shadow | Direct self-rendered | P1 | Done | Vertical/horizontal fade behavior migrated. |
 | badge | Direct/self-rendered | P1 | Done | Keeps old `colorType/type/solid/subtle/iconName` API and badge visuals. |
@@ -68,7 +69,7 @@ These components should not use Element Plus as the visual/behavior base because
 | steps | Element Plus adapter | P1 | Pending | Wrap `ElSteps`; preserve status/icon API. |
 | tabs | Element Plus adapter | P1 | Pending | Wrap `ElTabs`; preserve item/pane semantics. |
 | tag | Element Plus adapter | P1 | Pending | Wrap `ElTag`; map color/closable states. |
-| time-picker | Element Plus adapter | P1 | Pending | Wrap `ElTimePicker`; map time/range API. |
+| time-picker | Self-rendered hybrid | P1 | Completed | Migrated old time/range/quick-select behavior; composes Vision Icon, Button, and Divider. |
 | toggle | Element Plus adapter | P1 | Pending | Wrap `ElSwitch`; preserve old toggle visuals. |
 | tooltip | Element Plus adapter | P1 | Pending | Wrap `ElTooltip`; preserve placement/content/trigger. |
 | tree-view | Element Plus adapter | P1 | Pending | Wrap `ElTree`; map node/selection/expand API. |
@@ -78,6 +79,12 @@ These components should not use Element Plus as the visual/behavior base because
 | input-search-box | Hybrid composite | P2 | Pending | Compose `VisInput` plus search affordances; Element Plus is not the main base. |
 | page-header | Element Plus adapter or hybrid | P2 | Pending | Compare old layout against `ElPageHeader`; likely hybrid. |
 | toggle-button | Hybrid/self-rendered | P2 | Pending | No exact Element Plus equivalent; compose button/toggle semantics. |
+
+## Figma-Only Components
+
+| Component | Migration mode | Status | Implementation note |
+| --- | --- | --- | --- |
+| description | Self-rendered with Element Plus semantic mapping | Done | New `VisDescription`, `VisDescriptionItem`, and `VisDescriptionTitle` components match Figma border/direction/item-type/foldable variants and reuse Vision Alert, Tag, and Icon components. |
 
 ## Next Batch Recommendation
 
