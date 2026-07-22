@@ -1,6 +1,12 @@
-import { createApp } from 'vue'
+import { createApp, h } from 'vue'
+import { RouterView } from 'vue-router'
 
-import App from './App.vue'
+import { docsRouter } from './docs/router'
 import './styles/style.css'
 
-createApp(App).mount('#app')
+createApp({
+  name: 'VisionDocsRoot',
+  render: () => h(RouterView),
+})
+  .use(docsRouter)
+  .mount('#app')

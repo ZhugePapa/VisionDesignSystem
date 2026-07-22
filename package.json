@@ -108,6 +108,10 @@
       "types": "./dist/types/components/message/index.d.ts",
       "import": "./dist/lib/components/message/index.js"
     },
+    "./components/menu": {
+      "types": "./dist/types/components/menu/index.d.ts",
+      "import": "./dist/lib/components/menu/index.js"
+    },
     "./components/modal": {
       "types": "./dist/types/components/modal/index.d.ts",
       "import": "./dist/lib/components/modal/index.js"
@@ -230,6 +234,7 @@
     "typescript": "~6.0.2",
     "vite": "^8.0.4",
     "vue": "^3.5.32",
+    "vue-router": "^5.2.0",
     "vue-tsc": "^3.2.6"
   }
 }

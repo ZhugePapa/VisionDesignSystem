@@ -292,7 +292,35 @@ function handleAction(event: MouseEvent): void {
 }
 
 .vis-tabs__count {
+  padding-inline: var(--space-6);
   flex: 0 0 auto;
+}
+
+.vis-tabs__count.visual-text.is-compact-text {
+  inline-size: auto;
+  padding-inline: var(--space-6);
+}
+
+.vis-tabs__count :deep(.vis-badge__text) {
+  color: var(--color-text-tertiary);
+  font-weight: 400;
+}
+
+.vis-tabs__item:is(:hover, .state-hover):not(.is-active, :disabled)
+  .vis-tabs__count
+  :deep(.vis-badge__text) {
+  color: var(--color-text-secondary);
+  font-weight: 500;
+}
+
+.vis-tabs__item.is-active .vis-tabs__count :deep(.vis-badge__text) {
+  color: var(--color-text-primary);
+  font-weight: 500;
+}
+
+.vis-tabs__item:disabled .vis-tabs__count :deep(.vis-badge__text) {
+  color: var(--color-text-disabled);
+  font-weight: 400;
 }
 
 .vis-tabs__action {

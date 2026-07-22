@@ -55,6 +55,7 @@ export default defineConfig({
         'components/loading/index': fileURLToPath(new URL('./src/components/loading/index.ts', import.meta.url)),
         'components/markdown/index': fileURLToPath(new URL('./src/components/markdown/index.ts', import.meta.url)),
         'components/message/index': fileURLToPath(new URL('./src/components/message/index.ts', import.meta.url)),
+        'components/menu/index': fileURLToPath(new URL('./src/components/menu/index.ts', import.meta.url)),
         'components/modal/index': fileURLToPath(new URL('./src/components/modal/index.ts', import.meta.url)),
         'components/notification/index': fileURLToPath(
           new URL('./src/components/notification/index.ts', import.meta.url),

@@ -22,9 +22,17 @@ import VisInput from './components/input/VisInput.vue'
 import VisInputNumber from './components/input-number/VisInputNumber.vue'
 import VisInputSearchBox from './components/input-search-box/VisInputSearchBox.vue'
 import VisInputTextarea from './components/input-textarea/VisInputTextarea.vue'
-import VisLoading from './components/loading/VisLoading.vue'
+import { VisLoading, VisLoadingText } from './components/loading'
 import { VisMarkdown } from './components/markdown'
 import VisMessage from './components/message/VisMessage.vue'
+import {
+  VisMenu,
+  VisMenuBrandMark,
+  VisMenuGroup,
+  VisMenuItem,
+  VisProjectCell,
+  VisProjectLogo,
+} from './components/menu'
 import VisModal from './components/modal/VisModal.vue'
 import VisModalConfirm from './components/modal/VisModalConfirm.vue'
 import VisNotification from './components/notification/VisNotification.vue'
@@ -93,8 +101,15 @@ export {
   VisInputSearchBox,
   VisInputTextarea,
   VisLoading,
+  VisLoadingText,
   VisMarkdown,
   VisMessage,
+  VisMenu,
+  VisMenuBrandMark,
+  VisMenuGroup,
+  VisMenuItem,
+  VisProjectCell,
+  VisProjectLogo,
   VisModal,
   VisModalConfirm,
   VisNotification,
@@ -234,7 +249,12 @@ export type {
 } from './components/input-number/input-number.types'
 export type { VisInputSearchBoxProps, VisInputSearchBoxState } from './components/input-search-box/input-search-box.types'
 export type { VisInputTextareaProps, VisInputTextareaState } from './components/input-textarea/input-textarea.types'
-export type { VisLoadingColor, VisLoadingProps, VisLoadingSize } from './components/loading/loading.types'
+export type {
+  VisLoadingColor,
+  VisLoadingProps,
+  VisLoadingSize,
+  VisLoadingTextProps,
+} from './components/loading/loading.types'
 export type {
   VisMarkdownComponentMap,
   VisMarkdownIncompleteType,
@@ -244,6 +264,22 @@ export type {
   VisMarkdownTheme,
 } from './components/markdown'
 export type { VisMessageProps, VisMessageType } from './components/message/message.types'
+export type {
+  VisMenuBrandMarkProps,
+  VisMenuGroupProps,
+  VisMenuItemData,
+  VisMenuItemProps,
+  VisMenuItemState,
+  VisMenuKey,
+  VisMenuProject,
+  VisMenuProps,
+  VisMenuSection,
+  VisMenuSelectPayload,
+  VisMenuType,
+  VisProjectCellProps,
+  VisProjectLogoProps,
+  VisProjectLogoVariant,
+} from './components/menu/menu.types'
 export type {
   VisModalConfirmProps,
   VisModalConfirmType,
@@ -379,8 +415,15 @@ const components = [
   VisInputSearchBox,
   VisInputTextarea,
   VisLoading,
+  VisLoadingText,
   VisMarkdown,
   VisMessage,
+  VisMenu,
+  VisMenuBrandMark,
+  VisMenuGroup,
+  VisMenuItem,
+  VisProjectCell,
+  VisProjectLogo,
   VisModal,
   VisModalConfirm,
   VisNotification,

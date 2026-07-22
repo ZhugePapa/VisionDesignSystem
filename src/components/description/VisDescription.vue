@@ -124,8 +124,9 @@ watch(
 }
 
 .vis-description.is-bordered .vis-description__content {
+  border: 1px solid var(--color-border-default);
   gap: 1px;
-  padding: 1px;
+  padding: 0;
   background: var(--color-border-default);
 }
 

@@ -184,7 +184,10 @@ function onSelect(): void {
 }
 
 .vis-dropdown-item.is-disabled .vis-dropdown-item__icon,
-.vis-dropdown-item.is-disabled .vis-dropdown-item__trailing,
+.vis-dropdown-item.is-disabled .vis-dropdown-item__trailing {
+  color: var(--color-fg-disabled);
+}
+
 .vis-dropdown-item.is-disabled :deep(.vis-avatar-label__title),
 .vis-dropdown-item.is-disabled :deep(.vis-avatar-label__subtitle) {
   color: var(--color-text-disabled);

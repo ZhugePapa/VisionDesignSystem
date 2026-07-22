@@ -82,7 +82,7 @@
 | API 名 | 旧 API | Element Plus API | 说明 | 类型 | 默认值 |
 | --- | --- | --- | --- | --- | --- |
 | `colorType` | `colorType` | class / CSS var | 保持 Figma/旧项目 API。内部映射到 Badge 颜色 token，`info` 继续表示灰/信息色。 | `VisBadgeColorType` | `'danger'` |
-| `type` | `type` | `is-dot` / class | Badge 形态主 API。`status/number/icon` 由 Vision 自研结构控制，必要时参考 Element Plus `is-dot` / `value`。 | `'status' \| 'number' \| 'icon'` | `'status'` |
+| `type` | `type` | `is-dot` / `value` / class | Badge 形态主 API。`status/text/icon/dot` 由 Vision 自研结构控制，`number` 保留旧 API 并复用 text 视觉。 | `'status' \| 'text' \| 'icon' \| 'dot' \| 'number'` | `'status'` |
 | `solid` | `solid` | class | 保留旧布尔 API，控制实色风格。与 `subtle` 同时传入时按组件实现定义优先级。 | `boolean` | `false` |
 | `subtle` | `subtle` | class | 保留旧布尔 API，控制柔和风格。 | `boolean` | `false` |
 | `label` | `label` | 自研 | 文本内容。 | `string` | `undefined` |
@@ -402,6 +402,14 @@
 | `text` | `text` | 自研 | 是否显示文字，保持旧/Figma API。 | `boolean` | `false` |
 | `label` | `label` | text / aria-label | loading 文案。 | `string` | `'loading...'` |
 | `decorative` | `decorative` | `aria-hidden` | 装饰性 loading。 | `boolean` | `false` |
+
+## LoadingText
+
+| API 名 | 旧 API | Element Plus API | 说明 | 类型 | 默认值 |
+| --- | --- | --- | --- | --- | --- |
+| `label` | Figma text | 自研 | 加载文案，配合 `atom-02` 图标和流光动效展示。 | `string` | `'正在思考...'` |
+| `decorative` | 无 | `aria-hidden` | 标记为装饰内容；关闭时使用 `status` / `aria-live="polite"` 语义。 | `boolean` | `false` |
+| `default` slot | Figma text | slot | 覆盖 `label` 展示自定义文案。 | slot | - |
 
 ## Markdown
 

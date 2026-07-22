@@ -119,7 +119,7 @@ const loadingColor = computed<VisLoadingColor>(() => {
   --vis-button-shadow-layer: 0 0 0 0 transparent;
   --vis-button-height: var(--space-32);
   --vis-button-padding-inline: var(--space-12);
-  --vis-button-gap: var(--space-8);
+  --vis-button-gap: var(--space-6);
   --vis-button-icon-size: var(--space-16);
   --vis-button-loading-size: var(--space-16);
   --vis-button-font-size: var(--font-text-md-size);
@@ -161,6 +161,7 @@ const loadingColor = computed<VisLoadingColor>(() => {
 .vis-button.size-lg {
   --vis-button-height: var(--space-40);
   --vis-button-padding-inline: var(--space-16);
+  --vis-button-gap: var(--space-8);
   --vis-button-icon-size: var(--space-20);
   --vis-button-font-weight: 500;
 }

@@ -23,7 +23,7 @@ const isSolid = computed(() => props.solid || props.type === 'dot')
 const isSubtle = computed(() => props.subtle && props.type === 'status' && !props.solid)
 
 const defaultStatusLabelMap: Record<VisBadgeColorType, string> = {
-  danger: '危险',
+  danger: '错误',
   warning: '警告',
   success: '成功',
   brand: '进行中',
@@ -171,19 +171,27 @@ const badgeStyle = computed(() => badgeStyleMap[normalizedColorType.value])
 
 .vis-badge.visual-status {
   block-size: var(--space-20);
-  gap: 6px;
+  gap: var(--space-4);
   padding-inline: var(--space-8);
 }
 
 .vis-badge.visual-text {
-  min-inline-size: var(--space-20);
+  min-inline-size: 18px;
   block-size: var(--space-20);
-  padding-inline: 6px;
+  padding-inline: 5px;
 }
 
 .vis-badge.visual-text.is-compact-text {
-  inline-size: var(--space-20);
+  inline-size: 18px;
   padding-inline: 0;
+}
+
+.vis-badge.visual-text.is-solid {
+  min-inline-size: var(--space-20);
+}
+
+.vis-badge.visual-text.is-compact-text.is-solid {
+  inline-size: var(--space-20);
 }
 
 .vis-badge.visual-icon {
@@ -212,12 +220,14 @@ const badgeStyle = computed(() => badgeStyleMap[normalizedColorType.value])
 }
 
 .vis-badge.is-solid:is(.visual-text, .visual-icon) {
-  border-color: var(--color-border-white);
+  border-width: 0;
   background: var(--vis-badge-solid-bg);
   color: var(--color-text-white);
 }
 
 .vis-badge.is-solid.visual-status {
+  border-width: 0;
+  padding-inline: var(--space-6);
   background: var(--vis-badge-solid-bg);
   color: var(--color-text-white);
 }

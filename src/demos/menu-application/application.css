@@ -1,0 +1,38 @@
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+  inline-size: 100%;
+  min-inline-size: 320px;
+  block-size: 100%;
+  margin: 0;
+}
+
+body {
+  overflow: hidden;
+  font-family: var(--font-family-sans);
+}
+
+#app > .vision-theme {
+  inline-size: 100%;
+  block-size: 100%;
+}
+
+.application-page-content {
+  max-inline-size: 1240px;
+  margin: var(--space-24) auto 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}

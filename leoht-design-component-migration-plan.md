@@ -24,7 +24,7 @@ These components should not use Element Plus as the visual/behavior base because
 | code-block | Done | `VisCodeBlock` | Direct migration; uses `VisButton` and `VisScrollShadow`. |
 | scroll-shadow | Done | `VisScrollShadow` | Direct migration; keeps edge fade behavior. |
 | badge | Done | `VisBadge` | Direct/self-rendered migration. API keeps `colorType/type/solid/subtle/iconName`. |
-| loading | Done | `VisLoading` | Direct/self-rendered migration. API keeps `size/color/text/label`. |
+| loading | Done | `VisLoading` / `VisLoadingText` | Direct/self-rendered migration. Spinner keeps `size/color/text/label`; LoadingText follows the Figma text-and-shine pattern. |
 | markdown | Pending | `VisMarkdown` | Direct migration; requires adding `marked` and `dompurify` dependencies first. |
 | rich-text-editor | Pending | `VisRichTextEditor` | Direct migration; must first port internal tooltip/dropdown/divider behavior or replace with internal controls. |
 

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import { RouterLink, useRoute } from 'vue-router'
 
 import VisAccordion from './components/accordion/VisAccordion.vue'
 import VisAlert from './components/alert/VisAlert.vue'
@@ -23,7 +24,7 @@ import VisInput from './components/input/VisInput.vue'
 import VisInputNumber from './components/input-number/VisInputNumber.vue'
 import VisInputSearchBox from './components/input-search-box/VisInputSearchBox.vue'
 import VisInputTextarea from './components/input-textarea/VisInputTextarea.vue'
-import VisLoading from './components/loading/VisLoading.vue'
+import { VisLoading, VisLoadingText } from './components/loading'
 import { VisMarkdown } from './components/markdown'
 import VisMessage from './components/message/VisMessage.vue'
 import VisModal from './components/modal/VisModal.vue'
@@ -86,51 +87,12 @@ import type { VisToggleState } from './components/toggle/toggle.types'
 import type { VisTooltipPosition, VisTooltipTrigger } from './components/tooltip/tooltip.types'
 import type { VisTreeViewFolderType, VisTreeViewItem, VisTreeViewKey } from './components/tree-view/tree-view.types'
 import type { VisUploadFileItem, VisUploadType } from './components/upload/upload.types'
-
-type DemoPageId =
-  | 'accordion'
-  | 'alert'
-  | 'avatar'
-  | 'button'
-  | 'input'
-  | 'input-number'
-  | 'input-search-box'
-  | 'input-textarea'
-  | 'markdown'
-  | 'message'
-  | 'modal'
-  | 'notification'
-  | 'pagination'
-  | 'popover'
-  | 'progress-bar'
-  | 'progress-circle'
-  | 'badge'
-  | 'loading'
-  | 'tag'
-  | 'breadcrumb'
-  | 'radio'
-  | 'rate'
-  | 'checkbox'
-  | 'date-picker'
-  | 'description'
-  | 'divider'
-  | 'drawer'
-  | 'dropdown'
-  | 'featured-icon'
-  | 'form'
-  | 'code-block'
-  | 'scroll-shadow'
-  | 'segmented'
-  | 'select'
-  | 'slider'
-  | 'table'
-  | 'tabs'
-  | 'time-picker'
-  | 'toggle'
-  | 'toggle-button'
-  | 'tooltip'
-  | 'tree-view'
-  | 'upload'
+import {
+  defaultDemoPageId,
+  demoPages as pages,
+  getDemoRouteName,
+  type DemoPageId,
+} from './docs/demo-pages'
 
 type SidebarPageId = DemoPageId | 'icons'
 
@@ -182,8 +144,14 @@ interface ApiTableSection {
   rows: ApiDisplayRow[]
 }
 
+const route = useRoute()
 const theme = ref<VisTheme>('light')
-const activePage = ref<DemoPageId>('button')
+const activePage = computed<DemoPageId>(() => {
+  const page = route.meta.demoPage
+  return typeof page === 'string' && pages.some((item) => item.id === page)
+    ? page as DemoPageId
+    : defaultDemoPageId
+})
 const collapsedGroups = ref<Set<string>>(new Set())
 const inputValue = ref('Vision Design')
 const inputNumberValue = ref(0)
@@ -660,52 +628,6 @@ const content = '# Vision Markdown'
 ~~~
 `
 
-const pages: Array<{ id: DemoPageId; title: string; subtitle: string }> = [
-  { id: 'accordion', title: 'Accordion', subtitle: '折叠面板' },
-  { id: 'alert', title: 'Alert', subtitle: '警告提示' },
-  { id: 'avatar', title: 'Avatar', subtitle: '头像' },
-  { id: 'badge', title: 'Badge', subtitle: '徽标' },
-  { id: 'breadcrumb', title: 'Breadcrumb', subtitle: '面包屑' },
-  { id: 'button', title: 'Button', subtitle: '按钮' },
-  { id: 'checkbox', title: 'Checkbox', subtitle: '复选框' },
-  { id: 'code-block', title: 'Code Block', subtitle: '代码块' },
-  { id: 'date-picker', title: 'Date Picker', subtitle: '日期选择器' },
-  { id: 'description', title: 'Description', subtitle: '描述列表' },
-  { id: 'divider', title: 'Divider', subtitle: '分割线' },
-  { id: 'drawer', title: 'Drawer', subtitle: '抽屉' },
-  { id: 'dropdown', title: 'Dropdown', subtitle: '下拉菜单' },
-  { id: 'featured-icon', title: 'Featured Icon', subtitle: '特征图标' },
-  { id: 'form', title: 'Form', subtitle: '表单' },
-  { id: 'input', title: 'Input', subtitle: '输入框' },
-  { id: 'input-number', title: 'InputNumber', subtitle: '数字输入框' },
-  { id: 'input-search-box', title: 'InputSearchBox', subtitle: '搜索输入框' },
-  { id: 'input-textarea', title: 'InputTextarea', subtitle: '文本域' },
-  { id: 'loading', title: 'Loading', subtitle: '加载' },
-  { id: 'markdown', title: 'Markdown', subtitle: '格式渲染' },
-  { id: 'message', title: 'Message', subtitle: '全局提示' },
-  { id: 'modal', title: 'Modal', subtitle: '弹窗' },
-  { id: 'notification', title: 'Notification', subtitle: '通知提醒' },
-  { id: 'pagination', title: 'Pagination', subtitle: '分页器' },
-  { id: 'popover', title: 'Popover', subtitle: '气泡框' },
-  { id: 'progress-bar', title: 'ProgressBar', subtitle: '进度条' },
-  { id: 'progress-circle', title: 'ProgressCircle', subtitle: '环形进度条' },
-  { id: 'radio', title: 'Radio', subtitle: '单选框' },
-  { id: 'rate', title: 'Rate', subtitle: '评分' },
-  { id: 'scroll-shadow', title: 'Scroll Shadow', subtitle: '滚动阴影' },
-  { id: 'segmented', title: 'Segmented', subtitle: '分段控制器' },
-  { id: 'select', title: 'Select', subtitle: '选择器' },
-  { id: 'slider', title: 'Slider', subtitle: '滑动输入' },
-  { id: 'table', title: 'Table', subtitle: '表格' },
-  { id: 'tabs', title: 'Tabs', subtitle: '标签页' },
-  { id: 'tag', title: 'Tag', subtitle: '标签' },
-  { id: 'time-picker', title: 'Time Picker', subtitle: '时间选择器' },
-  { id: 'toggle', title: 'Toggle', subtitle: '开关' },
-  { id: 'toggle-button', title: 'ToggleButton', subtitle: '切换按钮' },
-  { id: 'tooltip', title: 'Tooltip', subtitle: '文字提示' },
-  { id: 'tree-view', title: 'TreeView', subtitle: '树视图' },
-  { id: 'upload', title: 'Upload', subtitle: '上传' },
-]
-
 const logoSvg = `<svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
 <path d="M1.17624 12.0999C1.08208 11.3108 1.70042 10.6252 2.49503 10.6252H20.6269C21.3112 10.6252 21.8872 11.1395 21.9715 11.8186C22.1291 13.0887 22.4174 15.2891 22.8363 18.0123C23.1958 20.349 23.6515 22.3009 23.9974 23.6103C24.2316 24.4966 23.5685 25.3993 22.6517 25.3993H4.69643C4.10331 25.3993 3.58189 25.0115 3.42711 24.4389C3.08143 23.1602 2.47289 20.7401 2.01825 18.0123C1.61875 15.6153 1.33808 13.456 1.17624 12.0999Z" fill="#14C9C9"/>
 <path d="M26.8326 3.92544C26.8552 3.17666 26.2525 2.56665 25.5034 2.56665H8.72388C7.98591 2.56665 7.38456 3.16037 7.36697 3.89813C7.3174 5.97618 7.16675 10.1505 6.71893 13.983C6.29265 17.6312 5.51629 21.5891 5.06188 23.7538C4.88457 24.5984 5.52744 25.3993 6.39049 25.3993H23.1359C23.7498 25.3993 24.2839 24.9849 24.4224 24.387C24.8547 22.5209 25.7527 18.3303 26.1939 13.983C26.6096 9.88697 26.7724 5.93002 26.8326 3.92544Z" fill="#1C63FC"/>
@@ -775,6 +697,12 @@ const sidebarGroups: SidebarGroup[] = [
       { title: 'Tooltip', subtitle: '文字提示', page: 'tooltip' },
       { title: 'TreeView', subtitle: '树视图', page: 'tree-view' },
       { title: 'Upload', subtitle: '上传', page: 'upload' },
+    ],
+  },
+  {
+    title: 'Application Components',
+    items: [
+      { title: 'Menu', subtitle: '业务菜单', page: 'menu' },
     ],
   },
 ]
@@ -2215,6 +2143,7 @@ const apiTables: Record<DemoPageId, ApiRow[]> = {
   ],
   loading: [
     {
+      component: 'VisLoading',
       visionApi: 'size',
       elementApi: '无直接对应',
       description: '控制加载图形外框尺寸，内部图形按旧项目 87.5% 比例绘制。',
@@ -2222,6 +2151,7 @@ const apiTables: Record<DemoPageId, ApiRow[]> = {
       defaultValue: "'xs'",
     },
     {
+      component: 'VisLoading',
       visionApi: 'color',
       elementApi: '无直接对应',
       description: '控制加载图形和文本颜色。',
@@ -2229,6 +2159,7 @@ const apiTables: Record<DemoPageId, ApiRow[]> = {
       defaultValue: "'brand'",
     },
     {
+      component: 'VisLoading',
       visionApi: 'text',
       elementApi: '无直接对应',
       description: '是否在加载图形下方显示文案。',
@@ -2236,6 +2167,7 @@ const apiTables: Record<DemoPageId, ApiRow[]> = {
       defaultValue: 'false',
     },
     {
+      component: 'VisLoading',
       visionApi: 'label',
       elementApi: 'aria-label',
       description: '加载文案；无文本模式下作为可访问名称。',
@@ -2243,11 +2175,36 @@ const apiTables: Record<DemoPageId, ApiRow[]> = {
       defaultValue: "'loading...'",
     },
     {
+      component: 'VisLoading',
       visionApi: 'decorative',
       elementApi: 'aria-hidden',
       description: '标记为装饰性加载图形，隐藏给辅助技术。',
       type: 'boolean',
       defaultValue: 'false',
+    },
+    {
+      component: 'VisLoadingText',
+      visionApi: 'label',
+      elementApi: '无直接对应',
+      description: '设置加载文案，默认为设计稿中的“正在思考...”。',
+      type: 'string',
+      defaultValue: "'正在思考...'",
+    },
+    {
+      component: 'VisLoadingText',
+      visionApi: 'decorative',
+      elementApi: 'aria-hidden',
+      description: '将组件标记为装饰内容，不向辅助技术播报状态。',
+      type: 'boolean',
+      defaultValue: 'false',
+    },
+    {
+      component: 'VisLoadingText',
+      visionApi: 'default slot',
+      elementApi: '无直接对应',
+      description: '覆盖 label 展示自定义文案内容。',
+      type: 'slot',
+      defaultValue: '-',
     },
   ],
   markdown: [
@@ -3892,6 +3849,21 @@ const apiTables: Record<DemoPageId, ApiRow[]> = {
       defaultValue: "'表格'",
     },
   ],
+  menu: [
+    { visionApi: 'type', elementApi: 'mode', description: '切换项目内常驻侧栏与全局主侧栏。', type: "'project' | 'main'", defaultValue: "'project'" },
+    { visionApi: 'items', elementApi: 'default slot', description: '项目菜单树；父节点通过 children 声明二级菜单，图标支持 iconName 或 projectLogo。', type: 'VisMenuItemData[]', defaultValue: '[]' },
+    { visionApi: 'sections', elementApi: 'default slot', description: '主侧栏分组数据；传入后优先于 items。', type: 'VisMenuSection[]', defaultValue: '[]' },
+    { visionApi: 'activeKey', elementApi: 'default-active', description: '当前路由对应的激活菜单 key，父项会根据激活后代同步高亮。', type: 'VisMenuKey', defaultValue: 'undefined' },
+    { visionApi: 'openKey', elementApi: 'default-openeds / unique-opened', description: '当前唯一内联展开的父菜单，支持 v-model:open-key。', type: 'VisMenuKey | null', defaultValue: 'undefined' },
+    { visionApi: 'collapsed', elementApi: 'collapse', description: '项目侧栏折叠状态；主侧栏不使用该属性。', type: 'boolean', defaultValue: 'false' },
+    { visionApi: 'project', elementApi: '无直接对应', description: '当前项目信息，支持使用 logoVariant 显示设计稿项目 Logo。', type: 'VisMenuProject', defaultValue: '内置示例项目' },
+    { visionApi: 'projects', elementApi: '无直接对应', description: '项目切换器中的最近项目列表；每项可配置 logoVariant。', type: 'VisMenuProject[]', defaultValue: '[]' },
+    { visionApi: 'projectSwitcherOpen', elementApi: '无直接对应', description: '项目切换浮层开关，支持 v-model:project-switcher-open。', type: 'boolean', defaultValue: 'undefined' },
+    { visionApi: 'brandTitle', elementApi: '无直接对应', description: '主侧栏顶部品牌名称。', type: 'string', defaultValue: "'VISSLM DevOps'" },
+    { visionApi: 'showFooter', elementApi: '无直接对应', description: '是否显示项目侧栏底部帮助与折叠操作。', type: 'boolean', defaultValue: 'true' },
+    { visionApi: 'helpLabel', elementApi: '无直接对应', description: '底部帮助入口文案。', type: 'string', defaultValue: "'帮助'" },
+    { visionApi: 'moreProjectsLabel', elementApi: '无直接对应', description: '项目切换器底部查看更多入口文案。', type: 'string', defaultValue: "'查看更多项目'" },
+  ],
 }
 
 const noElementApiRows = (): ElementApiRow[] => []
@@ -4356,6 +4328,21 @@ const elementApiTables: Record<DemoPageId, ElementApiRow[]> = {
     { category: 'Attribute', api: 'icon', description: '自定义图标组件。', type: 'string | Component', defaultValue: '-' },
     { category: 'Attribute', api: 'z-index', description: 'Message 的 z-index。', type: 'number', defaultValue: '-' },
     { category: 'Event', api: 'close', description: '关闭 Message 时触发。', type: '() => void', defaultValue: '-' },
+  ],
+  menu: [
+    { category: 'Attribute', api: 'mode', description: '菜单展示模式。', type: "'horizontal' | 'vertical'", defaultValue: "'vertical'" },
+    { category: 'Attribute', api: 'default-active', description: '页面加载时默认激活菜单的 index。', type: 'string', defaultValue: "''" },
+    { category: 'Attribute', api: 'default-openeds', description: '默认打开的 SubMenu index 数组。', type: 'string[]', defaultValue: '[]' },
+    { category: 'Attribute', api: 'unique-opened', description: '是否只保持一个 SubMenu 展开。', type: 'boolean', defaultValue: 'false' },
+    { category: 'Attribute', api: 'collapse', description: '是否水平折叠菜单，仅垂直模式可用。', type: 'boolean', defaultValue: 'false' },
+    { category: 'Attribute', api: 'router', description: '是否使用 vue-router 模式，以菜单 index 作为 path。', type: 'boolean', defaultValue: 'false' },
+    { category: 'Attribute', api: 'menu-trigger', description: '水平模式下子菜单的触发方式。', type: "'hover' | 'click'", defaultValue: "'hover'" },
+    { category: 'Attribute', api: 'collapse-transition', description: '是否开启折叠动画。', type: 'boolean', defaultValue: 'true' },
+    { category: 'Attribute', api: 'persistent', description: '菜单折叠后是否保留子菜单 DOM。', type: 'boolean', defaultValue: 'true' },
+    { category: 'Attribute', api: 'popper-offset', description: '弹出菜单的偏移量。', type: 'number', defaultValue: '6' },
+    { category: 'Event', api: 'select', description: '菜单项被选中时触发。', type: '(index, indexPath, item, routerResult?) => void', defaultValue: '-' },
+    { category: 'Event', api: 'open', description: 'SubMenu 展开时触发。', type: '(index, indexPath) => void', defaultValue: '-' },
+    { category: 'Event', api: 'close', description: 'SubMenu 收起时触发。', type: '(index, indexPath) => void', defaultValue: '-' },
   ],
   notification: [
     { category: 'Attribute', api: 'title', description: '通知标题。', type: 'string', defaultValue: "''" },
@@ -4978,8 +4965,9 @@ const visionComponentNames: Record<DemoPageId, string> = {
   'progress-bar': 'VisProgressBar / VisProgressBarMultiple',
   'progress-circle': 'VisProgressCircle',
   badge: 'VisBadge',
-  loading: 'VisLoading',
+  loading: 'VisLoading / VisLoadingText',
   markdown: 'VisMarkdown',
+  menu: 'VisMenu / VisMenuItem / VisMenuGroup / VisProjectCell / VisProjectLogo',
   tag: 'VisTag',
   breadcrumb: 'VisBreadcrumb',
   radio: 'VisRadio',
@@ -5017,6 +5005,7 @@ const elementComponentNames: Partial<Record<DemoPageId, string>> = {
   'input-search-box': 'ElInput',
   'input-textarea': 'ElInput',
   message: 'ElMessage',
+  menu: 'ElMenu',
   modal: 'ElDialog',
   notification: 'ElNotification',
   pagination: 'ElPagination',
@@ -5275,6 +5264,15 @@ const visionEventTables: Record<DemoPageId, ApiDisplayRow[]> = {
       description: '离场过渡结束后触发。',
       type: '() => void',
     },
+  ],
+  menu: [
+    { api: 'update:openKey', description: '唯一展开父菜单变化时触发。', type: '(value: VisMenuKey | null) => void' },
+    { api: 'update:collapsed', description: '点击侧栏折叠按钮时触发。', type: '(value: boolean) => void' },
+    { api: 'update:projectSwitcherOpen', description: '项目切换浮层开关变化时触发。', type: '(value: boolean) => void' },
+    { api: 'select', description: '选择叶子菜单，或点击父菜单进入默认子项时触发。', type: '(payload: VisMenuSelectPayload) => void' },
+    { api: 'project-change', description: '选择其他项目时触发。', type: '(project: VisMenuProject) => void' },
+    { api: 'request-more-projects', description: '点击查看更多项目时触发。', type: '() => void' },
+    { api: 'help', description: '点击底部帮助入口时触发。', type: '() => void' },
   ],
   notification: [
     {
@@ -5805,6 +5803,12 @@ const elementExtraApiRows: Record<DemoPageId, ElementApiRow[]> = {
   message: [
     { category: 'Slot', api: 'default', description: '自定义消息内容。', type: 'slot', defaultValue: '-' },
   ],
+  menu: [
+    { category: 'Slot', api: 'default', description: 'ElMenu 默认内容，通常放置 ElMenuItem 与 ElSubMenu。', type: 'slot', defaultValue: '-' },
+    { category: 'Expose', api: 'open', description: '展开指定 index 的 SubMenu。', type: '(index: string) => void', defaultValue: '-' },
+    { category: 'Expose', api: 'close', description: '收起指定 index 的 SubMenu。', type: '(index: string) => void', defaultValue: '-' },
+    { category: 'Expose', api: 'handleResize', description: '手动刷新菜单布局。', type: '() => void', defaultValue: '-' },
+  ],
   notification: [],
   pagination: [],
   popover: [
@@ -6154,6 +6158,14 @@ const currentVisionApiSections = computed(() => {
     ].filter((section): section is ApiTableSection => Boolean(section))
   }
 
+  if (activePage.value === 'loading') {
+    const rows = apiTables.loading
+    return [
+      createSection('VisLoading Attributes', visionAttributeColumns, toVisionAttributeRows(rows.filter((row) => row.component === 'VisLoading'))),
+      createSection('VisLoadingText Attributes', visionAttributeColumns, toVisionAttributeRows(rows.filter((row) => row.component === 'VisLoadingText'))),
+    ].filter((section): section is ApiTableSection => Boolean(section))
+  }
+
   const componentName = visionComponentNames[activePage.value]
   return [
     createSection(`${componentName} Attributes`, visionAttributeColumns, toVisionAttributeRows(apiTables[activePage.value])),
@@ -6237,10 +6249,6 @@ function toggleGroup(title: string) {
   collapsedGroups.value = next
 }
 
-function selectPage(page: SidebarPageId | undefined) {
-  if (!page || page === 'icons') return
-  activePage.value = page
-}
 </script>
 
 <template>
@@ -6280,18 +6288,24 @@ function selectPage(page: SidebarPageId | undefined) {
             </button>
 
             <template v-if="!isGroupCollapsed(group.title)">
-              <button
+              <template
                 v-for="item in group.items"
                 :key="group.title + '-' + item.title"
-                class="menu-item"
-                :class="{ active: item.page === activePage, 'is-disabled': !item.page || item.page === 'icons' }"
-                :disabled="!item.page || item.page === 'icons'"
-                type="button"
-                @click="selectPage(item.page)"
               >
-                <span>{{ item.title }}</span>
-                <small>{{ item.subtitle }}</small>
-              </button>
+                <RouterLink
+                  v-if="item.page && item.page !== 'icons'"
+                  class="menu-item"
+                  :class="{ active: item.page === activePage }"
+                  :to="{ name: getDemoRouteName(item.page) }"
+                >
+                  <span>{{ item.title }}</span>
+                  <small>{{ item.subtitle }}</small>
+                </RouterLink>
+                <button v-else class="menu-item is-disabled" disabled type="button">
+                  <span>{{ item.title }}</span>
+                  <small>{{ item.subtitle }}</small>
+                </button>
+              </template>
             </template>
 
             <div v-if="groupIndex < sidebarGroups.length - 1" class="menu-divider" aria-hidden="true">
@@ -6365,6 +6379,7 @@ function selectPage(page: SidebarPageId | undefined) {
                 <VisButton danger>危险按钮</VisButton>
                 <VisButton loading>加载中</VisButton>
                 <VisButton icon-only icon-name="plus" label="新增" />
+                <VisButton prefix suffix>中号按钮</VisButton>
               </div>
 
               <div v-else-if="activePage === 'form'" class="form-demo">
@@ -6772,16 +6787,52 @@ function selectPage(page: SidebarPageId | undefined) {
                 </div>
                 <div class="badge-demo__row">
                   <VisBadge type="text" color-type="danger" label="Hot!" />
+                  <VisBadge type="text" color-type="warning" label="Hot!" />
                   <VisBadge type="text" color-type="success" label="New" />
-                  <VisBadge type="number" color-type="brand" :count="8" />
-                  <VisBadge type="icon" color-type="warning" icon-name="alert-triangle" />
-                  <VisBadge type="dot" color-type="success" />
+                  <VisBadge type="text" color-type="brand" label="New" />
+                  <VisBadge type="text" color-type="grey" label="info" />
                 </div>
                 <div class="badge-demo__row">
-                  <VisBadge color-type="brand" solid label="实心" />
-                  <VisBadge color-type="brand" subtle label="轻量" />
-                  <VisBadge type="text" color-type="grey" label="Info" />
+                  <VisBadge type="icon" color-type="danger" />
+                  <VisBadge type="icon" color-type="warning" />
+                  <VisBadge type="icon" color-type="success" />
+                  <VisBadge type="icon" color-type="brand" />
+                  <VisBadge type="icon" color-type="grey" />
+                </div>
+                <div class="badge-demo__row">
+                  <VisBadge color-type="danger" solid />
+                  <VisBadge color-type="warning" solid />
+                  <VisBadge color-type="success" solid />
+                  <VisBadge color-type="brand" solid />
+                  <VisBadge color-type="grey" solid />
+                </div>
+                <div class="badge-demo__row">
+                  <VisBadge type="text" color-type="danger" solid label="Hot!" />
+                  <VisBadge type="text" color-type="warning" solid label="Hot!" />
+                  <VisBadge type="text" color-type="success" solid label="New" />
+                  <VisBadge type="text" color-type="brand" solid label="New" />
+                  <VisBadge type="text" color-type="grey" solid label="info" />
+                </div>
+                <div class="badge-demo__row">
                   <VisBadge type="icon" color-type="danger" solid icon-name="x-close" />
+                  <VisBadge type="icon" color-type="warning" solid />
+                  <VisBadge type="icon" color-type="success" solid />
+                  <VisBadge type="icon" color-type="brand" solid />
+                  <VisBadge type="icon" color-type="grey" solid />
+                </div>
+                <div class="badge-demo__row">
+                  <VisBadge color-type="danger" subtle />
+                  <VisBadge color-type="warning" subtle />
+                  <VisBadge color-type="success" subtle />
+                  <VisBadge color-type="brand" subtle />
+                  <VisBadge color-type="grey" subtle />
+                </div>
+                <div class="badge-demo__row">
+                  <VisBadge type="dot" color-type="danger" />
+                  <VisBadge type="dot" color-type="warning" />
+                  <VisBadge type="dot" color-type="success" />
+                  <VisBadge type="dot" color-type="brand" />
+                  <VisBadge type="dot" color-type="grey" />
                 </div>
               </div>
 
@@ -6800,6 +6851,10 @@ function selectPage(page: SidebarPageId | undefined) {
                   <span class="loading-demo__inverse">
                     <VisLoading color="white" text label="同步中" />
                   </span>
+                </div>
+                <div class="loading-demo__row">
+                  <VisLoadingText />
+                  <VisLoadingText label="正在生成答案..." />
                 </div>
               </div>
 
@@ -7811,12 +7866,43 @@ function selectPage(page: SidebarPageId | undefined) {
                 <div class="dropdown-demo__items">
                   <VisDropdownItem type="icon" icon-name="settings-01" state="hover" />
                   <VisDropdownItem label="菜单选项" active />
+                  <VisDropdownItem label="菜单选项" active state="hover" />
                   <VisDropdownItem type="icon" icon-name="log-out-01" label="菜单选项" arrow />
                   <VisDropdownItem type="avatar" title="张大山" subtitle="zhangdashan" />
                   <VisDropdownItem label="菜单选项" disabled />
                   <VisDropdownItem label="菜单选项" checkable active />
                 </div>
               </div>
+
+              <a
+                v-else-if="activePage === 'menu'"
+                class="menu-launch-card"
+                href="./demo/"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <span class="menu-launch-card__preview" aria-hidden="true">
+                  <span class="menu-launch-card__rail">
+                    <i />
+                    <i />
+                    <i />
+                    <i />
+                  </span>
+                  <span class="menu-launch-card__canvas">
+                    <i />
+                    <i />
+                    <i />
+                  </span>
+                </span>
+                <span class="menu-launch-card__copy">
+                  <span class="menu-launch-card__icon"><Icon name="menu-01" :size="20" decorative /></span>
+                  <span>
+                    <strong>打开完整 Menu 业务场景</strong>
+                    <small>在独立页面中体验主导航、项目切换、侧栏折叠、父子菜单和真实内容路由。</small>
+                  </span>
+                  <Icon name="arrow-up-right" :size="20" decorative />
+                </span>
+              </a>
 
               <div v-else-if="activePage === 'segmented'" class="segmented-demo">
                 <div class="segmented-demo__controls">
@@ -8269,6 +8355,7 @@ function selectPage(page: SidebarPageId | undefined) {
   background: var(--color-bg-surface);
   font: inherit;
   text-align: left;
+  text-decoration: none;
   cursor: pointer;
 }
 
@@ -8319,6 +8406,7 @@ function selectPage(page: SidebarPageId | undefined) {
   background: var(--color-bg-surface);
   font: inherit;
   text-align: left;
+  text-decoration: none;
   cursor: pointer;
 }
 
@@ -8437,6 +8525,11 @@ function selectPage(page: SidebarPageId | undefined) {
 .demo-panel:has(.dropdown-demo) {
   max-inline-size: 880px;
   min-block-size: 520px;
+  inline-size: 100%;
+}
+
+.demo-panel:has(.menu-launch-card) {
+  max-inline-size: 1120px;
   inline-size: 100%;
 }
 
@@ -9636,6 +9729,123 @@ function selectPage(page: SidebarPageId | undefined) {
   display: grid;
   gap: var(--space-20);
   justify-items: start;
+}
+
+.menu-launch-card {
+  box-sizing: border-box;
+  inline-size: 100%;
+  max-inline-size: 760px;
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  display: block;
+  color: var(--color-text-primary);
+  background: var(--color-bg-canvas);
+  box-shadow: var(--shadow-default-xs);
+  text-decoration: none;
+  transition: border-color 140ms ease, box-shadow 140ms ease, transform 140ms ease;
+}
+
+.menu-launch-card:hover,
+.menu-launch-card:focus-visible {
+  border-color: var(--color-border-brand);
+  box-shadow: var(--shadow-default-md);
+  transform: translateY(-2px);
+  outline: 0;
+}
+
+.menu-launch-card__preview {
+  box-sizing: border-box;
+  inline-size: 100%;
+  block-size: 220px;
+  border-block-end: 1px solid var(--color-border-default);
+  padding: var(--space-24);
+  display: flex;
+  overflow: hidden;
+  background: var(--color-bg-secondary);
+}
+
+.menu-launch-card__rail {
+  inline-size: 128px;
+  border: 1px solid var(--color-border-default);
+  border-inline-end: 0;
+  border-radius: var(--radius-sm) 0 0 var(--radius-sm);
+  padding: var(--space-16) var(--space-12);
+  display: grid;
+  align-content: start;
+  gap: var(--space-8);
+  background: var(--color-bg-canvas);
+}
+
+.menu-launch-card__rail i,
+.menu-launch-card__canvas i {
+  border-radius: var(--radius-xs);
+  display: block;
+  background: var(--color-bg-tertiary);
+}
+
+.menu-launch-card__rail i {
+  block-size: var(--space-24);
+}
+
+.menu-launch-card__rail i:first-child {
+  background: var(--color-fg-brand-subtle);
+}
+
+.menu-launch-card__canvas {
+  border: 1px solid var(--color-border-default);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  padding: var(--space-24);
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-content: start;
+  gap: var(--space-12);
+  flex: 1 1 0;
+  background: var(--color-bg-canvas);
+}
+
+.menu-launch-card__canvas i {
+  block-size: 72px;
+  border: 1px solid var(--color-border-default);
+  background: var(--color-bg-secondary);
+}
+
+.menu-launch-card__copy {
+  padding: var(--space-20);
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-12);
+}
+
+.menu-launch-card__copy > span:nth-child(2) {
+  min-inline-size: 0;
+  display: grid;
+  gap: var(--space-4);
+}
+
+.menu-launch-card__copy strong {
+  color: var(--color-text-primary);
+  font-size: var(--font-text-lg-size);
+  font-weight: 600;
+  line-height: var(--font-text-lg-line-height);
+}
+
+.menu-launch-card__copy small {
+  color: var(--color-text-secondary);
+  font-size: var(--font-text-md-size);
+  line-height: var(--font-text-md-line-height);
+}
+
+.menu-launch-card__icon {
+  inline-size: var(--space-40);
+  block-size: var(--space-40);
+  border-radius: var(--radius-sm);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-fg-brand-primary);
+  background: var(--color-fg-brand-subtle);
 }
 
 .modal-content {

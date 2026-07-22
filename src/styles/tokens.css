@@ -161,8 +161,9 @@
   --primitive-pink-800: #5f264c;
   --primitive-pink-900: #3b1f35;
   --primitive-grey-0: #ffffff;
-  --primitive-grey-25: #f9f9fa;
-  --primitive-grey-50: #f3f4f5;
+  --primitive-grey-12: #fcfdfd;
+  --primitive-grey-25: #f8f8f9;
+  --primitive-grey-50: #f2f3f5;
   --primitive-grey-100: #edeff0;
   --primitive-grey-200: #d3d4d6;
   --primitive-grey-300: #bdbec2;
@@ -333,6 +334,7 @@
   --color-fg-primary: var(--primitive-grey-950);
   --color-bg-canvas: var(--primitive-grey-0);
   --color-bg-surface: var(--primitive-grey-0);
+  --color-bg-surface-subtle: var(--primitive-grey-12);
   --color-bg-tertiary: var(--primitive-grey-50);
   --color-fg-secondary: var(--primitive-grey-700);
   --color-bg-secondary: var(--primitive-grey-25);
@@ -404,6 +406,7 @@
   --color-fg-primary: var(--primitive-grey-0);
   --color-bg-canvas: var(--primitive-grey-975);
   --color-bg-surface: var(--primitive-grey-950);
+  --color-bg-surface-subtle: var(--primitive-grey-950);
   --color-bg-tertiary: var(--primitive-grey-900);
   --color-fg-secondary: var(--primitive-grey-400);
   --color-bg-secondary: var(--primitive-grey-925);

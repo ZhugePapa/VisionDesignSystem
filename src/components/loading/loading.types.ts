@@ -8,3 +8,8 @@ export interface VisLoadingProps {
   label?: string
   decorative?: boolean
 }
+
+export interface VisLoadingTextProps {
+  label?: string
+  decorative?: boolean
+}
