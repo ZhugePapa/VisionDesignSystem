@@ -12,6 +12,10 @@
       "types": "./dist/types/index.d.ts",
       "import": "./dist/lib/index.js"
     },
+    "./components/ai": {
+      "types": "./dist/types/components/ai/index.d.ts",
+      "import": "./dist/lib/components/ai/index.js"
+    },
     "./components/accordion": {
       "types": "./dist/types/components/accordion/index.d.ts",
       "import": "./dist/lib/components/accordion/index.js"
@@ -35,6 +39,10 @@
     "./components/button": {
       "types": "./dist/types/components/button/index.d.ts",
       "import": "./dist/lib/components/button/index.js"
+    },
+    "./components/card": {
+      "types": "./dist/types/components/card/index.d.ts",
+      "import": "./dist/lib/components/card/index.js"
     },
     "./components/checkbox": {
       "types": "./dist/types/components/checkbox/index.d.ts",
@@ -71,6 +79,10 @@
     "./components/featured-icon": {
       "types": "./dist/types/components/featured-icon/index.d.ts",
       "import": "./dist/lib/components/featured-icon/index.js"
+    },
+    "./components/file-icon": {
+      "types": "./dist/types/components/file-icon/index.d.ts",
+      "import": "./dist/lib/components/file-icon/index.js"
     },
     "./components/form": {
       "types": "./dist/types/components/form/index.d.ts",
@@ -123,6 +135,10 @@
     "./components/pagination": {
       "types": "./dist/types/components/pagination/index.d.ts",
       "import": "./dist/lib/components/pagination/index.js"
+    },
+    "./components/page-header": {
+      "types": "./dist/types/components/page-header/index.d.ts",
+      "import": "./dist/lib/components/page-header/index.js"
     },
     "./components/popover": {
       "types": "./dist/types/components/popover/index.d.ts",

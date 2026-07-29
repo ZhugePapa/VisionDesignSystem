@@ -12,11 +12,15 @@ export interface VisDropdownEntry {
   label?: string
   itemType?: VisDropdownItemType
   active?: boolean
+  danger?: boolean
   arrow?: boolean
   checkable?: boolean
   disabled?: boolean
   iconName?: IconName
   state?: VisDropdownItemState
+  description?: boolean
+  descriptionText?: string
+  suffix?: boolean
   title?: string
   subtitle?: string
   avatarImageVariant?: VisAvatarImageVariant
@@ -38,6 +42,7 @@ export interface VisDropdownItemProps {
   label?: string
   type?: VisDropdownItemType
   active?: boolean
+  danger?: boolean
   arrow?: boolean
   checkable?: boolean
   disabled?: boolean
@@ -46,6 +51,9 @@ export interface VisDropdownItemProps {
   subtitle?: string
   avatarImageVariant?: VisAvatarImageVariant
   state?: VisDropdownItemState
+  description?: boolean
+  descriptionText?: string
+  suffix?: boolean
 }
 
 export interface VisDropdownHeaderProps {

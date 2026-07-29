@@ -36,7 +36,7 @@ const role = computed(() => (props.decorative ? undefined : 'status'))
   gap: var(--space-4);
   max-inline-size: 100%;
   overflow: hidden;
-  color: var(--color-text-tertiary);
+  color: var(--color-text-secondary);
   font-family: var(--font-family-sans);
   font-size: var(--font-text-md-size);
   font-weight: 400;
@@ -49,7 +49,7 @@ const role = computed(() => (props.decorative ? undefined : 'status'))
 .vis-loading-text__icon {
   inline-size: var(--space-16);
   block-size: var(--space-16);
-  color: var(--color-fg-tertiary);
+  color: var(--color-fg-secondary);
   flex: 0 0 auto;
 }
 

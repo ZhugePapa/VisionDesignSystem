@@ -1,0 +1,360 @@
+- generic [ref=e4]:
+  - banner [ref=e5]:
+    - generic [ref=e12]:
+      - strong [ref=e13]: Vision Design
+      - generic [ref=e14]: Design System
+    - button "切换到暗色模式" [ref=e15] [cursor=pointer]
+  - generic [ref=e21]:
+    - complementary "Design system navigation" [ref=e22]:
+      - generic [ref=e23]:
+        - button "Documentation" [expanded] [ref=e24] [cursor=pointer]
+        - button "Introduction 介绍" [disabled] [ref=e29]:
+          - generic [ref=e30]: Introduction
+          - generic [ref=e31]: 介绍
+        - button "Changelog 更新记录" [disabled] [ref=e32]:
+          - generic [ref=e33]: Changelog
+          - generic [ref=e34]: 更新记录
+      - generic [ref=e37]:
+        - button "Primitives" [expanded] [ref=e38] [cursor=pointer]
+        - button "Global Variables 全局变量" [disabled] [ref=e43]:
+          - generic [ref=e44]: Global Variables
+          - generic [ref=e45]: 全局变量
+        - button "Icons 图标" [disabled] [ref=e46]:
+          - generic [ref=e47]: Icons
+          - generic [ref=e48]: 图标
+        - button "Logo 标识" [disabled] [ref=e49]:
+          - generic [ref=e50]: Logo
+          - generic [ref=e51]: 标识
+      - generic [ref=e54]:
+        - button "Shared Components" [expanded] [ref=e55] [cursor=pointer]
+        - link "Accordion 折叠面板" [ref=e60] [cursor=pointer]:
+          - /url: "#/components/accordion"
+          - generic [ref=e61]: Accordion
+          - generic [ref=e62]: 折叠面板
+        - link "Alert 警告提示" [ref=e63] [cursor=pointer]:
+          - /url: "#/components/alert"
+          - generic [ref=e64]: Alert
+          - generic [ref=e65]: 警告提示
+        - link "Avatar 头像" [ref=e66] [cursor=pointer]:
+          - /url: "#/components/avatar"
+          - generic [ref=e67]: Avatar
+          - generic [ref=e68]: 头像
+        - link "Badge 徽标" [ref=e69] [cursor=pointer]:
+          - /url: "#/components/badge"
+          - generic [ref=e70]: Badge
+          - generic [ref=e71]: 徽标
+        - link "Breadcrumb 面包屑" [ref=e72] [cursor=pointer]:
+          - /url: "#/components/breadcrumb"
+          - generic [ref=e73]: Breadcrumb
+          - generic [ref=e74]: 面包屑
+        - link "Button 按钮" [ref=e75] [cursor=pointer]:
+          - /url: "#/components/button"
+          - generic [ref=e76]: Button
+          - generic [ref=e77]: 按钮
+        - link "Card 卡片" [ref=e78] [cursor=pointer]:
+          - /url: "#/components/card"
+          - generic [ref=e79]: Card
+          - generic [ref=e80]: 卡片
+        - link "Checkbox 复选框" [ref=e81] [cursor=pointer]:
+          - /url: "#/components/checkbox"
+          - generic [ref=e82]: Checkbox
+          - generic [ref=e83]: 复选框
+        - link "CodeBlock 代码块" [ref=e84] [cursor=pointer]:
+          - /url: "#/components/code-block"
+          - generic [ref=e85]: CodeBlock
+          - generic [ref=e86]: 代码块
+        - link "DatePicker 日期选择器" [ref=e87] [cursor=pointer]:
+          - /url: "#/components/date-picker"
+          - generic [ref=e88]: DatePicker
+          - generic [ref=e89]: 日期选择器
+        - link "Description 描述列表" [ref=e90] [cursor=pointer]:
+          - /url: "#/components/description"
+          - generic [ref=e91]: Description
+          - generic [ref=e92]: 描述列表
+        - link "Divider 分割线" [ref=e93] [cursor=pointer]:
+          - /url: "#/components/divider"
+          - generic [ref=e94]: Divider
+          - generic [ref=e95]: 分割线
+        - link "Drawer 抽屉" [ref=e96] [cursor=pointer]:
+          - /url: "#/components/drawer"
+          - generic [ref=e97]: Drawer
+          - generic [ref=e98]: 抽屉
+        - link "Dropdown 下拉菜单" [ref=e99] [cursor=pointer]:
+          - /url: "#/components/dropdown"
+          - generic [ref=e100]: Dropdown
+          - generic [ref=e101]: 下拉菜单
+        - link "FeaturedIcon 特征图标" [ref=e102] [cursor=pointer]:
+          - /url: "#/components/featured-icon"
+          - generic [ref=e103]: FeaturedIcon
+          - generic [ref=e104]: 特征图标
+        - link "Form 表单" [ref=e105] [cursor=pointer]:
+          - /url: "#/components/form"
+          - generic [ref=e106]: Form
+          - generic [ref=e107]: 表单
+        - link "Input 输入框" [ref=e108] [cursor=pointer]:
+          - /url: "#/components/input"
+          - generic [ref=e109]: Input
+          - generic [ref=e110]: 输入框
+        - link "InputNumber 数字输入框" [ref=e111] [cursor=pointer]:
+          - /url: "#/components/input-number"
+          - generic [ref=e112]: InputNumber
+          - generic [ref=e113]: 数字输入框
+        - link "InputSearchBox 搜索输入框" [ref=e114] [cursor=pointer]:
+          - /url: "#/components/input-search-box"
+          - generic [ref=e115]: InputSearchBox
+          - generic [ref=e116]: 搜索输入框
+        - link "InputTextarea 文本域" [ref=e117] [cursor=pointer]:
+          - /url: "#/components/input-textarea"
+          - generic [ref=e118]: InputTextarea
+          - generic [ref=e119]: 文本域
+        - link "Loading 加载" [ref=e120] [cursor=pointer]:
+          - /url: "#/components/loading"
+          - generic [ref=e121]: Loading
+          - generic [ref=e122]: 加载
+        - link "Markdown 格式渲染" [ref=e123] [cursor=pointer]:
+          - /url: "#/components/markdown"
+          - generic [ref=e124]: Markdown
+          - generic [ref=e125]: 格式渲染
+        - link "Message 全局提示" [ref=e126] [cursor=pointer]:
+          - /url: "#/components/message"
+          - generic [ref=e127]: Message
+          - generic [ref=e128]: 全局提示
+        - link "Modal 对话框" [ref=e129] [cursor=pointer]:
+          - /url: "#/components/modal"
+          - generic [ref=e130]: Modal
+          - generic [ref=e131]: 对话框
+        - link "Notification 通知提醒" [ref=e132] [cursor=pointer]:
+          - /url: "#/components/notification"
+          - generic [ref=e133]: Notification
+          - generic [ref=e134]: 通知提醒
+        - link "Pagination 分页器" [ref=e135] [cursor=pointer]:
+          - /url: "#/components/pagination"
+          - generic [ref=e136]: Pagination
+          - generic [ref=e137]: 分页器
+        - link "Popover 气泡框" [ref=e138] [cursor=pointer]:
+          - /url: "#/components/popover"
+          - generic [ref=e139]: Popover
+          - generic [ref=e140]: 气泡框
+        - link "ProgressBar 进度条" [ref=e141] [cursor=pointer]:
+          - /url: "#/components/progress-bar"
+          - generic [ref=e142]: ProgressBar
+          - generic [ref=e143]: 进度条
+        - link "ProgressCircle 环形进度条" [ref=e144] [cursor=pointer]:
+          - /url: "#/components/progress-circle"
+          - generic [ref=e145]: ProgressCircle
+          - generic [ref=e146]: 环形进度条
+        - link "Radio 单选框" [ref=e147] [cursor=pointer]:
+          - /url: "#/components/radio"
+          - generic [ref=e148]: Radio
+          - generic [ref=e149]: 单选框
+        - link "Rate 评分" [ref=e150] [cursor=pointer]:
+          - /url: "#/components/rate"
+          - generic [ref=e151]: Rate
+          - generic [ref=e152]: 评分
+        - button "RichTextEditor 富文本编辑器" [disabled] [ref=e153]:
+          - generic [ref=e154]: RichTextEditor
+          - generic [ref=e155]: 富文本编辑器
+        - link "ScrollShadow 滚动阴影" [ref=e156] [cursor=pointer]:
+          - /url: "#/components/scroll-shadow"
+          - generic [ref=e157]: ScrollShadow
+          - generic [ref=e158]: 滚动阴影
+        - link "Segmented 分段控制器" [ref=e159] [cursor=pointer]:
+          - /url: "#/components/segmented"
+          - generic [ref=e160]: Segmented
+          - generic [ref=e161]: 分段控制器
+        - link "Select 选择器" [ref=e162] [cursor=pointer]:
+          - /url: "#/components/select"
+          - generic [ref=e163]: Select
+          - generic [ref=e164]: 选择器
+        - link "Slider 滑动输入" [ref=e165] [cursor=pointer]:
+          - /url: "#/components/slider"
+          - generic [ref=e166]: Slider
+          - generic [ref=e167]: 滑动输入
+        - link "Table 表格" [ref=e168] [cursor=pointer]:
+          - /url: "#/components/table"
+          - generic [ref=e169]: Table
+          - generic [ref=e170]: 表格
+        - link "Tabs 标签页" [ref=e171] [cursor=pointer]:
+          - /url: "#/components/tabs"
+          - generic [ref=e172]: Tabs
+          - generic [ref=e173]: 标签页
+        - link "Tag 标签" [ref=e174] [cursor=pointer]:
+          - /url: "#/components/tag"
+          - generic [ref=e175]: Tag
+          - generic [ref=e176]: 标签
+        - link "TimePicker 时间选择器" [ref=e177] [cursor=pointer]:
+          - /url: "#/components/time-picker"
+          - generic [ref=e178]: TimePicker
+          - generic [ref=e179]: 时间选择器
+        - link "Toggle 开关" [ref=e180] [cursor=pointer]:
+          - /url: "#/components/toggle"
+          - generic [ref=e181]: Toggle
+          - generic [ref=e182]: 开关
+        - link "ToggleButton 切换按钮" [ref=e183] [cursor=pointer]:
+          - /url: "#/components/toggle-button"
+          - generic [ref=e184]: ToggleButton
+          - generic [ref=e185]: 切换按钮
+        - link "Tooltip 文字提示" [ref=e186] [cursor=pointer]:
+          - /url: "#/components/tooltip"
+          - generic [ref=e187]: Tooltip
+          - generic [ref=e188]: 文字提示
+        - link "TreeView 树视图" [ref=e189] [cursor=pointer]:
+          - /url: "#/components/tree-view"
+          - generic [ref=e190]: TreeView
+          - generic [ref=e191]: 树视图
+        - link "Upload 上传" [ref=e192] [cursor=pointer]:
+          - /url: "#/components/upload"
+          - generic [ref=e193]: Upload
+          - generic [ref=e194]: 上传
+      - generic [ref=e197]:
+        - button "Application Components" [expanded] [ref=e198] [cursor=pointer]
+        - link "Menu 业务菜单" [ref=e203] [cursor=pointer]:
+          - /url: "#/application-components/menu"
+          - generic [ref=e204]: Menu
+          - generic [ref=e205]: 业务菜单
+        - link "PageHeader 页头" [ref=e206] [cursor=pointer]:
+          - /url: "#/application-components/page-header"
+          - generic [ref=e207]: PageHeader
+          - generic [ref=e208]: 页头
+      - generic [ref=e211]:
+        - button "AI components" [expanded] [ref=e212] [cursor=pointer]
+        - link "Attachment 附件" [ref=e217] [cursor=pointer]:
+          - /url: "#/ai-components/ai-attachment"
+          - generic [ref=e218]: Attachment
+          - generic [ref=e219]: 附件
+        - link "Bubble 消息气泡" [ref=e220] [cursor=pointer]:
+          - /url: "#/ai-components/ai-bubble"
+          - generic [ref=e221]: Bubble
+          - generic [ref=e222]: 消息气泡
+        - link "Conversation 会话列表" [ref=e223] [cursor=pointer]:
+          - /url: "#/ai-components/ai-conversation"
+          - generic [ref=e224]: Conversation
+          - generic [ref=e225]: 会话列表
+        - link "Prompts 提示建议" [ref=e226] [cursor=pointer]:
+          - /url: "#/ai-components/ai-prompts"
+          - generic [ref=e227]: Prompts
+          - generic [ref=e228]: 提示建议
+        - link "Sender 发送框" [ref=e229] [cursor=pointer]:
+          - /url: "#/ai-components/ai-sender"
+          - generic [ref=e230]: Sender
+          - generic [ref=e231]: 发送框
+    - main [ref=e232]:
+      - article [ref=e233]:
+        - generic [ref=e234]:
+          - heading "Bubble" [level=2] [ref=e235]
+          - paragraph [ref=e236]: 消息气泡
+        - generic [ref=e238]:
+          - generic [ref=e239]:
+            - heading "Default" [level=4] [ref=e240]
+            - generic [ref=e241]:
+              - generic [ref=e242]:
+                - generic [ref=e243]: 帮我生成需求文档
+                - generic:
+                  - button "复制"
+                  - button "编辑"
+              - generic [ref=e245]:
+                - generic [ref=e246]: 帮我生成需求文档
+                - generic [ref=e248]:
+                  - button "复制" [ref=e249] [cursor=pointer]
+                  - button "编辑" [ref=e255] [cursor=pointer]
+          - generic [ref=e260]:
+            - heading "Spilled" [level=4] [ref=e261]
+            - generic [ref=e263]:
+              - generic [ref=e264]: 帮我生成需求文档 通过 Webhook，您可以在代码仓库发生指定事件时，自动向目标地址发送 HTTP 请求。例如，在代码推送、分支创建、合并请求更新或版本发布后，触发持续集成、消息通知、项目管理或其他自动化流程。添加 Webhook 时，请选择需要监听的事件，填写可公开访问的回调地址，并设置签名密钥以验证请求来源，确保数据传输安全。
+              - generic [ref=e378]:
+                - button "复制" [ref=e379] [cursor=pointer]
+                - button "编辑" [ref=e385] [cursor=pointer]
+        - region "组件 API" [ref=e273]:
+          - generic [ref=e274]:
+            - heading "Vision API" [level=3] [ref=e275]
+            - generic [ref=e276]:
+              - heading "VisAiBubble Attributes" [level=4] [ref=e277]
+              - table [ref=e279]:
+                - rowgroup [ref=e285]:
+                  - row [ref=e286]:
+                    - columnheader "Vision API" [ref=e287]
+                    - columnheader "说明" [ref=e288]
+                    - columnheader "类型" [ref=e289]
+                    - columnheader "默认值" [ref=e290]
+                - rowgroup [ref=e291]:
+                  - row [ref=e292]:
+                    - cell [ref=e293]:
+                      - code [ref=e294]: content
+                    - cell "用户输入的文本内容；也可通过默认插槽传入。" [ref=e295]
+                    - cell [ref=e296]:
+                      - code [ref=e297]: string
+                    - cell [ref=e298]:
+                      - code [ref=e299]: "'帮我生成需求文档'"
+                  - row [ref=e300]:
+                    - cell [ref=e301]:
+                      - code [ref=e302]: spilled
+                    - cell "手动覆盖溢出状态；未传入时组件根据实际行数自动判断，展开后变为 false。" [ref=e303]
+                    - cell [ref=e304]:
+                      - code [ref=e305]: boolean
+                    - cell [ref=e306]:
+                      - code [ref=e307]: 自动判断
+                  - row [ref=e308]:
+                    - cell [ref=e309]:
+                      - code [ref=e310]: maxLines
+                    - cell "自动进入 spilled 状态前允许显示的最大行数。" [ref=e311]
+                    - cell [ref=e312]:
+                      - code [ref=e313]: number
+                    - cell [ref=e314]:
+                      - code [ref=e315]: "4"
+                  - row [ref=e316]:
+                    - cell [ref=e317]:
+                      - code [ref=e318]: copyable
+                    - cell "悬浮时是否显示复制操作。" [ref=e319]
+                    - cell [ref=e320]:
+                      - code [ref=e321]: boolean
+                    - cell [ref=e322]:
+                      - code [ref=e323]: "true"
+                  - row [ref=e324]:
+                    - cell [ref=e325]:
+                      - code [ref=e326]: editable
+                    - cell "悬浮时是否显示编辑操作。" [ref=e327]
+                    - cell [ref=e328]:
+                      - code [ref=e329]: boolean
+                    - cell [ref=e330]:
+                      - code [ref=e331]: "true"
+                  - row [ref=e332]:
+                    - cell [ref=e333]:
+                      - code [ref=e334]: state
+                    - cell "控制默认或悬浮预览状态。" [ref=e335]
+                    - cell [ref=e336]:
+                      - code [ref=e337]: "'default' | 'hover'"
+                    - cell [ref=e338]:
+                      - code [ref=e339]: "'default'"
+            - generic [ref=e340]:
+              - heading "VisAiBubble Events" [level=4] [ref=e341]
+              - table [ref=e343]:
+                - rowgroup [ref=e348]:
+                  - row [ref=e349]:
+                    - columnheader "事件名" [ref=e350]
+                    - columnheader "说明" [ref=e351]
+                    - columnheader "类型" [ref=e352]
+                - rowgroup [ref=e353]:
+                  - row [ref=e354]:
+                    - cell [ref=e355]:
+                      - code [ref=e356]: update:spilled
+                    - cell "自动检测或展开后溢出状态变化时触发。" [ref=e357]
+                    - cell [ref=e358]:
+                      - code [ref=e359]: "(spilled: boolean) => void"
+                  - row [ref=e360]:
+                    - cell [ref=e361]:
+                      - code [ref=e362]: expand
+                    - cell "点击展开按钮时触发。" [ref=e363]
+                    - cell [ref=e364]:
+                      - code [ref=e365]: () => void
+                  - row [ref=e366]:
+                    - cell [ref=e367]:
+                      - code [ref=e368]: copy
+                    - cell "点击复制按钮时触发并返回文本内容。" [ref=e369]
+                    - cell [ref=e370]:
+                      - code [ref=e371]: "(content: string) => void"
+                  - row [ref=e372]:
+                    - cell [ref=e373]:
+                      - code [ref=e374]: edit
+                    - cell "点击编辑按钮时触发并返回文本内容。" [ref=e375]
+                    - cell [ref=e376]:
+                      - code [ref=e377]: "(content: string) => void"

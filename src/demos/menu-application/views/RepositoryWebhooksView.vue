@@ -183,7 +183,7 @@ function toggleIntegration(id: string): void {
       <main class="webhook-content">
         <header class="webhook-heading">
           <div class="webhook-heading__title-row">
-            <h2>Webhook</h2>
+            <h2>Webhook 设置</h2>
             <VisButton size="md" prefix icon-name="plus">新建 webhook</VisButton>
           </div>
           <p>
@@ -307,13 +307,21 @@ function toggleIntegration(id: string): void {
   gap: var(--space-4);
 }
 
-.repository-summary h1,
-.webhook-heading h2 {
+.repository-summary h1 {
   margin: 0;
   color: var(--color-text-primary);
   font-size: var(--font-heading-h4-size);
   font-weight: 600;
   line-height: var(--font-heading-h4-line-height);
+  letter-spacing: 0;
+}
+
+.webhook-heading h2 {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: var(--font-heading-h3-size);
+  font-weight: 600;
+  line-height: var(--font-heading-h3-line-height);
   letter-spacing: 0;
 }
 
@@ -437,7 +445,6 @@ function toggleIntegration(id: string): void {
   box-sizing: border-box;
   block-size: 100px;
   min-block-size: 100px;
-  border-block-end: 1px solid var(--color-border-default);
   padding: var(--space-20);
   display: flex;
   flex-direction: column;
@@ -462,13 +469,17 @@ function toggleIntegration(id: string): void {
 }
 
 .webhook-list {
-  padding: 0 var(--space-20) var(--space-20);
+  padding: var(--space-20);
   min-block-size: 0;
   flex: 1 1 0;
 }
 
 .webhook-integration {
   border-block-end: 1px solid var(--color-border-default);
+}
+
+.webhook-integration:first-child {
+  border-block-start: 1px solid var(--color-border-default);
 }
 
 .webhook-integration__row {

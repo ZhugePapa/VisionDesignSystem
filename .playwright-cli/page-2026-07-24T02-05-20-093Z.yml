@@ -1,0 +1,78 @@
+- generic [ref=e4]:
+  - banner [ref=e5]:
+    - button "打开主导航" [ref=e6] [cursor=pointer]
+    - navigation "Breadcrumb" [ref=e11]:
+      - list [ref=e12]:
+        - listitem [ref=e13]:
+          - button "项目" [ref=e14] [cursor=pointer]
+        - listitem [ref=e23]:
+          - button "飞机照明系统" [disabled] [ref=e24]
+    - searchbox "搜索项目内容" [ref=e30]
+    - generic [ref=e31]:
+      - button "设置" [ref=e32] [cursor=pointer]
+      - button "切换到暗色模式" [ref=e39] [cursor=pointer]
+      - button "通知" [ref=e48] [cursor=pointer]
+    - img "当前用户头像" [ref=e55]
+  - generic [ref=e56]:
+    - navigation "项目导航" [ref=e57]:
+      - button "飞机照明系统" [ref=e59] [cursor=pointer]
+      - generic [ref=e76]:
+        - button "概览" [ref=e77] [cursor=pointer]
+        - button "项目管理" [ref=e83] [cursor=pointer]
+        - button "需求管理 10" [ref=e89] [cursor=pointer]:
+          - generic [ref=e94]: 需求管理
+          - generic [ref=e95]: "10"
+        - button "代码管理" [ref=e97] [cursor=pointer]
+        - button "流水线" [ref=e106] [cursor=pointer]
+        - button "制品管理" [ref=e113] [cursor=pointer]
+        - button "部署管理" [expanded] [ref=e124] [cursor=pointer]
+        - generic [ref=e134]:
+          - button "应用管理" [ref=e135] [cursor=pointer]
+          - button "环境管理" [ref=e137] [cursor=pointer]
+        - button "测试管理" [ref=e139] [cursor=pointer]
+        - button "项目设置" [ref=e148] [cursor=pointer]
+      - generic [ref=e156]:
+        - button "帮助" [ref=e157] [cursor=pointer]
+        - button "折叠项目导航" [ref=e163] [cursor=pointer]
+    - main [ref=e168]:
+      - generic [ref=e169]:
+        - region "代码仓库服务" [ref=e170]:
+          - generic [ref=e171]:
+            - button "返回上级页面" [ref=e172] [cursor=pointer]
+            - heading "代码仓库服务" [level=1] [ref=e185]
+          - tablist "页头标签页" [ref=e187]:
+            - tab "概览" [selected] [ref=e188] [cursor=pointer]
+            - tab "发布编排" [ref=e191] [cursor=pointer]
+            - tab "环境规划" [ref=e194] [cursor=pointer]
+            - tab "环境参数" [ref=e197] [cursor=pointer]
+            - tab "发布历史" [ref=e200] [cursor=pointer]
+        - region "应用概览" [ref=e204]:
+          - generic [ref=e206]:
+            - heading "基本信息" [level=2] [ref=e207]
+            - generic [ref=e208]:
+              - generic [ref=e209]:
+                - term [ref=e210]: 名称
+                - definition [ref=e211]: Conan_demo
+              - generic [ref=e212]:
+                - term [ref=e213]: 项目
+                - definition [ref=e214]:
+                  - generic [ref=e222]: 飞机照明系统
+              - generic [ref=e223]:
+                - term [ref=e224]: 负责人
+                - definition [ref=e225]:
+                  - generic [ref=e229]:
+                    - paragraph [ref=e230]: 张大山
+                    - paragraph [ref=e231]: zhangdashan
+              - generic [ref=e232]:
+                - term [ref=e233]: 状态
+                - definition [ref=e234]:
+                  - generic [ref=e235]: 运行中
+              - generic [ref=e238]:
+                - term [ref=e239]: 描述
+                - definition [ref=e240]: 提供代码托管、分支管理、合并请求及 Webhook 能力。
+              - generic [ref=e241]:
+                - term [ref=e242]: 创建时间
+                - definition [ref=e243]: 2026/06/09 19:20:34
+              - generic [ref=e244]:
+                - term [ref=e245]: 更新时间
+                - definition [ref=e246]: 2026/06/09 19:20:34

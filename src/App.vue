@@ -2,12 +2,23 @@
 import { computed, ref } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 
+import aiDemoImage from './assets/avatars/avatar-06.png'
+import {
+  VisAiActions,
+  VisAiAttachment,
+  VisAiBubble,
+  VisAiConversation,
+  VisAiPrompts,
+  VisAiSender,
+  VisAiThinking,
+} from './components/ai'
 import VisAccordion from './components/accordion/VisAccordion.vue'
 import VisAlert from './components/alert/VisAlert.vue'
 import { VisAvatar, VisAvatarGroup, VisAvatarLabel } from './components/avatar'
 import VisBadge from './components/badge/VisBadge.vue'
 import VisBreadcrumb from './components/breadcrumb/VisBreadcrumb.vue'
 import VisButton from './components/button/VisButton.vue'
+import VisCard from './components/card/VisCard.vue'
 import VisCheckbox from './components/checkbox/VisCheckbox.vue'
 import VisCheckboxGroup from './components/checkbox/VisCheckboxGroup.vue'
 import VisCodeBlock from './components/code-block/VisCodeBlock.vue'
@@ -29,6 +40,7 @@ import { VisMarkdown } from './components/markdown'
 import VisMessage from './components/message/VisMessage.vue'
 import VisModal from './components/modal/VisModal.vue'
 import VisNotification from './components/notification/VisNotification.vue'
+import VisPageHeader from './components/page-header/VisPageHeader.vue'
 import VisPagination from './components/pagination/VisPagination.vue'
 import VisPopover from './components/popover/VisPopover.vue'
 import { VisProgressBar, VisProgressBarMultiple } from './components/progress-bar'
@@ -50,6 +62,15 @@ import VisTooltip from './components/tooltip/VisTooltip.vue'
 import VisTreeView from './components/tree-view/VisTreeView.vue'
 import VisUpload from './components/upload/VisUpload.vue'
 import type { VisAccordionItemData, VisAccordionItemKey } from './components/accordion/accordion.types'
+import type {
+  VisAiActionFeedback,
+  VisAiAttachmentItem,
+  VisAiConversationAction,
+  VisAiConversationItemData,
+  VisAiPromptItem,
+  VisAiSenderSubmitPayload,
+  VisAiSenderSpeed,
+} from './components/ai'
 import type { VisAlertType } from './components/alert/alert.types'
 import type { VisTheme } from './components/config-provider/config-provider.types'
 import type { VisDescriptionDirection, VisDescriptionTag } from './components/description/description.types'
@@ -146,6 +167,102 @@ interface ApiTableSection {
 
 const route = useRoute()
 const theme = ref<VisTheme>('light')
+const aiActionsCurrent = ref(1)
+const aiActionsFeedback = ref<VisAiActionFeedback>(null)
+const aiActionsStatus = ref('')
+const aiConversationKey = ref<string | number>('conversation-1')
+const aiConversationCollapsed = ref(false)
+const aiBubbleStatus = ref('')
+const aiThinkingExpanded = ref(false)
+const aiSenderValue = ref('')
+const aiSenderDeepThinking = ref(false)
+const aiSenderModel = ref<string | number>('kimi-k3')
+const aiSenderSpeed = ref<VisAiSenderSpeed>('high')
+const aiSenderSkill = ref<string | number | ''>('requirement-breakdown')
+const aiSenderLoading = ref(false)
+const aiSenderStatus = ref('')
+const aiConversationItems = ref<VisAiConversationItemData[]>([
+  { key: 'conversation-1', label: '生成需求文档', group: '置顶', pinned: true },
+  { key: 'conversation-2', label: '项目关键里程碑有哪些？', group: '今天' },
+  { key: 'conversation-3', label: '项目的资源分配是否合理？', group: '今天' },
+  { key: 'conversation-4', label: '项目趋势如何？会延期吗？', group: '一周内' },
+  { key: 'conversation-5', label: '项目进度与计划差距？', group: '一周内' },
+  { key: 'conversation-6', label: '账号权限有无异常？', group: '一月内' },
+  { key: 'conversation-7', label: '有无数据泄露风险？', group: '一月内' },
+  { key: 'conversation-8', label: '备份是否完整可恢复？', group: '一月内' },
+])
+const aiPromptItems: VisAiPromptItem[] = [
+  {
+    key: 'check',
+    label: '项目协同',
+    descriptions: ['拆解里程碑、任务与负责人', '汇总进度、阻塞项与待办', '发现偏差并提供调整建议'],
+    iconName: 'file-search-02',
+  },
+  {
+    key: 'breakdown',
+    label: '项目协同',
+    descriptions: ['拆解里程碑、任务与负责人', '汇总进度、阻塞项与待办', '发现偏差并提供调整建议'],
+    iconName: 'paragraph-wrap',
+  },
+  {
+    key: 'trace',
+    label: '项目协同',
+    descriptions: ['拆解里程碑、任务与负责人', '汇总进度、阻塞项与待办', '发现偏差并提供调整建议'],
+    iconName: 'line-chart-up-03',
+  },
+  {
+    key: 'disabled',
+    label: '项目协同',
+    descriptions: ['拆解里程碑、任务与负责人', '汇总进度、阻塞项与待办', '发现偏差并提供调整建议'],
+    iconName: 'bar-line-chart',
+    disabled: true,
+  },
+]
+const aiBubbleLongContent =
+  '帮我生成需求文档\n通过 Webhook，您可以在代码仓库发生指定事件时，自动向目标地址发送 HTTP 请求。例如，在代码推送、分支创建、合并请求更新或版本发布后，触发持续集成、消息通知、项目管理或其他自动化流程。添加 Webhook 时，请选择需要监听的事件，填写可公开访问的回调地址，并设置签名密钥以验证请求来源，确保数据传输安全。'
+const aiSenderAttachments = ref<VisAiAttachmentItem[]>([
+  {
+    key: 'sender-file',
+    name: 'filename.doc',
+    type: 'file',
+    extension: 'doc',
+    size: '6.83kb',
+  },
+])
+
+function removeAiSenderAttachment(item: VisAiAttachmentItem): void {
+  aiSenderAttachments.value = aiSenderAttachments.value.filter((entry) => entry.key !== item.key)
+}
+
+function toggleAiConversationPin(item: VisAiConversationItemData): void {
+  const target = aiConversationItems.value.find((entry) => entry.key === item.key)
+  if (!target) return
+
+  target.pinned = !target.pinned
+  target.group = target.pinned ? '置顶' : '今天'
+}
+
+function handleAiConversationAction(payload: {
+  item: VisAiConversationItemData
+  action: VisAiConversationAction
+}): void {
+  if (payload.action !== 'delete') return
+
+  aiConversationItems.value = aiConversationItems.value.filter((entry) => entry.key !== payload.item.key)
+  if (aiConversationKey.value === payload.item.key) {
+    aiConversationKey.value = aiConversationItems.value[0]?.key ?? ''
+  }
+}
+
+function submitAiSender(payload: VisAiSenderSubmitPayload): void {
+  aiSenderLoading.value = true
+  aiSenderStatus.value = `正在生成：${payload.value || '基于附件生成内容'}`
+}
+
+function stopAiSender(): void {
+  aiSenderLoading.value = false
+  aiSenderStatus.value = '已停止生成'
+}
 const activePage = computed<DemoPageId>(() => {
   const page = route.meta.demoPage
   return typeof page === 'string' && pages.some((item) => item.id === page)
@@ -177,6 +294,15 @@ const notificationType = ref<VisNotificationType>('info')
 const notificationActions = ref(true)
 const notificationCloseable = ref(true)
 const notificationAutoClose = ref(false)
+const pageHeaderActiveTab = ref<string | number>('overview')
+const pageHeaderBreadcrumb = ref(true)
+const pageHeaderParentLink = ref(false)
+const pageHeaderTabs = ref(false)
+const pageHeaderIcon = ref(true)
+const pageHeaderDescription = ref(true)
+const pageHeaderTag = ref(false)
+const pageHeaderActions = ref(false)
+const pageHeaderStatus = ref('')
 const paginationPage = ref(1)
 const paginationSmallPage = ref(1)
 const paginationSimplePage = ref(1)
@@ -516,6 +642,19 @@ const tabsBaseItems: VisTabsItem[] = Array.from({ length: 9 }, (_, index) => ({
   count: index + 1,
 }))
 
+const pageHeaderBreadcrumbItems = [
+  { label: '项目', href: '#' },
+  { label: '飞机照明系统', href: '#' },
+  { label: '概览', active: true },
+]
+
+const pageHeaderTabItems: VisTabsItem[] = [
+  { value: 'overview', label: '标签' },
+  { value: 'details', label: '标签' },
+  { value: 'activity', label: '标签' },
+  { value: 'settings', label: '标签' },
+]
+
 const treeViewItems: VisTreeViewItem[] = [
   {
     key: 'docs',
@@ -571,8 +710,16 @@ function createTabsItems(count: number, options: { icon?: boolean; count?: boole
 
 const dropdownItems: VisDropdownEntry[] = [
   { type: 'search' },
-  { type: 'item', itemType: 'icon', iconName: 'settings-01', label: '菜单选项', state: 'hover' },
-  { type: 'item', label: '菜单选项', active: true },
+  {
+    type: 'item',
+    itemType: 'icon',
+    iconName: 'settings-01',
+    label: '菜单选项',
+    state: 'hover',
+    description: true,
+    descriptionText: '这里是描述文字',
+  },
+  { type: 'item', label: '菜单选项', active: true, suffix: true },
   { type: 'item', itemType: 'icon', iconName: 'log-out-01', label: '菜单选项', arrow: true },
   { type: 'divider' },
   {
@@ -659,6 +806,7 @@ const sidebarGroups: SidebarGroup[] = [
       { title: 'Badge', subtitle: '徽标', page: 'badge' },
       { title: 'Breadcrumb', subtitle: '面包屑', page: 'breadcrumb' },
       { title: 'Button', subtitle: '按钮', page: 'button' },
+      { title: 'Card', subtitle: '卡片', page: 'card' },
       { title: 'Checkbox', subtitle: '复选框', page: 'checkbox' },
       { title: 'CodeBlock', subtitle: '代码块', page: 'code-block' },
       { title: 'DatePicker', subtitle: '日期选择器', page: 'date-picker' },
@@ -703,6 +851,19 @@ const sidebarGroups: SidebarGroup[] = [
     title: 'Application Components',
     items: [
       { title: 'Menu', subtitle: '业务菜单', page: 'menu' },
+      { title: 'PageHeader', subtitle: '页头', page: 'page-header' },
+    ],
+  },
+  {
+    title: 'AI components',
+    items: [
+      { title: 'Actions', subtitle: '操作组', page: 'ai-actions' },
+      { title: 'Attachment', subtitle: '附件', page: 'ai-attachment' },
+      { title: 'Bubble', subtitle: '消息气泡', page: 'ai-bubble' },
+      { title: 'Conversation', subtitle: '会话列表', page: 'ai-conversation' },
+      { title: 'Prompts', subtitle: '提示建议', page: 'ai-prompts' },
+      { title: 'Sender', subtitle: '发送框', page: 'ai-sender' },
+      { title: 'Thinking', subtitle: '思考状态', page: 'ai-thinking' },
     ],
   },
 ]
@@ -712,6 +873,80 @@ const themeToggleIcon = computed(() => (theme.value === 'light' ? 'sun' : 'moon-
 const themeToggleLabel = computed(() => (theme.value === 'light' ? '切换到暗色模式' : '切换到亮色模式'))
 
 const apiTables: Record<DemoPageId, ApiRow[]> = {
+  'ai-actions': [
+    { visionApi: 'current', elementApi: '', description: '当前回答序号，支持 v-model:current。', type: 'number', defaultValue: '1' },
+    { visionApi: 'total', elementApi: '', description: '回答总数。', type: 'number', defaultValue: '5' },
+    { visionApi: 'pagination', elementApi: '', description: '是否显示回答分页导航。', type: 'boolean', defaultValue: 'true' },
+    { visionApi: 'copy', elementApi: '', description: '是否显示复制操作。', type: 'boolean', defaultValue: 'true' },
+    { visionApi: 'refresh', elementApi: '', description: '是否显示重新生成操作。', type: 'boolean', defaultValue: 'true' },
+    { visionApi: 'thumbs', elementApi: '', description: '是否显示赞同与不赞同操作。', type: 'boolean', defaultValue: 'true' },
+    { visionApi: 'share', elementApi: '', description: '是否显示分享操作。', type: 'boolean', defaultValue: 'true' },
+    { visionApi: 'more', elementApi: '', description: '是否显示更多操作。', type: 'boolean', defaultValue: 'true' },
+    { visionApi: 'disabled', elementApi: '', description: '禁用全部操作。', type: 'boolean', defaultValue: 'false' },
+    { visionApi: 'feedback', elementApi: '', description: '当前赞踩状态，支持 v-model:feedback。', type: "'up' | 'down' | null", defaultValue: 'null' },
+  ],
+  'ai-attachment': [
+    { visionApi: 'itemKey', elementApi: '无直接对应', description: '附件业务标识，会随 remove、preview 事件返回。', type: 'string | number', defaultValue: 'undefined' },
+    { visionApi: 'name', elementApi: '无直接对应', description: '附件名称及无障碍描述。', type: 'string', defaultValue: '必填' },
+    { visionApi: 'type', elementApi: '无直接对应', description: '切换文件卡片或图片缩略图布局。', type: "'file' | 'image'", defaultValue: "'file'" },
+    { visionApi: 'extension', elementApi: '无直接对应', description: '文件扩展名，仅文件类型显示。', type: 'string', defaultValue: "''" },
+    { visionApi: 'fileIconType', elementApi: '', description: '覆盖由 extension 自动推断的 File Icon 类型。', type: 'VisFileIconType', defaultValue: '自动推断' },
+    { visionApi: 'size', elementApi: '无直接对应', description: '文件体积说明，仅文件类型显示。', type: 'string', defaultValue: "''" },
+    { visionApi: 'url', elementApi: '无直接对应', description: '图片附件的预览地址。', type: 'string', defaultValue: "''" },
+    { visionApi: 'uploading', elementApi: 'VisProgressCircle', description: '显示上传遮罩或文件上传进度。', type: 'boolean', defaultValue: 'false' },
+    { visionApi: 'progress', elementApi: 'VisProgressCircle value', description: '上传进度百分比。', type: 'number', defaultValue: '25' },
+    { visionApi: 'removable', elementApi: '无直接对应', description: '是否允许移除附件。', type: 'boolean', defaultValue: 'true' },
+  ],
+  'ai-bubble': [
+    { visionApi: 'content', elementApi: '', description: '用户输入的文本内容；也可通过默认插槽传入。', type: 'string', defaultValue: "'帮我生成需求文档'" },
+    { visionApi: 'spilled', elementApi: '', description: '手动覆盖溢出状态；未传入时组件根据实际行数自动判断，展开后变为 false。', type: 'boolean', defaultValue: '自动判断' },
+    { visionApi: 'maxLines', elementApi: '', description: '自动进入 spilled 状态前允许显示的最大行数。', type: 'number', defaultValue: '4' },
+    { visionApi: 'copyable', elementApi: '', description: '悬浮时是否显示复制操作。', type: 'boolean', defaultValue: 'true' },
+    { visionApi: 'editable', elementApi: '', description: '悬浮时是否显示编辑操作。', type: 'boolean', defaultValue: 'true' },
+    { visionApi: 'state', elementApi: '', description: '控制默认或悬浮预览状态。', type: "'default' | 'hover'", defaultValue: "'default'" },
+  ],
+  'ai-conversation': [
+    { visionApi: 'modelValue', elementApi: '无直接对应', description: '当前选中的会话 key，支持 v-model。', type: 'string | number', defaultValue: "''" },
+    { visionApi: 'items', elementApi: '无直接对应', description: '会话数据源，支持分组、置顶和禁用。', type: 'VisAiConversationItemData[]', defaultValue: '[]' },
+    { visionApi: 'title', elementApi: '无直接对应', description: '会话侧栏标题。', type: 'string', defaultValue: "'小 VI 智能助理'" },
+    { visionApi: 'collapsed', elementApi: '无直接对应', description: '会话侧栏收起状态，支持 v-model:collapsed。', type: 'boolean', defaultValue: 'false' },
+    { visionApi: 'showCreation', elementApi: 'VisButton', description: '是否显示新建会话操作。', type: 'boolean', defaultValue: 'true' },
+    { visionApi: 'creationLabel', elementApi: 'VisButton default slot', description: '新建会话按钮文案。', type: 'string', defaultValue: "'发起新会话'" },
+  ],
+  'ai-prompts': [
+    { visionApi: 'items', elementApi: '无直接对应', description: '提示建议数据源。', type: 'VisAiPromptItem[]', defaultValue: '[]' },
+    { visionApi: 'oneLine', elementApi: '无直接对应', description: '切换单行紧凑卡片布局。', type: 'boolean', defaultValue: 'false' },
+    { visionApi: 'disabled', elementApi: '无直接对应', description: '禁用全部提示建议。', type: 'boolean', defaultValue: 'false' },
+  ],
+  'ai-sender': [
+    { component: 'VisAiSender', visionApi: 'modelValue', elementApi: '无直接对应', description: '输入内容，支持 v-model。', type: 'string', defaultValue: "''" },
+    { component: 'VisAiSender', visionApi: 'attachments', elementApi: 'VisAiAttachment', description: '当前附件列表。', type: 'VisAiAttachmentItem[]', defaultValue: '[]' },
+    { component: 'VisAiSender', visionApi: 'disabled', elementApi: '原生 textarea disabled', description: '禁用发送框及全部操作。', type: 'boolean', defaultValue: 'false' },
+    { component: 'VisAiSender', visionApi: 'loading', elementApi: 'VisAiSenderAction', description: '生成中状态，此时发送按钮切换为停止按钮。', type: 'boolean', defaultValue: 'false' },
+    { component: 'VisAiSender', visionApi: 'placeholder', elementApi: '原生 textarea placeholder', description: '输入区域占位文字。', type: 'string', defaultValue: "'请描述您的问题'" },
+    { component: 'VisAiSender', visionApi: 'deepThinking', elementApi: 'VisToggleButton modelValue', description: '深度思考开关，支持 v-model:deep-thinking。', type: 'boolean', defaultValue: 'false' },
+    { component: 'VisAiSender', visionApi: 'model', elementApi: 'VisDropdown', description: '当前模型 key，支持 v-model:model。', type: 'string | number', defaultValue: "''" },
+    { component: 'VisAiSender', visionApi: 'models', elementApi: 'VisDropdownItem', description: '可选模型数据源。', type: 'VisAiSenderModel[]', defaultValue: '内置 3 项' },
+    { component: 'VisAiSender', visionApi: 'speed', elementApi: 'VisDropdownItem', description: '模型生成速率，支持 v-model:speed。', type: 'VisAiSenderSpeed', defaultValue: "'high'" },
+    { component: 'VisAiSender', visionApi: 'skill', elementApi: 'VisAiSkill', description: '当前 AI 技能 key，支持 v-model:skill。', type: 'string | number', defaultValue: "''" },
+    { component: 'VisAiSender', visionApi: 'skills', elementApi: 'VisDropdownItem / VisAiSkill', description: '可选 AI 技能数据源。', type: 'VisAiSenderSkill[]', defaultValue: '内置 4 项' },
+    { component: 'VisAiSender', visionApi: 'submitOnEnter', elementApi: '原生 keydown', description: '回车发送；Shift+Enter 始终换行，并正确处理中文输入法。', type: 'boolean', defaultValue: 'true' },
+    { component: 'VisAiSender', visionApi: 'maxLength', elementApi: '原生 textarea maxlength', description: '最大输入字符数。', type: 'number', defaultValue: 'undefined' },
+    { component: 'VisAiSkill', visionApi: 'label', elementApi: '无直接对应', description: '技能名称。', type: 'string', defaultValue: "'Generator-Skill'" },
+    { component: 'VisAiSkill', visionApi: 'color', elementApi: '无直接对应', description: '技能语义色，兼容设计稿中的 acarlet 拼写。', type: 'VisAiSkillColor', defaultValue: "'blue'" },
+    { component: 'VisAiSkill', visionApi: 'icon', elementApi: 'Icon', description: '是否显示前置图标。', type: 'boolean', defaultValue: 'true' },
+    { component: 'VisAiSkill', visionApi: 'iconName', elementApi: 'Icon name', description: '前置图标名称。', type: 'IconName', defaultValue: "'book-open-01'" },
+    { component: 'VisAiSkill', visionApi: 'state', elementApi: '无直接对应', description: '用于受控展示默认或悬浮视觉状态。', type: "'default' | 'hover'", defaultValue: "'default'" },
+    { component: 'VisAiSenderAction', visionApi: 'loading', elementApi: '无直接对应', description: '显示停止生成状态。', type: 'boolean', defaultValue: 'false' },
+    { component: 'VisAiSenderAction', visionApi: 'disabled', elementApi: '原生 button disabled', description: '禁用主操作按钮。', type: 'boolean', defaultValue: 'false' },
+  ],
+  'ai-thinking': [
+    { visionApi: 'expanded', elementApi: '', description: '思考内容展开状态，支持 v-model:expanded。', type: 'boolean', defaultValue: 'undefined' },
+    { visionApi: 'defaultExpanded', elementApi: '', description: '非受控模式下的默认展开状态。', type: 'boolean', defaultValue: 'false' },
+    { visionApi: 'state', elementApi: '', description: '控制默认或悬浮预览状态。', type: "'default' | 'hover'", defaultValue: "'default'" },
+    { visionApi: 'label', elementApi: '', description: '思考中的状态文案。', type: 'string', defaultValue: "'正在思考...'" },
+    { visionApi: 'content', elementApi: '', description: '展开后的思考内容，也可通过默认插槽传入。', type: 'string', defaultValue: "'这里是思考的内容'" },
+  ],
   accordion: [
     {
       visionApi: 'items',
@@ -1012,6 +1247,50 @@ const apiTables: Record<DemoPageId, ApiRow[]> = {
       description: '按钮原生 type 属性。',
       type: "'button' | 'submit' | 'reset'",
       defaultValue: "'button'",
+    },
+  ],
+  card: [
+    {
+      visionApi: 'state',
+      elementApi: 'shadow / hover pseudo state',
+      description: '控制默认态或锁定悬浮态；真实鼠标悬浮仍由 interactive 控制。',
+      type: "'default' | 'hover'",
+      defaultValue: "'default'",
+    },
+    {
+      visionApi: 'interactive',
+      elementApi: 'shadow="hover"',
+      description: '是否响应真实 hover 和 focus-within，并显示品牌描边与品牌阴影。',
+      type: 'boolean',
+      defaultValue: 'true',
+    },
+    {
+      visionApi: 'showAction',
+      elementApi: '无直接对应',
+      description: '悬浮态是否显示右上角更多操作按钮。',
+      type: 'boolean',
+      defaultValue: 'true',
+    },
+    {
+      visionApi: 'actionLabel',
+      elementApi: 'aria-label',
+      description: '更多操作按钮的无障碍名称。',
+      type: 'string',
+      defaultValue: "'更多操作'",
+    },
+    {
+      visionApi: 'bodyStyle',
+      elementApi: 'body-style',
+      description: '透传至 ElCard body 的自定义样式。',
+      type: 'StyleValue',
+      defaultValue: 'undefined',
+    },
+    {
+      visionApi: 'bodyClass',
+      elementApi: 'body-class',
+      description: '追加到 ElCard body 的自定义类名。',
+      type: 'string',
+      defaultValue: 'undefined',
     },
   ],
   input: [
@@ -3373,11 +3652,18 @@ const apiTables: Record<DemoPageId, ApiRow[]> = {
       defaultValue: "'button'",
     },
     {
-      visionApi: 'header / headerType',
+      visionApi: 'header',
       elementApi: 'dropdown slot',
-      description: '显示分组标题或头像标题区。',
-      type: "boolean / 'group' | 'avatar'",
-      defaultValue: "false / 'group'",
+      description: '是否显示下拉菜单标题区。',
+      type: 'boolean',
+      defaultValue: 'false',
+    },
+    {
+      visionApi: 'headerType',
+      elementApi: 'dropdown slot',
+      description: '控制标题区为分组标题或头像信息。',
+      type: "'group' | 'avatar'",
+      defaultValue: "'group'",
     },
     {
       visionApi: 'buttonLabel',
@@ -3387,11 +3673,18 @@ const apiTables: Record<DemoPageId, ApiRow[]> = {
       defaultValue: "'触发'",
     },
     {
-      visionApi: 'searchValue / searchPlaceholder',
+      visionApi: 'searchValue',
       elementApi: '无直接对应',
-      description: '搜索条目的受控值和占位文本。',
-      type: 'string / string',
-      defaultValue: "'' / '请输入关键字'",
+      description: '搜索条目的受控值，配合 update:searchValue 使用。',
+      type: 'string',
+      defaultValue: "''",
+    },
+    {
+      visionApi: 'searchPlaceholder',
+      elementApi: 'placeholder',
+      description: '搜索条目的占位文本。',
+      type: 'string',
+      defaultValue: "'请输入关键字'",
     },
     {
       visionApi: 'itemType',
@@ -3401,11 +3694,67 @@ const apiTables: Record<DemoPageId, ApiRow[]> = {
       defaultValue: "'default'",
     },
     {
-      visionApi: 'active / checkable / arrow / disabled / state',
-      elementApi: 'command / disabled / pseudo states',
-      description: '控制选中、勾选、右箭头、禁用与 hover 演示态。',
-      type: 'boolean / VisDropdownItemState',
-      defaultValue: 'false / default',
+      visionApi: 'danger',
+      elementApi: 'item class',
+      description: '危险操作语义；文字和图标使用 danger 色，悬浮使用 danger-subtle 背景，禁用使用 danger-disabled。',
+      type: 'boolean',
+      defaultValue: 'false',
+    },
+    {
+      visionApi: 'description',
+      elementApi: '无直接对应',
+      description: '控制 default、icon 类型菜单项是否显示第二行说明，并切换为 58px 双行变体。',
+      type: 'boolean',
+      defaultValue: 'false',
+    },
+    {
+      visionApi: 'descriptionText',
+      elementApi: 'default slot',
+      description: '菜单项第二行说明文字，也可由 description 插槽覆盖。',
+      type: 'string',
+      defaultValue: "'这里是描述文字'",
+    },
+    {
+      visionApi: 'suffix',
+      elementApi: 'default slot',
+      description: '在单行 default、icon 菜单项的主内容后显示尾部内容，可由 suffix 插槽覆盖。',
+      type: 'boolean',
+      defaultValue: 'false',
+    },
+    {
+      visionApi: 'active',
+      elementApi: 'command',
+      description: '控制菜单项选中态；非 checkable 项显示品牌文字和尾部勾选图标。',
+      type: 'boolean',
+      defaultValue: 'false',
+    },
+    {
+      visionApi: 'checkable',
+      elementApi: '无直接对应',
+      description: '切换为左侧复选框结构，active 用作勾选值。',
+      type: 'boolean',
+      defaultValue: 'false',
+    },
+    {
+      visionApi: 'arrow',
+      elementApi: 'default slot',
+      description: '在菜单项右侧显示层级箭头，并优先于 active 的勾选图标。',
+      type: 'boolean',
+      defaultValue: 'false',
+    },
+    {
+      visionApi: 'disabled',
+      elementApi: 'disabled',
+      description: '禁用菜单项交互并应用禁用视觉。',
+      type: 'boolean',
+      defaultValue: 'false',
+    },
+    {
+      visionApi: 'state',
+      elementApi: 'pseudo states',
+      description: '锁定 default、hover 或 disabled 设计状态，主要用于设计走查与演示。',
+      type: 'VisDropdownItemState',
+      defaultValue: "'default'",
     },
   ],
   'featured-icon': [
@@ -3849,6 +4198,30 @@ const apiTables: Record<DemoPageId, ApiRow[]> = {
       defaultValue: "'表格'",
     },
   ],
+  'page-header': [
+    { visionApi: 'title', elementApi: '无直接对应', description: '页面主标题。', type: 'string', defaultValue: "'这里是页面的标题'" },
+    { visionApi: 'description', elementApi: '无直接对应', description: '页面说明内容；传入 false 隐藏，传入字符串时同时作为说明文字。', type: 'string | boolean', defaultValue: 'undefined' },
+    { visionApi: 'descriptionText', elementApi: '无直接对应', description: 'description 为 true 或未传入时使用的说明文字。', type: 'string', defaultValue: "'这里是描述'" },
+    { visionApi: 'showDescription', elementApi: '无直接对应', description: '说明区域显示开关的兼容 API，优先级高于 description。', type: 'boolean', defaultValue: 'undefined' },
+    { visionApi: 'breadcrumb', elementApi: 'VisBreadcrumb', description: '是否显示页头面包屑。', type: 'boolean', defaultValue: 'true' },
+    { visionApi: 'breadcrumbItems', elementApi: 'VisBreadcrumb items', description: '面包屑层级数据。', type: 'VisBreadcrumbItem[]', defaultValue: '内置 3 项示例' },
+    { visionApi: 'breadcrumbs', elementApi: 'VisBreadcrumb items', description: 'breadcrumbItems 的兼容数据 API；传入后自动显示面包屑。', type: 'VisBreadcrumbItem[]', defaultValue: 'undefined' },
+    { visionApi: 'showBreadcrumb', elementApi: '无直接对应', description: '面包屑显示开关的兼容 API，优先级高于 breadcrumb。', type: 'boolean', defaultValue: 'undefined' },
+    { visionApi: 'parentLink', elementApi: 'VisButton', description: '显示返回上级页面的图标按钮。', type: 'boolean', defaultValue: 'false' },
+    { visionApi: 'tabs', elementApi: 'VisTabs items', description: '标签页数据；传入 true 时使用 tabItems 兼容数据。', type: 'boolean | VisTabsItem[]', defaultValue: 'false' },
+    { visionApi: 'tabItems', elementApi: 'VisTabs items', description: '旧版标签页数据 API 的兼容别名。', type: 'VisTabsItem[]', defaultValue: '内置 4 项示例' },
+    { visionApi: 'activeTab', elementApi: 'VisTabs modelValue', description: '当前激活标签，支持 v-model:active-tab。', type: 'VisTabsValue', defaultValue: '首个标签' },
+    { visionApi: 'icon', elementApi: 'VisFeaturedIcon icon', description: '标题前的特征图标名称；传入 true 时使用 iconName。图标尺寸会根据 Description 与 ParentLink 自动切换。', type: 'IconName | boolean', defaultValue: 'true' },
+    { visionApi: 'iconName', elementApi: 'VisFeaturedIcon icon', description: '旧版特征图标名称 API 的兼容别名。', type: 'IconName', defaultValue: "'dataflow-04'" },
+    { visionApi: 'tag', elementApi: 'VisTag props', description: '标题后的标签配置；false 表示不显示。', type: 'VisTagProps | false', defaultValue: 'undefined' },
+    { visionApi: 'headerSuffix', elementApi: 'VisTag', description: '是否显示标题后的默认标签。', type: 'boolean', defaultValue: 'false' },
+    { visionApi: 'tagLabel', elementApi: 'VisTag label', description: '旧版标题标签文案。', type: 'string', defaultValue: "'标签'" },
+    { visionApi: 'tagIconName', elementApi: 'VisTag iconName', description: '旧版标题标签图标。', type: 'IconName', defaultValue: "'archive'" },
+    { visionApi: 'actions', elementApi: 'VisButton', description: '右侧操作按钮；true 使用内置主次操作，数组用于自定义操作。', type: 'boolean | VisPageHeaderAction[]', defaultValue: 'false' },
+    { visionApi: 'secondaryActionLabel', elementApi: 'VisButton label', description: '旧版次操作按钮文案。', type: 'string', defaultValue: "'按钮'" },
+    { visionApi: 'primaryActionLabel', elementApi: 'VisButton label', description: '旧版主操作按钮文案。', type: 'string', defaultValue: "'按钮'" },
+    { visionApi: 'ariaLabel', elementApi: 'aria-label', description: '页头区域的无障碍名称。', type: 'string', defaultValue: 'undefined' },
+  ],
   menu: [
     { visionApi: 'type', elementApi: 'mode', description: '切换项目内常驻侧栏与全局主侧栏。', type: "'project' | 'main'", defaultValue: "'project'" },
     { visionApi: 'items', elementApi: 'default slot', description: '项目菜单树；父节点通过 children 声明二级菜单，图标支持 iconName 或 projectLogo。', type: 'VisMenuItemData[]', defaultValue: '[]' },
@@ -3859,7 +4232,12 @@ const apiTables: Record<DemoPageId, ApiRow[]> = {
     { visionApi: 'project', elementApi: '无直接对应', description: '当前项目信息，支持使用 logoVariant 显示设计稿项目 Logo。', type: 'VisMenuProject', defaultValue: '内置示例项目' },
     { visionApi: 'projects', elementApi: '无直接对应', description: '项目切换器中的最近项目列表；每项可配置 logoVariant。', type: 'VisMenuProject[]', defaultValue: '[]' },
     { visionApi: 'projectSwitcherOpen', elementApi: '无直接对应', description: '项目切换浮层开关，支持 v-model:project-switcher-open。', type: 'boolean', defaultValue: 'undefined' },
-    { visionApi: 'brandTitle', elementApi: '无直接对应', description: '主侧栏顶部品牌名称。', type: 'string', defaultValue: "'VISSLM DevOps'" },
+    { visionApi: 'brandTitle', elementApi: '无直接对应', description: 'Header Navigation 与主侧栏顶部品牌名称。', type: 'string', defaultValue: "'VISSLM'" },
+    { visionApi: 'search', elementApi: '无直接对应', description: 'Header Navigation 是否显示搜索框。', type: 'boolean', defaultValue: 'true' },
+    { visionApi: 'searchPlaceholder', elementApi: 'ElInput placeholder', description: 'Header Navigation 搜索框占位文字。', type: 'string', defaultValue: "'请输入关键字'" },
+    { visionApi: 'avatarImageVariant', elementApi: '无直接对应', description: 'Header Navigation 右侧头像图片变体。', type: 'VisAvatarImageVariant', defaultValue: "'09'" },
+    { visionApi: 'aiActionLabel', elementApi: 'aria-label', description: 'Header Navigation AI 按钮的无障碍名称。', type: 'string', defaultValue: "'AI 助手'" },
+    { visionApi: 'themeActionLabel', elementApi: '无直接对应', description: 'Header Navigation 主题按钮的无障碍名称。', type: 'string', defaultValue: "'切换主题'" },
     { visionApi: 'showFooter', elementApi: '无直接对应', description: '是否显示项目侧栏底部帮助与折叠操作。', type: 'boolean', defaultValue: 'true' },
     { visionApi: 'helpLabel', elementApi: '无直接对应', description: '底部帮助入口文案。', type: 'string', defaultValue: "'帮助'" },
     { visionApi: 'moreProjectsLabel', elementApi: '无直接对应', description: '项目切换器底部查看更多入口文案。', type: 'string', defaultValue: "'查看更多项目'" },
@@ -3869,6 +4247,13 @@ const apiTables: Record<DemoPageId, ApiRow[]> = {
 const noElementApiRows = (): ElementApiRow[] => []
 
 const elementApiTables: Record<DemoPageId, ElementApiRow[]> = {
+  'ai-actions': noElementApiRows(),
+  'ai-attachment': noElementApiRows(),
+  'ai-bubble': noElementApiRows(),
+  'ai-conversation': noElementApiRows(),
+  'ai-prompts': noElementApiRows(),
+  'ai-sender': noElementApiRows(),
+  'ai-thinking': noElementApiRows(),
   accordion: [
     { category: 'Attribute', api: 'model-value', description: '当前激活的面板；手风琴模式时为 string，非手风琴模式时为 array', type: 'string | array', defaultValue: '-' },
     { category: 'Attribute', api: 'accordion', description: '是否启用手风琴模式', type: 'boolean', defaultValue: 'false' },
@@ -4046,6 +4431,15 @@ const elementApiTables: Record<DemoPageId, ElementApiRow[]> = {
       type: 'string | Component',
       defaultValue: 'button',
     },
+  ],
+  card: [
+    { category: 'Attribute', api: 'header', description: '卡片标题，也可以通过 header 插槽传入 DOM。', type: 'string', defaultValue: "''" },
+    { category: 'Attribute', api: 'footer', description: '卡片页脚，也可以通过 footer 插槽传入 DOM。', type: 'string', defaultValue: "''" },
+    { category: 'Attribute', api: 'body-style', description: '卡片 body 的 CSS 样式。', type: 'StyleValue', defaultValue: "''" },
+    { category: 'Attribute', api: 'header-class', description: '卡片 header 的自定义类名。', type: 'string', defaultValue: '-' },
+    { category: 'Attribute', api: 'body-class', description: '卡片 body 的自定义类名。', type: 'string', defaultValue: '-' },
+    { category: 'Attribute', api: 'footer-class', description: '卡片 footer 的自定义类名。', type: 'string', defaultValue: '-' },
+    { category: 'Attribute', api: 'shadow', description: '设置卡片阴影出现的时机。', type: "'always' | 'hover' | 'never'", defaultValue: "'always'" },
   ],
   input: [
     {
@@ -4329,6 +4723,7 @@ const elementApiTables: Record<DemoPageId, ElementApiRow[]> = {
     { category: 'Attribute', api: 'z-index', description: 'Message 的 z-index。', type: 'number', defaultValue: '-' },
     { category: 'Event', api: 'close', description: '关闭 Message 时触发。', type: '() => void', defaultValue: '-' },
   ],
+  'page-header': noElementApiRows(),
   menu: [
     { category: 'Attribute', api: 'mode', description: '菜单展示模式。', type: "'horizontal' | 'vertical'", defaultValue: "'vertical'" },
     { category: 'Attribute', api: 'default-active', description: '页面加载时默认激活菜单的 index。', type: 'string', defaultValue: "''" },
@@ -4949,10 +5344,18 @@ const elementApiTables: Record<DemoPageId, ElementApiRow[]> = {
 }
 
 const visionComponentNames: Record<DemoPageId, string> = {
+  'ai-actions': 'VisAiActions',
+  'ai-attachment': 'VisAiAttachment',
+  'ai-bubble': 'VisAiBubble',
+  'ai-conversation': 'VisAiConversation / VisAiConversationItem',
+  'ai-prompts': 'VisAiPrompts',
+  'ai-sender': 'VisAiSender / VisAiSkill / VisAiSenderAction',
+  'ai-thinking': 'VisAiThinking',
   accordion: 'VisAccordion',
   alert: 'VisAlert',
   avatar: 'VisAvatar',
   button: 'VisButton',
+  card: 'VisCard',
   input: 'VisInput',
   'input-number': 'VisInputNumber',
   'input-search-box': 'VisInputSearchBox',
@@ -4967,7 +5370,8 @@ const visionComponentNames: Record<DemoPageId, string> = {
   badge: 'VisBadge',
   loading: 'VisLoading / VisLoadingText',
   markdown: 'VisMarkdown',
-  menu: 'VisMenu / VisMenuItem / VisMenuGroup / VisProjectCell / VisProjectLogo',
+  menu: 'VisMenu / VisMenuHeaderNavigation / VisMenuItem / VisMenuGroup / VisProjectCell / VisProjectLogo',
+  'page-header': 'VisPageHeader',
   tag: 'VisTag',
   breadcrumb: 'VisBreadcrumb',
   radio: 'VisRadio',
@@ -5000,6 +5404,7 @@ const elementComponentNames: Partial<Record<DemoPageId, string>> = {
   alert: 'ElAlert',
   avatar: 'ElAvatar',
   button: 'ElButton',
+  card: 'ElCard',
   input: 'ElInput',
   'input-number': 'ElInputNumber',
   'input-search-box': 'ElInput',
@@ -5045,6 +5450,13 @@ const visionAttributeColumns: ApiColumn[] = [
   { key: 'defaultValue', label: '默认值' },
 ]
 
+const visionOwnedAttributeColumns: ApiColumn[] = [
+  { key: 'api', label: 'Vision API' },
+  { key: 'description', label: '说明' },
+  { key: 'type', label: '类型' },
+  { key: 'defaultValue', label: '默认值' },
+]
+
 const apiColumns: ApiColumn[] = [
   { key: 'api', label: 'API' },
   { key: 'description', label: '说明' },
@@ -5071,6 +5483,52 @@ const exposeColumns: ApiColumn[] = [
 ]
 
 const visionEventTables: Record<DemoPageId, ApiDisplayRow[]> = {
+  'ai-actions': [
+    { api: 'update:current', description: '回答序号变化时触发。', type: '(current: number) => void' },
+    { api: 'change', description: '切换上一条或下一条回答时触发。', type: '(current: number) => void' },
+    { api: 'update:feedback', description: '赞踩状态变化时触发。', type: "(feedback: 'up' | 'down' | null) => void" },
+    { api: 'feedback', description: '点击赞同或不赞同时触发。', type: "(feedback: 'up' | 'down') => void" },
+    { api: 'copy', description: '点击复制操作时触发。', type: '() => void' },
+    { api: 'refresh', description: '点击重新生成操作时触发。', type: '() => void' },
+    { api: 'share', description: '点击分享操作时触发。', type: '() => void' },
+    { api: 'more', description: '点击更多操作时触发。', type: '() => void' },
+  ],
+  'ai-attachment': [
+    { api: 'remove', description: '点击关闭按钮时触发。', type: '(key?: VisAiKey) => void' },
+    { api: 'preview', description: '点击图片附件时触发。', type: '(key?: VisAiKey) => void' },
+  ],
+  'ai-bubble': [
+    { api: 'update:spilled', description: '自动检测或展开后溢出状态变化时触发。', type: '(spilled: boolean) => void' },
+    { api: 'expand', description: '点击展开按钮时触发。', type: '() => void' },
+    { api: 'copy', description: '点击复制按钮时触发并返回文本内容。', type: '(content: string) => void' },
+    { api: 'edit', description: '点击编辑按钮时触发并返回文本内容。', type: '(content: string) => void' },
+  ],
+  'ai-conversation': [
+    { api: 'update:modelValue', description: '选中会话时触发。', type: '(key: VisAiKey) => void' },
+    { api: 'update:collapsed', description: '收起状态变化时触发。', type: '(collapsed: boolean) => void' },
+    { api: 'select', description: '选择会话时返回完整数据。', type: '(item: VisAiConversationItemData) => void' },
+    { api: 'create', description: '点击新建会话时触发。', type: '() => void' },
+    { api: 'pin', description: '点击置顶或取消置顶时触发。', type: '(item: VisAiConversationItemData) => void' },
+    { api: 'more', description: '点击更多操作时触发。', type: '(item: VisAiConversationItemData) => void' },
+    { api: 'action', description: '选择更多菜单操作时触发。', type: '(payload: { item: VisAiConversationItemData; action: VisAiConversationAction }) => void' },
+  ],
+  'ai-prompts': [
+    { api: 'select', description: '选择可用提示建议时触发。', type: '(item: VisAiPromptItem) => void' },
+  ],
+  'ai-sender': [
+    { api: 'update:modelValue', description: '输入内容变化时触发。', type: '(value: string) => void' },
+    { api: 'update:speed', description: '模型生成速率变化时触发。', type: '(speed: VisAiSenderSpeed) => void' },
+    { api: 'submit', description: '点击发送或按 Enter 时触发，返回当前模型、技能、附件与深度思考状态。', type: '(payload: VisAiSenderSubmitPayload) => void' },
+    { api: 'stop', description: '生成中点击停止按钮时触发。', type: '() => void' },
+    { api: 'attachmentRequest', description: '点击“文件和图片”时触发，由业务层打开文件选择器。', type: '() => void' },
+    { api: 'documentRequest', description: '点击“生成文档”时触发。', type: '() => void' },
+    { api: 'removeAttachment', description: '移除附件时返回完整附件数据。', type: '(item: VisAiAttachmentItem) => void' },
+    { api: 'previewAttachment', description: '预览图片附件时返回完整附件数据。', type: '(item: VisAiAttachmentItem) => void' },
+  ],
+  'ai-thinking': [
+    { api: 'update:expanded', description: '展开状态变化时触发。', type: '(expanded: boolean) => void' },
+    { api: 'toggle', description: '点击思考状态区域切换展开状态时触发。', type: '(expanded: boolean) => void' },
+  ],
   accordion: [
     {
       api: 'update:modelValue',
@@ -5105,6 +5563,13 @@ const visionEventTables: Record<DemoPageId, ApiDisplayRow[]> = {
     {
       api: 'click',
       description: '点击按钮时触发，透传原生 button click 事件。',
+      type: '(event: MouseEvent) => void',
+    },
+  ],
+  card: [
+    {
+      api: 'action',
+      description: '点击右上角操作按钮时触发。',
       type: '(event: MouseEvent) => void',
     },
   ],
@@ -5265,6 +5730,15 @@ const visionEventTables: Record<DemoPageId, ApiDisplayRow[]> = {
       type: '() => void',
     },
   ],
+  'page-header': [
+    { api: 'back', description: '点击返回上级页面按钮时触发。', type: '(event: MouseEvent) => void' },
+    { api: 'breadcrumbClick', description: '点击面包屑项目时触发。', type: '(item: VisBreadcrumbItem, index: number) => void' },
+    { api: 'update:activeTab', description: '激活标签变化时触发，用于 v-model:active-tab。', type: '(value: VisTabsValue) => void' },
+    { api: 'tabChange', description: '标签切换时触发，并返回标签数据。', type: '(value: VisTabsValue, item: VisTabsItem) => void' },
+    { api: 'action', description: '任一自定义操作按钮点击时触发。', type: '(payload: VisPageHeaderActionPayload) => void' },
+    { api: 'secondaryAction', description: '点击内置次操作按钮时触发。', type: '(event: MouseEvent) => void' },
+    { api: 'primaryAction', description: '点击内置主操作按钮时触发。', type: '(event: MouseEvent) => void' },
+  ],
   menu: [
     { api: 'update:openKey', description: '唯一展开父菜单变化时触发。', type: '(value: VisMenuKey | null) => void' },
     { api: 'update:collapsed', description: '点击侧栏折叠按钮时触发。', type: '(value: boolean) => void' },
@@ -5273,6 +5747,11 @@ const visionEventTables: Record<DemoPageId, ApiDisplayRow[]> = {
     { api: 'project-change', description: '选择其他项目时触发。', type: '(project: VisMenuProject) => void' },
     { api: 'request-more-projects', description: '点击查看更多项目时触发。', type: '() => void' },
     { api: 'help', description: '点击底部帮助入口时触发。', type: '() => void' },
+    { api: 'close', description: '点击主侧栏顶部关闭按钮时触发。', type: '() => void' },
+    { api: 'menu', description: '点击 Header Navigation 左侧菜单按钮时触发。', type: '() => void' },
+    { api: 'ai', description: '点击 Header Navigation AI 按钮时触发。', type: '() => void' },
+    { api: 'theme', description: '点击 Header Navigation 主题按钮时触发。', type: '() => void' },
+    { api: 'notifications', description: '点击 Header Navigation 通知按钮时触发。', type: '() => void' },
   ],
   notification: [
     {
@@ -5711,6 +6190,13 @@ const visionEventTables: Record<DemoPageId, ApiDisplayRow[]> = {
 }
 
 const elementExtraApiRows: Record<DemoPageId, ElementApiRow[]> = {
+  'ai-actions': [],
+  'ai-attachment': [],
+  'ai-bubble': [],
+  'ai-conversation': [],
+  'ai-prompts': [],
+  'ai-sender': [],
+  'ai-thinking': [],
   accordion: [
     { category: 'Slot', api: 'default', description: 'Collapse 默认内容，通常放置 Collapse Item', type: 'slot', defaultValue: '-' },
     { category: 'Slot', api: 'title', description: 'Collapse Item 标题内容', type: 'slot', defaultValue: '-' },
@@ -5731,6 +6217,11 @@ const elementExtraApiRows: Record<DemoPageId, ElementApiRow[]> = {
     { category: 'Expose', api: 'type', description: '按钮类型', type: 'object', defaultValue: '-' },
     { category: 'Expose', api: 'disabled', description: '按钮禁用状态', type: 'object', defaultValue: '-' },
     { category: 'Expose', api: 'shouldAddSpace', description: '是否在两个中文字符之间插入空格', type: 'object', defaultValue: '-' },
+  ],
+  card: [
+    { category: 'Slot', api: 'default', description: '卡片的默认内容。', type: 'slot', defaultValue: '-' },
+    { category: 'Slot', api: 'header', description: '卡片标题内容。', type: 'slot', defaultValue: '-' },
+    { category: 'Slot', api: 'footer', description: '卡片页脚内容。', type: 'slot', defaultValue: '-' },
   ],
   input: [
     { category: 'Slot', api: 'prefix', description: '输入框头部内容，只对非 textarea 有效', type: 'slot', defaultValue: '-' },
@@ -5803,6 +6294,7 @@ const elementExtraApiRows: Record<DemoPageId, ElementApiRow[]> = {
   message: [
     { category: 'Slot', api: 'default', description: '自定义消息内容。', type: 'slot', defaultValue: '-' },
   ],
+  'page-header': [],
   menu: [
     { category: 'Slot', api: 'default', description: 'ElMenu 默认内容，通常放置 ElMenuItem 与 ElSubMenu。', type: 'slot', defaultValue: '-' },
     { category: 'Expose', api: 'open', description: '展开指定 index 的 SubMenu。', type: '(index: string) => void', defaultValue: '-' },
@@ -6138,6 +6630,22 @@ function createSection(title: string, columns: ApiColumn[], rows: ApiDisplayRow[
   return { title, columns, rows }
 }
 
+const pageHeaderSlotRows: ApiDisplayRow[] = [
+  { api: 'breadcrumb', description: '自定义面包屑区域，暴露 items。', type: 'slot' },
+  { api: 'back', description: '自定义返回上级页面入口。', type: 'slot' },
+  { api: 'icon', description: '自定义标题前图标，暴露 iconName。', type: 'slot' },
+  { api: 'title', description: '自定义页面标题。', type: 'slot' },
+  { api: 'suffix', description: '自定义标题后缀，暴露 tag 配置。', type: 'slot' },
+  { api: 'actions', description: '自定义右侧操作区，暴露 actions。', type: 'slot' },
+  { api: 'description', description: '自定义页面说明内容。', type: 'slot' },
+  { api: 'tabs', description: '自定义标签页区域，暴露 items 与 activeTab。', type: 'slot' },
+]
+
+const cardSlotRows: ApiDisplayRow[] = [
+  { api: 'default', description: '卡片的业务内容。', type: 'slot' },
+  { api: 'action', description: '覆盖右上角操作按钮图标。', type: 'slot' },
+]
+
 const currentVisionApiSections = computed(() => {
   if (activePage.value === 'description') {
     const rows = apiTables.description
@@ -6166,9 +6674,38 @@ const currentVisionApiSections = computed(() => {
     ].filter((section): section is ApiTableSection => Boolean(section))
   }
 
+  if (activePage.value === 'page-header') {
+    return [
+      createSection('VisPageHeader Attributes', visionAttributeColumns, toVisionAttributeRows(apiTables['page-header'])),
+      createSection('VisPageHeader Events', eventColumns, visionEventTables['page-header']),
+      createSection('VisPageHeader Slots', slotColumns, pageHeaderSlotRows),
+    ].filter((section): section is ApiTableSection => Boolean(section))
+  }
+
+  if (activePage.value === 'card') {
+    return [
+      createSection('VisCard Attributes', visionAttributeColumns, toVisionAttributeRows(apiTables.card)),
+      createSection('VisCard Events', eventColumns, visionEventTables.card),
+      createSection('VisCard Slots', slotColumns, cardSlotRows),
+    ].filter((section): section is ApiTableSection => Boolean(section))
+  }
+
+  if (activePage.value === 'ai-sender') {
+    const rows = apiTables['ai-sender']
+    return [
+      createSection('VisAiSender Attributes', visionOwnedAttributeColumns, toVisionAttributeRows(rows.filter((row) => row.component === 'VisAiSender'))),
+      createSection('VisAiSkill Attributes', visionOwnedAttributeColumns, toVisionAttributeRows(rows.filter((row) => row.component === 'VisAiSkill'))),
+      createSection('VisAiSenderAction Attributes', visionOwnedAttributeColumns, toVisionAttributeRows(rows.filter((row) => row.component === 'VisAiSenderAction'))),
+      createSection('VisAiSender Events', eventColumns, visionEventTables['ai-sender']),
+    ].filter((section): section is ApiTableSection => Boolean(section))
+  }
+
   const componentName = visionComponentNames[activePage.value]
+  const attributeColumns = activePage.value.startsWith('ai-')
+    ? visionOwnedAttributeColumns
+    : visionAttributeColumns
   return [
-    createSection(`${componentName} Attributes`, visionAttributeColumns, toVisionAttributeRows(apiTables[activePage.value])),
+    createSection(`${componentName} Attributes`, attributeColumns, toVisionAttributeRows(apiTables[activePage.value])),
     createSection(`${componentName} Events`, eventColumns, visionEventTables[activePage.value]),
   ].filter((section): section is ApiTableSection => Boolean(section))
 })
@@ -6380,6 +6917,17 @@ function toggleGroup(title: string) {
                 <VisButton loading>加载中</VisButton>
                 <VisButton icon-only icon-name="plus" label="新增" />
                 <VisButton prefix suffix>中号按钮</VisButton>
+              </div>
+
+              <div v-else-if="activePage === 'card'" class="card-demo">
+                <div class="card-demo__item">
+                  <span class="card-demo__label">Default</span>
+                  <VisCard class="card-demo__card" aria-label="默认状态卡片" />
+                </div>
+                <div class="card-demo__item">
+                  <span class="card-demo__label">Hover</span>
+                  <VisCard class="card-demo__card" state="hover" aria-label="悬浮状态卡片" />
+                </div>
               </div>
 
               <div v-else-if="activePage === 'form'" class="form-demo">
@@ -7865,13 +8413,83 @@ function toggleGroup(title: string) {
 
                 <div class="dropdown-demo__items">
                   <VisDropdownItem type="icon" icon-name="settings-01" state="hover" />
+                  <VisDropdownItem description />
+                  <VisDropdownItem type="icon" icon-name="settings-01" description arrow />
+                  <VisDropdownItem description active />
+                  <VisDropdownItem description checkable active />
+                  <VisDropdownItem description disabled />
+                  <VisDropdownItem suffix />
+                  <VisDropdownItem type="icon" icon-name="settings-01" suffix />
+                  <VisDropdownItem suffix active />
+                  <VisDropdownItem suffix arrow />
+                  <VisDropdownItem suffix disabled />
                   <VisDropdownItem label="菜单选项" active />
                   <VisDropdownItem label="菜单选项" active state="hover" />
                   <VisDropdownItem type="icon" icon-name="log-out-01" label="菜单选项" arrow />
                   <VisDropdownItem type="avatar" title="张大山" subtitle="zhangdashan" />
                   <VisDropdownItem label="菜单选项" disabled />
                   <VisDropdownItem label="菜单选项" checkable active />
+                  <VisDropdownItem label="删除" danger />
+                  <VisDropdownItem label="删除" danger state="hover" />
+                  <VisDropdownItem label="删除" danger disabled />
+                  <VisDropdownItem type="icon" icon-name="trash-01" label="删除" danger />
+                  <VisDropdownItem type="icon" icon-name="trash-01" label="删除" danger state="hover" />
+                  <VisDropdownItem type="icon" icon-name="trash-01" label="删除" danger disabled />
                 </div>
+              </div>
+
+              <div v-else-if="activePage === 'page-header'" class="page-header-demo">
+                <div class="page-header-demo__controls" aria-label="PageHeader variants">
+                  <label class="avatar-demo__toggle">
+                    <input v-model="pageHeaderBreadcrumb" type="checkbox">
+                    <span>Breadcrumb</span>
+                  </label>
+                  <label class="avatar-demo__toggle">
+                    <input v-model="pageHeaderParentLink" type="checkbox">
+                    <span>Parent link</span>
+                  </label>
+                  <label class="avatar-demo__toggle">
+                    <input v-model="pageHeaderTabs" type="checkbox">
+                    <span>Tabs</span>
+                  </label>
+                  <label class="avatar-demo__toggle">
+                    <input v-model="pageHeaderIcon" type="checkbox">
+                    <span>Icon</span>
+                  </label>
+                  <label class="avatar-demo__toggle">
+                    <input v-model="pageHeaderDescription" type="checkbox">
+                    <span>Description</span>
+                  </label>
+                  <label class="avatar-demo__toggle">
+                    <input v-model="pageHeaderTag" type="checkbox">
+                    <span>Header suffix</span>
+                  </label>
+                  <label class="avatar-demo__toggle">
+                    <input v-model="pageHeaderActions" type="checkbox">
+                    <span>Actions</span>
+                  </label>
+                </div>
+
+                <div class="page-header-demo__showcase">
+                  <VisPageHeader
+                    v-model:active-tab="pageHeaderActiveTab"
+                    title="这里是页面的标题"
+                    :description="pageHeaderDescription"
+                    description-text="这里是描述"
+                    :breadcrumb="pageHeaderBreadcrumb"
+                    :breadcrumb-items="pageHeaderBreadcrumbItems"
+                    :parent-link="pageHeaderParentLink"
+                    :tabs="pageHeaderTabs ? pageHeaderTabItems : false"
+                    :icon="pageHeaderIcon ? 'dataflow-04' : false"
+                    :header-suffix="pageHeaderTag"
+                    :actions="pageHeaderActions"
+                    @back="pageHeaderStatus = '已触发返回上级页面'"
+                    @tab-change="pageHeaderStatus = `已切换至 ${String($event)}`"
+                    @action="pageHeaderStatus = `已触发操作：${String($event.key)}`"
+                  />
+                </div>
+
+                <p v-if="pageHeaderStatus" class="page-header-demo__status">{{ pageHeaderStatus }}</p>
               </div>
 
               <a
@@ -7903,6 +8521,170 @@ function toggleGroup(title: string) {
                   <Icon name="arrow-up-right" :size="20" decorative />
                 </span>
               </a>
+
+              <div v-else-if="activePage === 'ai-actions'" class="ai-component-demo ai-actions-demo">
+                <section class="ai-component-demo__section">
+                  <h4 class="ld-heading-h4">Default</h4>
+                  <div class="ai-actions-demo__stage">
+                    <VisAiActions
+                      v-model:current="aiActionsCurrent"
+                      v-model:feedback="aiActionsFeedback"
+                      @copy="aiActionsStatus = '已复制回答'"
+                      @refresh="aiActionsStatus = '已请求重新生成'"
+                      @share="aiActionsStatus = '已请求分享回答'"
+                      @more="aiActionsStatus = '已打开更多操作'"
+                    />
+                  </div>
+                  <p v-if="aiActionsStatus" class="ai-actions-demo__status">
+                    {{ aiActionsStatus }}
+                  </p>
+                </section>
+
+                <section class="ai-component-demo__section">
+                  <h4 class="ld-heading-h4">Properties</h4>
+                  <div class="ai-actions-demo__variants">
+                    <VisAiActions :current="3" :total="5" />
+                    <VisAiActions :pagination="false" :share="false" :more="false" />
+                    <VisAiActions disabled />
+                  </div>
+                </section>
+              </div>
+
+              <div v-else-if="activePage === 'ai-attachment'" class="ai-component-demo ai-attachment-demo">
+                <section class="ai-component-demo__section">
+                  <h4 class="ld-heading-h4">File</h4>
+                  <div class="ai-component-demo__row">
+                    <VisAiAttachment
+                      item-key="file-default"
+                      name="filename.doc"
+                      extension="doc"
+                      size="6.83kb"
+                    />
+                    <VisAiAttachment
+                      item-key="file-uploading"
+                      name="filename.doc"
+                      extension="doc"
+                      size="6.83kb"
+                      uploading
+                      :progress="64"
+                    />
+                  </div>
+                </section>
+                <section class="ai-component-demo__section">
+                  <h4 class="ld-heading-h4">Image</h4>
+                  <div class="ai-component-demo__row">
+                    <VisAiAttachment
+                      item-key="image-default"
+                      name="组件设计预览"
+                      type="image"
+                      :url="aiDemoImage"
+                    />
+                    <VisAiAttachment
+                      item-key="image-uploading"
+                      name="上传中的设计预览"
+                      type="image"
+                      :url="aiDemoImage"
+                      uploading
+                      :progress="48"
+                    />
+                  </div>
+                </section>
+              </div>
+
+              <div v-else-if="activePage === 'ai-bubble'" class="ai-component-demo ai-bubble-demo">
+                <section class="ai-component-demo__section">
+                  <h4 class="ld-heading-h4">Default</h4>
+                  <div class="ai-bubble-demo__stage">
+                    <VisAiBubble content="帮我生成需求文档" />
+                    <VisAiBubble content="帮我生成需求文档" state="hover" />
+                  </div>
+                </section>
+
+                <section class="ai-component-demo__section">
+                  <h4 class="ld-heading-h4">Spilled</h4>
+                  <div class="ai-bubble-demo__stage">
+                    <VisAiBubble
+                      :content="aiBubbleLongContent"
+                      @copy="aiBubbleStatus = '已复制消息内容'"
+                      @edit="aiBubbleStatus = '已请求编辑消息'"
+                    />
+                  </div>
+                  <p v-if="aiBubbleStatus" class="ai-bubble-demo__status">{{ aiBubbleStatus }}</p>
+                </section>
+              </div>
+
+              <div v-else-if="activePage === 'ai-conversation'" class="ai-component-demo">
+                <div class="ai-conversation-demo__stage">
+                  <VisAiConversation
+                    v-model="aiConversationKey"
+                    v-model:collapsed="aiConversationCollapsed"
+                    :items="aiConversationItems"
+                    @create="aiConversationKey = `conversation-${aiConversationItems.length + 1}`"
+                    @pin="toggleAiConversationPin"
+                    @action="handleAiConversationAction"
+                  />
+                </div>
+              </div>
+
+              <div v-else-if="activePage === 'ai-prompts'" class="ai-component-demo">
+                <section class="ai-component-demo__section">
+                  <h4 class="ld-heading-h4">Standard</h4>
+                  <VisAiPrompts
+                    :items="aiPromptItems"
+                    @select="aiSenderValue = $event.label"
+                  />
+                </section>
+                <section class="ai-component-demo__section">
+                  <h4 class="ld-heading-h4">One line</h4>
+                  <VisAiPrompts
+                    :items="aiPromptItems.slice(0, 3)"
+                    one-line
+                    @select="aiSenderValue = $event.label"
+                  />
+                </section>
+              </div>
+
+              <div v-else-if="activePage === 'ai-sender'" class="ai-component-demo ai-sender-demo">
+                <div class="ai-sender-demo__stage">
+                  <VisAiSender
+                    v-model="aiSenderValue"
+                    v-model:deep-thinking="aiSenderDeepThinking"
+                    v-model:model="aiSenderModel"
+                    v-model:speed="aiSenderSpeed"
+                    v-model:skill="aiSenderSkill"
+                    :attachments="aiSenderAttachments"
+                    :loading="aiSenderLoading"
+                    @submit="submitAiSender"
+                    @stop="stopAiSender"
+                    @remove-attachment="removeAiSenderAttachment"
+                    @attachment-request="aiSenderStatus = '已请求选择文件和图片'"
+                    @document-request="aiSenderStatus = '已请求生成文档'"
+                  />
+                </div>
+                <p v-if="aiSenderStatus" class="ai-sender-demo__status">{{ aiSenderStatus }}</p>
+              </div>
+
+              <div v-else-if="activePage === 'ai-thinking'" class="ai-component-demo ai-thinking-demo">
+                <section class="ai-component-demo__section">
+                  <h4 class="ld-heading-h4">Default</h4>
+                  <div class="ai-thinking-demo__matrix">
+                    <VisAiThinking />
+                    <VisAiThinking state="hover" />
+                    <VisAiThinking default-expanded />
+                    <VisAiThinking default-expanded state="hover" />
+                  </div>
+                </section>
+
+                <section class="ai-component-demo__section">
+                  <h4 class="ld-heading-h4">Interactive</h4>
+                  <div class="ai-thinking-demo__stage">
+                    <VisAiThinking
+                      v-model:expanded="aiThinkingExpanded"
+                      content="正在分析用户问题、上下文和可用工具，并组织回答。"
+                    />
+                  </div>
+                </section>
+              </div>
 
               <div v-else-if="activePage === 'segmented'" class="segmented-demo">
                 <div class="segmented-demo__controls">
@@ -8512,6 +9294,11 @@ function toggleGroup(title: string) {
   inline-size: 100%;
 }
 
+.demo-panel:has(.ai-component-demo) {
+  max-inline-size: 100%;
+  inline-size: 100%;
+}
+
 .demo-panel:has(.divider-demo) {
   max-inline-size: 760px;
   inline-size: 100%;
@@ -8530,6 +9317,16 @@ function toggleGroup(title: string) {
 
 .demo-panel:has(.menu-launch-card) {
   max-inline-size: 1120px;
+  inline-size: 100%;
+}
+
+.demo-panel:has(.page-header-demo) {
+  max-inline-size: 1120px;
+  inline-size: 100%;
+}
+
+.demo-panel:has(.card-demo) {
+  max-inline-size: 880px;
   inline-size: 100%;
 }
 
@@ -8756,6 +9553,37 @@ function toggleGroup(title: string) {
   flex-wrap: wrap;
   align-items: center;
   gap: var(--space-12);
+}
+
+.card-demo {
+  inline-size: 100%;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 400px));
+  gap: var(--space-32);
+}
+
+.card-demo__item {
+  min-inline-size: 0;
+  display: grid;
+  gap: var(--space-8);
+}
+
+.card-demo__label {
+  color: var(--color-text-secondary);
+  font-size: var(--font-text-sm-size);
+  line-height: var(--font-text-sm-line-height);
+}
+
+.card-demo__card {
+  inline-size: 400px;
+  max-inline-size: 100%;
+  block-size: 320px;
+}
+
+@media (max-width: 960px) {
+  .card-demo {
+    grid-template-columns: minmax(0, 400px);
+  }
 }
 
 .badge-demo,
@@ -9746,6 +10574,40 @@ function toggleGroup(title: string) {
   transition: border-color 140ms ease, box-shadow 140ms ease, transform 140ms ease;
 }
 
+.page-header-demo {
+  inline-size: 100%;
+  display: grid;
+  gap: var(--space-20);
+}
+
+.page-header-demo__controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-8) var(--space-16);
+}
+
+.page-header-demo__showcase {
+  box-sizing: border-box;
+  inline-size: 100%;
+  padding: var(--space-24);
+  overflow-x: auto;
+  border-radius: var(--radius-md);
+  background: var(--color-bg-secondary);
+}
+
+.page-header-demo__showcase :deep(.vis-page-header) {
+  inline-size: 800px;
+  min-inline-size: 800px;
+}
+
+.page-header-demo__status {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-text-md-size);
+  line-height: var(--font-text-md-line-height);
+}
+
 .menu-launch-card:hover,
 .menu-launch-card:focus-visible {
   border-color: var(--color-border-brand);
@@ -9846,6 +10708,118 @@ function toggleGroup(title: string) {
   justify-content: center;
   color: var(--color-fg-brand-primary);
   background: var(--color-fg-brand-subtle);
+}
+
+.ai-component-demo {
+  inline-size: 100%;
+  display: grid;
+  gap: var(--space-32);
+}
+
+.ai-component-demo__section {
+  display: grid;
+  gap: var(--space-16);
+}
+
+.ai-component-demo__section > h4 {
+  margin: 0;
+}
+
+.ai-component-demo__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-20);
+}
+
+.ai-actions-demo__stage,
+.ai-thinking-demo__stage {
+  box-sizing: border-box;
+  min-block-size: 120px;
+  border-radius: var(--radius-md);
+  padding: var(--space-24);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-bg-canvas);
+}
+
+.ai-actions-demo__variants,
+.ai-thinking-demo__matrix {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--space-32);
+}
+
+.ai-thinking-demo__matrix {
+  min-block-size: 120px;
+}
+
+.ai-actions-demo__status {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-text-sm-size);
+  line-height: var(--font-text-sm-line-height);
+}
+
+.ai-bubble-demo__stage {
+  box-sizing: border-box;
+  min-block-size: 152px;
+  border-radius: var(--radius-md);
+  padding: var(--space-24) var(--space-32);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
+  gap: var(--space-24);
+  overflow: visible;
+  background: var(--color-bg-canvas);
+}
+
+.ai-bubble-demo__status {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-text-sm-size);
+  line-height: var(--font-text-sm-line-height);
+  text-align: end;
+}
+
+.ai-conversation-demo__stage {
+  box-sizing: border-box;
+  min-block-size: 680px;
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: flex-start;
+  overflow: hidden;
+  background: var(--color-bg-secondary);
+}
+
+.ai-conversation-demo__stage :deep(.vis-ai-conversation:not(.is-collapsed)) {
+  min-block-size: 680px;
+}
+
+.ai-sender-demo {
+  align-content: end;
+  min-block-size: 420px;
+  border-radius: var(--radius-md);
+  padding: var(--space-32);
+  background: var(--color-bg-secondary);
+}
+
+.ai-sender-demo__stage {
+  inline-size: 100%;
+  max-inline-size: 1000px;
+  margin-inline: auto;
+}
+
+.ai-sender-demo__status {
+  max-inline-size: 1000px;
+  margin: 0 auto;
+  color: var(--color-text-secondary);
+  font-size: var(--font-text-sm-size);
+  line-height: var(--font-text-sm-line-height);
 }
 
 .modal-content {

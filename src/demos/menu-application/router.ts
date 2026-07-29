@@ -11,14 +11,56 @@ const projectRoutes: RouteRecordRaw[] = getProjectPageItems().map((item) => ({
       ? () => import('./views/ProjectOverviewView.vue')
       : item.key === 'repositories'
         ? () => import('./views/RepositoryWebhooksView.vue')
+        : item.key === 'applications'
+          ? () => import('./views/ApplicationListView.vue')
       : () => import('./views/ProjectSectionView.vue'),
   meta: {
     menuKey: item.key,
     title: item.key === 'repositories' ? 'Webhook 设置' : item.label,
     description: item.description,
-    layout: item.key === 'repositories' ? 'repository-detail' : undefined,
+    layout:
+      item.key === 'repositories'
+        ? 'repository-detail'
+        : item.key === 'applications'
+          ? 'application-workspace'
+          : undefined,
   },
 }))
+
+const applicationDetailRoute: RouteRecordRaw = {
+  path: 'deployments/applications/:applicationId',
+  component: () => import('./views/ApplicationDetailLayout.vue'),
+  redirect: (to) => ({
+    name: 'application-overview',
+    params: to.params,
+  }),
+  meta: {
+    menuKey: 'applications',
+    layout: 'application-workspace',
+  },
+  children: [
+    {
+      path: 'overview',
+      name: 'application-overview',
+      component: () => import('./views/ApplicationOverviewView.vue'),
+      meta: {
+        menuKey: 'applications',
+        layout: 'application-workspace',
+        title: '应用概览',
+      },
+    },
+    {
+      path: 'environment-planning',
+      name: 'application-environment-planning',
+      component: () => import('./views/ApplicationEnvironmentPlanningView.vue'),
+      meta: {
+        menuKey: 'applications',
+        layout: 'application-workspace',
+        title: '环境规划',
+      },
+    },
+  ],
+}
 
 export const menuApplicationRouter = createRouter({
   history: createWebHashHistory(),
@@ -31,7 +73,7 @@ export const menuApplicationRouter = createRouter({
       path: '/projects/:projectKey',
       component: ProjectLayout,
       redirect: (to) => ({ name: 'project-overview', params: { projectKey: to.params.projectKey } }),
-      children: projectRoutes,
+      children: [...projectRoutes, applicationDetailRoute],
     },
     {
       path: '/:pathMatch(.*)*',

@@ -252,9 +252,13 @@
 | `searchPlaceholder` | `searchPlaceholder` | input placeholder | 搜索占位。 | `string` | `'请输入关键字'` |
 | `label` | item/header `label` | item text | 菜单项/分组名。 | `string` | `'菜单选项'` |
 | `active` | item `active` | selected class | 选中态。 | `boolean` | `false` |
+| `danger` | item `danger` | item class | 危险操作语义；文字和图标使用 danger 色，悬浮使用 danger-subtle 背景，禁用使用 danger-disabled。 | `boolean` | `false` |
 | `checkable` | item `checkable` | `aria-checked` | 可勾选菜单项。 | `boolean` | `false` |
 | `disabled` | item `disabled` | `disabled` | 禁用菜单项。 | `boolean` | `false` |
 | `icon` | item `iconName` | icon slot | 菜单项图标。 | `IconName` | `'settings-01'` |
+| `description` | item `description` | 无直接对应 | default、icon 菜单项显示第二行说明，并切换为 58px 双行变体；avatar 类型忽略该属性。 | `boolean` | `false` |
+| `descriptionText` | item `descriptionText` | item render / default slot | 第二行说明文字，也可由 `description` 插槽覆盖。 | `string` | `'这里是描述文字'` |
+| `suffix` | item `suffix` | item render / default slot | 在 Description=false 的 default、icon 菜单项中显示尾部内容；avatar 与双行描述变体忽略，可由 `suffix` 插槽覆盖。 | `boolean` | `false` |
 | `select` | `select` | `command` | 选择事件。 | event | - |
 
 ## FeaturedIcon
@@ -431,6 +435,7 @@
 | `items` | `items` | `ElMenuItem` data | 菜单数据。 | `VisMenuItemConfig[]` | demo items |
 | `activeId` | `activeId` | `default-active` | 当前激活项。 | `string` | `'dashboard'` |
 | `search` | `search` | header slot | 是否显示搜索入口。 | `boolean` | `true` |
+| `aiActionLabel` | 无 | `aria-label` | Header Navigation AI 按钮的无障碍名称。 | `string` | `'AI 助手'` |
 | `userCard` | `userCard` | footer slot | 是否显示用户卡片。 | `boolean` | `true` |
 | `label` | group/item `label` | item title | 菜单组或项标题。 | `string` | `'菜单名称'` |
 | `collapsed` | item `collapse` | `collapse` | item 接收折叠状态。 | `boolean` | `false` |
@@ -440,6 +445,7 @@
 | `level` | item `subLevel` | class | 子级层级。 | `number` | `0` |
 | `badgeCount` | `badgeCount` | badge slot | 尾部徽标。 | `string \| number` | `10` |
 | `select` / `collapse` | 同名 | `select` / collapse button | 事件保持。 | event | - |
+| `ai` | 无 | button click | 点击 Header Navigation AI 按钮时触发。 | event | - |
 
 ## Message
 
@@ -494,17 +500,34 @@
 | API 名 | 旧 API | Element Plus API | 说明 | 类型 | 默认值 |
 | --- | --- | --- | --- | --- | --- |
 | `title` | `title` | 自研 | 页面标题。 | `string` | `'这里是页面的标题'` |
-| `description` | `description` + `descriptionText` | 自研 | `description` 改为文本，旧布尔改 `showDescription`。 | `string` | demo text |
-| `showDescription` | `description` | class | 是否显示描述。 | `boolean` | `true` |
-| `breadcrumbs` | `breadcrumbItems` | Breadcrumb | 面包屑数据。 | `VisBreadcrumbItem[]` | demo items |
-| `showBreadcrumb` | `breadcrumb` | Breadcrumb | 是否显示面包屑。 | `boolean` | `false` |
-| `parentLink` | `parentLink` | Button link | 是否显示返回上级。 | `boolean` | `false` |
-| `tabs` | `tabItems` | Tabs | 标签页数据。 | `VisTabsItem[]` | demo tabs |
-| `activeTab` | `activeTab` | Tabs model-value | 当前标签。 | `VisTabsValue` | `undefined` |
-| `icon` | `icon` + `iconName` | FeaturedIcon | 页面图标。 | `IconName \| false` | `false` |
-| `tag` | `headerSuffix/tagLabel/tagIconName` | Tag | 标题后缀标签。 | `VisTagProps \| false` | demo tag |
-| `actions` | `actions` | actions slot | 页面操作。 | `boolean \| VisAction[]` | `true` |
-| `update:activeTab` / `tabChange` | 同名 | Tabs events | 标签切换事件。 | event | - |
+| `description` | `description` | 自研 | 页面说明文字；传入布尔值时兼容旧版显示开关。 | `string \| boolean` | `undefined` |
+| `descriptionText` | `descriptionText` | 自研 | 旧版说明文字 API，继续直接兼容。 | `string` | `'这里是描述'` |
+| `showDescription` | `description` | class | 语义化的说明显示开关。 | `boolean` | `true` |
+| `breadcrumbs` | `breadcrumbItems` | `VisBreadcrumb.items` | 语义化面包屑数据；传入后自动显示。 | `VisBreadcrumbItem[]` | `undefined` |
+| `breadcrumbItems` | `breadcrumbItems` | `VisBreadcrumb.items` | 旧版面包屑数据 API，继续直接兼容。 | `VisBreadcrumbItem[]` | 内置示例 |
+| `showBreadcrumb` | `breadcrumb` | `VisBreadcrumb` | 语义化面包屑显示开关。 | `boolean` | `false` |
+| `breadcrumb` | `breadcrumb` | `VisBreadcrumb` | 旧版面包屑显示开关，继续直接兼容。 | `boolean` | `false` |
+| `parentLink` | `parentLink` | `VisButton` | 是否显示返回上级页面按钮。 | `boolean` | `false` |
+| `tabs` | `tabs` | `VisTabs.items` | 标签页显示开关或语义化标签数据。 | `boolean \| VisTabsItem[]` | `false` |
+| `tabItems` | `tabItems` | `VisTabs.items` | 旧版标签页数据 API，继续直接兼容。 | `VisTabsItem[]` | 内置示例 |
+| `activeTab` | `activeTab` | `VisTabs.modelValue` | 当前标签，支持 `v-model:active-tab`。 | `VisTabsValue` | 首个标签 |
+| `icon` | `icon` | `VisFeaturedIcon.icon` | 特征图标显示开关或语义化图标名称。 | `IconName \| boolean` | `false` |
+| `iconName` | `iconName` | `VisFeaturedIcon.icon` | 旧版图标名称 API，继续直接兼容。 | `IconName` | `'dataflow-04'` |
+| `tag` | `headerSuffix` | `VisTag` | 语义化标题后缀标签配置。 | `VisTagProps \| false` | `undefined` |
+| `headerSuffix` | `headerSuffix` | `VisTag` | 旧版标题标签显示开关。 | `boolean` | `false` |
+| `tagLabel` | `tagLabel` | `VisTag.label` | 旧版标题标签文案。 | `string` | `'标签'` |
+| `tagIconName` | `tagIconName` | `VisTag.iconName` | 旧版标题标签图标。 | `IconName` | `'archive'` |
+| `actions` | `actions` | `VisButton` | 页面操作开关或自定义操作数组。 | `boolean \| VisPageHeaderAction[]` | `false` |
+| `secondaryActionLabel` | `secondaryActionLabel` | `VisButton.label` | 旧版次操作按钮文案。 | `string` | `'按钮'` |
+| `primaryActionLabel` | `primaryActionLabel` | `VisButton.label` | 旧版主操作按钮文案。 | `string` | `'按钮'` |
+| `ariaLabel` | - | `aria-label` | 页头区域的无障碍名称。 | `string` | `undefined` |
+| `back` | `back` | `VisButton.click` | 返回按钮点击事件。 | event | - |
+| `breadcrumbClick` | - | `VisBreadcrumb.click` | 面包屑项目点击事件。 | event | - |
+| `update:activeTab` | `update:activeTab` | `VisTabs.update:modelValue` | 当前标签更新事件。 | event | - |
+| `tabChange` | `tabChange` | `VisTabs.change` | 标签切换事件。 | event | - |
+| `action` | - | `VisButton.click` | 自定义操作按钮统一事件。 | event | - |
+| `secondaryAction` | `secondaryAction` | `VisButton.click` | 内置次操作按钮事件。 | event | - |
+| `primaryAction` | `primaryAction` | `VisButton.click` | 内置主操作按钮事件。 | event | - |
 
 ## Pagination
 
@@ -800,6 +823,117 @@
 | `descriptionText` | `descriptionText` | helper text | 辅助说明。 | `string` | `'jpg/png files with a size less than 500KB.'` |
 | `fileIcon` | `fileIconName` | file item icon slot | 文件图标。 | `IconName` | `'file-06'` |
 | `change` / `remove` / `progress` / `success` / `error` | 旧组件仅 `update:modelValue` | Element Upload events | 迁移时补齐上传事件矩阵。 | event | - |
+
+## AI Actions
+
+| API 名 | 旧 API | Element Plus API | 说明 | 类型 | 默认值 |
+| --- | --- | --- | --- | --- | --- |
+| `current` | 新增 | 不适用 | 当前回答序号，支持 `v-model:current`。 | `number` | `1` |
+| `total` | 新增 | 不适用 | 回答总数。 | `number` | `5` |
+| `pagination` | 新增 | 不适用 | 是否显示回答分页导航。 | `boolean` | `true` |
+| `copy` | 新增 | 不适用 | 是否显示复制操作。 | `boolean` | `true` |
+| `refresh` | 新增 | 不适用 | 是否显示重新生成操作。 | `boolean` | `true` |
+| `thumbs` | 新增 | 不适用 | 是否显示赞同与不赞同操作。 | `boolean` | `true` |
+| `share` | 新增 | 不适用 | 是否显示分享操作。 | `boolean` | `true` |
+| `more` | 新增 | 不适用 | 是否显示更多操作。 | `boolean` | `true` |
+| `disabled` | 新增 | 不适用 | 禁用全部操作。 | `boolean` | `false` |
+| `feedback` | 新增 | 不适用 | 当前赞踩状态，支持 `v-model:feedback`。 | `'up' \| 'down' \| null` | `null` |
+| `update:current` / `change` | 新增 | 不适用 | 回答序号变化事件。 | event | - |
+| `update:feedback` / `feedback` | 新增 | 不适用 | 赞踩状态变化事件。 | event | - |
+| `copy` / `refresh` / `share` / `more` | 新增 | 不适用 | 对应回答操作事件。 | event | - |
+
+## AI Attachment
+
+| API 名 | 旧 API | Element Plus API | 说明 | 类型 | 默认值 |
+| --- | --- | --- | --- | --- | --- |
+| `itemKey` | 新增 | 无直接对应 | 附件业务标识。 | `VisAiKey` | `undefined` |
+| `name` | 新增 | 无直接对应 | 附件名称及无障碍描述。 | `string` | 必填 |
+| `type` | 新增 | 无直接对应 | 文件卡片或图片缩略图。 | `'file' \| 'image'` | `'file'` |
+| `extension` | 新增 | 无直接对应 | 文件扩展名。 | `string` | `''` |
+| `size` | 新增 | 无直接对应 | 文件体积说明。 | `string` | `''` |
+| `url` | 新增 | 原生 `img src` | 图片预览地址。 | `string` | `''` |
+| `uploading` | 新增 | `VisProgressCircle` | 是否显示上传进度。 | `boolean` | `false` |
+| `progress` | 新增 | `VisProgressCircle.value` | 上传进度百分比。 | `number` | `25` |
+| `removable` | 新增 | 无直接对应 | 是否显示移除操作。 | `boolean` | `true` |
+| `remove` / `preview` | 新增 | 无直接对应 | 移除或预览附件事件。 | event | - |
+
+## AI Bubble
+
+| API 名 | 旧 API | Element Plus API | 说明 | 类型 | 默认值 |
+| --- | --- | --- | --- | --- | --- |
+| `content` | 新增 | 不适用 | 用户输入的文本内容，也支持默认插槽。 | `string` | `'帮我生成需求文档'` |
+| `spilled` | 新增 | 不适用 | 手动覆盖溢出状态；未传入时根据实际行数自动判断，展开后变为 `false`。 | `boolean` | 自动判断 |
+| `maxLines` | 新增 | 不适用 | 自动进入 spilled 状态前允许显示的最大行数。 | `number` | `4` |
+| `copyable` | 新增 | 不适用 | 悬浮时是否显示复制操作。 | `boolean` | `true` |
+| `editable` | 新增 | 不适用 | 悬浮时是否显示编辑操作。 | `boolean` | `true` |
+| `state` | 新增 | 不适用 | 默认或悬浮预览状态。 | `'default' \| 'hover'` | `'default'` |
+| `expand` | 新增 | 不适用 | 点击展开按钮、显示全文时触发。 | event | - |
+| `update:spilled` | 新增 | 不适用 | 自动检测或展开后的溢出状态变化事件。 | event | - |
+| `copy` / `edit` | 新增 | 不适用 | 复制或编辑操作事件，返回当前文本内容。 | event | - |
+
+## AI Conversation
+
+| API 名 | 旧 API | Element Plus API | 说明 | 类型 | 默认值 |
+| --- | --- | --- | --- | --- | --- |
+| `modelValue` | 新增 | 无直接对应 | 当前会话 key。 | `VisAiKey` | `''` |
+| `items` | 新增 | 无直接对应 | 会话数据，支持分组、置顶和禁用。 | `VisAiConversationItemData[]` | `[]` |
+| `title` | 新增 | 无直接对应 | 会话侧栏标题。 | `string` | `'小 VI 智能助理'` |
+| `collapsed` | 新增 | 无直接对应 | 收起状态。 | `boolean` | `false` |
+| `showCreation` | 新增 | `VisButton` | 是否显示新建会话操作。 | `boolean` | `true` |
+| `creationLabel` | 新增 | `VisButton` default slot | 新建会话文案。 | `string` | `'发起新会话'` |
+| `select` / `create` / `pin` / `more` | 新增 | 无直接对应 | 会话选择、创建、置顶与打开更多菜单事件。 | event | - |
+| `action` | 新增 | 无直接对应 | 选择更多菜单操作时返回会话数据与 `share`、`rename`、`pin` 或 `delete` 动作。 | event | - |
+
+## AI Prompts
+
+| API 名 | 旧 API | Element Plus API | 说明 | 类型 | 默认值 |
+| --- | --- | --- | --- | --- | --- |
+| `items` | 新增 | 无直接对应 | 提示建议数据源。 | `VisAiPromptItem[]` | `[]` |
+| `oneLine` | 新增 | 无直接对应 | 单行紧凑布局。 | `boolean` | `false` |
+| `disabled` | 新增 | 无直接对应 | 禁用全部提示建议。 | `boolean` | `false` |
+| `select` | 新增 | 无直接对应 | 选择提示建议事件。 | event | - |
+
+## AI Sender
+
+| API 名 | 旧 API | Element Plus API | 说明 | 类型 | 默认值 |
+| --- | --- | --- | --- | --- | --- |
+| `modelValue` | 新增 | 原生 `textarea.value` | 输入内容。 | `string` | `''` |
+| `attachments` | 新增 | `VisAiAttachment` | 当前附件列表。 | `VisAiAttachmentItem[]` | `[]` |
+| `disabled` | 新增 | 原生 `disabled` | 禁用输入和全部操作。 | `boolean` | `false` |
+| `loading` | 新增 | `VisAiSenderAction` | 生成中状态，主操作切换为停止。 | `boolean` | `false` |
+| `placeholder` | 新增 | 原生 `placeholder` | 输入占位文字。 | `string` | `'请描述您的问题'` |
+| `deepThinking` | 新增 | `VisToggleButton.modelValue` | 深度思考开关。 | `boolean` | `false` |
+| `model` | 新增 | `VisDropdown` | 当前模型 key。 | `VisAiKey` | `''` |
+| `models` | 新增 | `VisDropdownItem` | 模型数据源，每项可通过 `iconName` 指定模型图标。 | `VisAiSenderModel[]` | 内置 3 项 |
+| `speed` | 新增 | `VisDropdownItem` | 模型生成速率，支持低、中、高、极高四档。 | `VisAiSenderSpeed` | `'high'` |
+| `skill` | 新增 | `VisAiSkill` | 当前技能 key。 | `VisAiKey` | `''` |
+| `skills` | 新增 | `VisDropdownItem` / `VisAiSkill` | 技能数据源。 | `VisAiSenderSkill[]` | 内置 4 项 |
+| `submitOnEnter` | 新增 | 原生 `keydown` | Enter 发送，Shift+Enter 换行。 | `boolean` | `true` |
+| `maxLength` | 新增 | 原生 `maxlength` | 最大输入字符数。 | `number` | `undefined` |
+| `submit` / `stop` | 新增 | 无直接对应 | 发送与停止生成事件。 | event | - |
+| `attachmentRequest` / `documentRequest` | 新增 | 无直接对应 | 请求选择附件或生成文档。 | event | - |
+| `removeAttachment` / `previewAttachment` | 新增 | `VisAiAttachment` events | 附件移除与预览事件。 | event | - |
+
+## AI Thinking
+
+| API 名 | 旧 API | Element Plus API | 说明 | 类型 | 默认值 |
+| --- | --- | --- | --- | --- | --- |
+| `expanded` | 新增 | 不适用 | 思考内容展开状态，支持 `v-model:expanded`。 | `boolean` | `undefined` |
+| `defaultExpanded` | 新增 | 不适用 | 非受控模式下的默认展开状态。 | `boolean` | `false` |
+| `state` | 新增 | 不适用 | 默认或悬浮预览状态。 | `'default' \| 'hover'` | `'default'` |
+| `label` | 新增 | `VisLoadingText.label` | 思考中的状态文案。 | `string` | `'正在思考...'` |
+| `content` | 新增 | 不适用 | 展开后的思考内容，也可由默认插槽覆盖。 | `string` | `'这里是思考的内容'` |
+| `update:expanded` / `toggle` | 新增 | 不适用 | 思考内容展开状态变化事件。 | event | - |
+
+## AI Skill
+
+| API 名 | 旧 API | Element Plus API | 说明 | 类型 | 默认值 |
+| --- | --- | --- | --- | --- | --- |
+| `label` | 新增 | 无直接对应 | 技能名称。 | `string` | `'Generator-Skill'` |
+| `color` | 新增 | 无直接对应 | 技能语义色；兼容设计稿中的 `acarlet` 拼写并归一为 `scarlet`。 | `VisAiSkillColor` | `'blue'` |
+| `icon` | 新增 | `Icon` | 是否显示前置图标。 | `boolean` | `true` |
+| `iconName` | 新增 | `Icon.name` | 前置图标名称。 | `IconName` | `'book-open-01'` |
+| `state` | 新增 | 无直接对应 | 默认或悬浮视觉状态。 | `'default' \| 'hover'` | `'default'` |
 
 ## HelloWorld
 

@@ -122,7 +122,7 @@ watch(
   color: var(--vis-toggle-button-fg);
   background: var(--vis-toggle-button-bg);
   box-shadow: none;
-  font-family: var(--font-family-sans);
+  font-family: var(--font-family-text);
   font-size: var(--vis-toggle-button-font-size);
   font-weight: var(--vis-toggle-button-font-weight);
   line-height: var(--vis-toggle-button-line-height);
@@ -156,12 +156,13 @@ watch(
 
 .vis-toggle-button:is(:hover, .state-hover):not(.is-disabled) {
   --vis-toggle-button-bg: var(--color-bg-tertiary);
+  --vis-toggle-button-icon-fg: var(--color-fg-secondary);
 }
 
 .vis-toggle-button:is(.is-active, .state-active):not(.is-disabled) {
-  --vis-toggle-button-bg: var(--color-fg-brand-subtle);
-  --vis-toggle-button-fg: var(--color-text-brand-primary);
-  --vis-toggle-button-icon-fg: currentColor;
+  --vis-toggle-button-bg: var(--color-bg-quaternary);
+  --vis-toggle-button-fg: var(--color-text-primary);
+  --vis-toggle-button-icon-fg: var(--color-fg-primary);
 }
 
 .vis-toggle-button:is(:focus-visible, .state-focus):not(.is-disabled) {

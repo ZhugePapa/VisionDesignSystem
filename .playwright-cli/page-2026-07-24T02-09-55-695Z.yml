@@ -1,0 +1,137 @@
+- generic [ref=e4]:
+  - banner [ref=e5]:
+    - button "打开主导航" [ref=e6] [cursor=pointer]
+    - navigation "Breadcrumb" [ref=e11]:
+      - list [ref=e12]:
+        - listitem [ref=e13]:
+          - button "项目" [ref=e14] [cursor=pointer]
+        - listitem [ref=e23]:
+          - button "飞机照明系统" [disabled] [ref=e24]
+    - searchbox "搜索项目内容" [ref=e30]
+    - generic [ref=e31]:
+      - button "设置" [ref=e32] [cursor=pointer]
+      - button "切换到暗色模式" [ref=e39] [cursor=pointer]
+      - button "通知" [ref=e48] [cursor=pointer]
+    - img "当前用户头像" [ref=e55]
+  - generic [ref=e56]:
+    - navigation "项目导航" [ref=e57]:
+      - button "飞机照明系统" [ref=e59] [cursor=pointer]
+      - generic [ref=e76]:
+        - button "概览" [ref=e77] [cursor=pointer]
+        - button "项目管理" [ref=e83] [cursor=pointer]
+        - button "需求管理 10" [ref=e89] [cursor=pointer]:
+          - generic [ref=e94]: 需求管理
+          - generic [ref=e95]: "10"
+        - button "代码管理" [ref=e97] [cursor=pointer]
+        - button "流水线" [ref=e106] [cursor=pointer]
+        - button "制品管理" [ref=e113] [cursor=pointer]
+        - button "部署管理" [expanded] [ref=e124] [cursor=pointer]
+        - generic [ref=e134]:
+          - button "应用管理" [ref=e135] [cursor=pointer]
+          - button "环境管理" [ref=e137] [cursor=pointer]
+        - button "测试管理" [ref=e139] [cursor=pointer]
+        - button "项目设置" [ref=e148] [cursor=pointer]
+      - generic [ref=e156]:
+        - button "帮助" [ref=e157] [cursor=pointer]
+        - button "折叠项目导航" [ref=e163] [cursor=pointer]
+    - main [ref=e168]:
+      - generic [ref=e169]:
+        - region "代码仓库服务" [ref=e170]:
+          - generic [ref=e171]:
+            - button "返回上级页面" [ref=e172] [cursor=pointer]
+            - heading "代码仓库服务" [level=1] [ref=e185]
+          - tablist "页头标签页" [ref=e187]:
+            - tab "概览" [ref=e188] [cursor=pointer]
+            - tab "发布编排" [ref=e191] [cursor=pointer]
+            - tab "环境规划" [selected] [ref=e194] [cursor=pointer]
+            - tab "环境参数" [ref=e197] [cursor=pointer]
+            - tab "发布历史" [ref=e200] [cursor=pointer]
+        - region "环境规划" [ref=e204]:
+          - generic "环境筛选" [ref=e205]:
+            - searchbox "搜索环境" [ref=e210]
+            - button "类型" [ref=e211] [cursor=pointer]
+            - button "创建人" [ref=e217] [cursor=pointer]
+            - button "新建环境" [ref=e223] [cursor=pointer]
+          - generic [ref=e229]:
+            - generic [ref=e231]:
+              - generic [ref=e237]:
+                - heading "开发环境" [level=2] [ref=e238]
+                - paragraph [ref=e239]: 用于开发人员日常联调和功能验证，代码合并后可自动部署。
+              - generic [ref=e242]:
+                - generic [ref=e243]:
+                  - term [ref=e244]: 环境类型
+                  - definition [ref=e245]:
+                    - generic [ref=e246]: 标签
+                - generic [ref=e248]:
+                  - term [ref=e249]: 环境状态
+                  - definition [ref=e250]:
+                    - generic [ref=e251]: 运行中
+                - generic [ref=e253]:
+                  - term [ref=e254]: 创建人
+                  - definition [ref=e255]:
+                    - paragraph [ref=e260]: 张大山
+                - generic [ref=e261]:
+                  - term [ref=e262]: 创建时间
+                  - definition [ref=e263]: 07月23日 16:45:23
+                - generic [ref=e264]:
+                  - term [ref=e265]: 当前版本
+                  - definition [ref=e266]: v2.8.0-dev.l26
+                - generic [ref=e267]:
+                  - term [ref=e268]: 当前部署制品
+                  - definition [ref=e269]:
+                    - generic [ref=e270]: registry.example.com/devops/repository-service:v2.8.0-dev.l26
+            - generic [ref=e273]:
+              - generic [ref=e279]:
+                - heading "测试环境" [level=2] [ref=e280]
+                - paragraph [ref=e281]: 用于系统测试、接口测试和版本发布前的质量验证。
+              - generic [ref=e284]:
+                - generic [ref=e285]:
+                  - term [ref=e286]: 环境类型
+                  - definition [ref=e287]:
+                    - generic [ref=e288]: 标签
+                - generic [ref=e290]:
+                  - term [ref=e291]: 环境状态
+                  - definition [ref=e292]:
+                    - generic [ref=e293]: 部署中
+                - generic [ref=e295]:
+                  - term [ref=e296]: 创建人
+                  - definition [ref=e297]:
+                    - paragraph [ref=e302]: 张大山
+                - generic [ref=e303]:
+                  - term [ref=e304]: 创建时间
+                  - definition [ref=e305]: 07月23日 16:45:23
+                - generic [ref=e306]:
+                  - term [ref=e307]: 当前版本
+                  - definition [ref=e308]: v2.8.0-rc.3
+                - generic [ref=e309]:
+                  - term [ref=e310]: 当前部署制品
+                  - definition [ref=e311]:
+                    - generic [ref=e312]: repository-service-2.8.0-rc.3.jar
+            - generic [ref=e315]:
+              - button "生产环境更多操作" [ref=e357] [cursor=pointer]
+              - generic [ref=e321]:
+                - heading "生产环境" [level=2] [ref=e322]
+                - paragraph [ref=e323]: 面向正式用户提供稳定服务，发布操作需要经过审批和验证。
+              - generic [ref=e326]:
+                - generic [ref=e327]:
+                  - term [ref=e328]: 环境类型
+                  - definition [ref=e329]:
+                    - generic [ref=e330]: 标签
+                - generic [ref=e332]:
+                  - term [ref=e333]: 环境状态
+                  - definition [ref=e334]:
+                    - generic [ref=e335]: 运行异常
+                - generic [ref=e337]:
+                  - term [ref=e338]: 创建人
+                  - definition [ref=e339]:
+                    - paragraph [ref=e344]: 张大山
+                - generic [ref=e345]:
+                  - term [ref=e346]: 创建时间
+                  - definition [ref=e347]: 07月23日 16:45:23
+                - generic [ref=e348]:
+                  - term [ref=e349]: 当前版本
+                  - definition [ref=e350]: v2.7.6
+                - generic [ref=e351]:
+                  - term [ref=e352]: 当前部署制品
+                  - definition [ref=e353]:
+                    - generic [ref=e354]: registry.example.com/devops/repository-service:v2.7.6

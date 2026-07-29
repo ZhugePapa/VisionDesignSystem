@@ -45,6 +45,7 @@ const emit = defineEmits<{
 
 <style scoped>
 .vis-project-cell {
+  position: relative;
   box-sizing: border-box;
   inline-size: 216px;
   block-size: var(--space-56);
@@ -54,18 +55,32 @@ const emit = defineEmits<{
   align-items: center;
   gap: var(--space-8);
   color: var(--color-text-primary);
-  background: var(--color-bg-canvas);
-  box-shadow:
-    inset -1px 0 0 var(--color-border-default),
-    inset 0 -1px 0 var(--color-border-default);
-  font-family: var(--font-family-sans);
+  background: transparent;
+  box-shadow: inset -1px 0 0 var(--color-border-default);
+  font-family: var(--font-family-heading);
   text-align: start;
   cursor: pointer;
   outline: 0;
 }
 
+.vis-project-cell::after {
+  position: absolute;
+  inset-inline-start: 50%;
+  inset-block-end: 0;
+  inline-size: 172px;
+  block-size: 1px;
+  border-radius: 1px;
+  content: '';
+  background: var(--color-border-default);
+  transform: translateX(-50%);
+}
+
 .vis-project-cell:is(:hover, :focus-visible, .is-active) {
-  background: var(--color-bg-secondary);
+  background: var(--color-bg-tertiary);
+}
+
+.vis-project-cell:is(:hover, :focus-visible, .is-active)::after {
+  display: none;
 }
 
 .vis-project-cell.is-collapsed {
@@ -74,10 +89,13 @@ const emit = defineEmits<{
   padding: var(--space-8);
 }
 
+.vis-project-cell.is-collapsed::after {
+  inline-size: var(--space-24);
+}
+
 .vis-project-cell:focus-visible {
   box-shadow:
     inset -1px 0 0 var(--color-border-default),
-    inset 0 -1px 0 var(--color-border-default),
     inset 0 0 0 2px var(--color-effect-focus-ring-brand);
 }
 
@@ -95,9 +113,9 @@ const emit = defineEmits<{
   min-inline-size: 0;
   flex: 1 1 0;
   overflow: hidden;
-  font-size: var(--font-text-lg-size);
+  font-size: var(--font-heading-h6-size);
   font-weight: 600;
-  line-height: var(--font-text-lg-line-height);
+  line-height: var(--font-heading-h6-line-height);
   text-overflow: ellipsis;
   white-space: nowrap;
 }

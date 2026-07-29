@@ -1,4 +1,5 @@
 import type { IconName } from '../icons/generated/registry.generated'
+import type { VisAvatarImageVariant } from '../avatar/avatar.types'
 
 export type VisMenuKey = string | number
 export type VisMenuType = 'project' | 'main'
@@ -54,6 +55,15 @@ export interface VisMenuProps {
   showFooter?: boolean
   helpLabel?: string
   moreProjectsLabel?: string
+}
+
+export interface VisMenuHeaderNavigationProps {
+  brandTitle?: string
+  search?: boolean
+  searchPlaceholder?: string
+  avatarImageVariant?: VisAvatarImageVariant
+  aiActionLabel?: string
+  themeActionLabel?: string
 }
 
 export interface VisMenuItemProps {

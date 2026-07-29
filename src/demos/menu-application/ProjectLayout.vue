@@ -2,14 +2,10 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { RouterView, useRoute, useRouter, type RouteLocationRaw } from 'vue-router'
 
-import { VisAvatar } from '../../components/avatar'
-import VisBreadcrumb from '../../components/breadcrumb/VisBreadcrumb.vue'
-import type { VisBreadcrumbItem } from '../../components/breadcrumb/breadcrumb.types'
 import VisButton from '../../components/button/VisButton.vue'
 import VisConfigProvider from '../../components/config-provider/VisConfigProvider.vue'
 import type { VisTheme } from '../../components/config-provider/config-provider.types'
-import VisInputSearchBox from '../../components/input-search-box/VisInputSearchBox.vue'
-import { VisMenu } from '../../components/menu'
+import { VisMenu, VisMenuHeaderNavigation } from '../../components/menu'
 import type {
   VisMenuKey,
   VisMenuProject,
@@ -23,6 +19,9 @@ import {
   projects,
   type ApplicationMenuItem,
 } from './navigation'
+import AiAssistantWorkspace from './AiAssistantWorkspace.vue'
+
+type AiAssistantMode = 'copilot' | 'independent' | 'float'
 
 const route = useRoute()
 const router = useRouter()
@@ -34,6 +33,7 @@ const collapsed = ref(savedCollapsed === 'true')
 const openKey = ref<VisMenuKey | null>(null)
 const mainOpen = ref(false)
 const projectSwitcherOpen = ref(false)
+const aiAssistantMode = ref<AiAssistantMode | null>(null)
 
 const activeKey = computed<VisMenuKey>(() =>
   typeof route.meta.menuKey === 'string' || typeof route.meta.menuKey === 'number'
@@ -51,17 +51,11 @@ const currentProject = computed<VisMenuProject>(() => {
 const mainActiveKey = computed<VisMenuKey>(() => `main-${currentProject.value.key}`)
 const themeLabel = computed(() => (theme.value === 'light' ? '切换到暗色模式' : '切换到亮色模式'))
 const isRepositoryDetail = computed(() => route.meta.layout === 'repository-detail')
+const isApplicationWorkspace = computed(() => route.meta.layout === 'application-workspace')
+const isFullBleedWorkspace = computed(() => isRepositoryDetail.value || isApplicationWorkspace.value)
 const pageDescription = computed(() =>
   typeof route.meta.description === 'string' ? route.meta.description : activeItem.value.description,
 )
-const headerBreadcrumbItems = computed<VisBreadcrumbItem[]>(() => [
-  { label: '项目', iconName: 'file-06' },
-  ...activePath.value.map((item, index, path) => ({
-    label: item.label,
-    active: index === path.length - 1,
-  })),
-])
-
 function withProject(target: RouteLocationRaw, projectKey = currentProject.value.key): RouteLocationRaw {
   if (typeof target === 'string') return target
   if ('name' in target && target.name) {
@@ -71,11 +65,6 @@ function withProject(target: RouteLocationRaw, projectKey = currentProject.value
     }
   }
   return target
-}
-
-function navigateToItem(item?: ApplicationMenuItem): void {
-  const target = item?.route ?? item?.children?.[0]?.route
-  if (target) void router.push(withProject(target))
 }
 
 function onSelect(payload: VisMenuSelectPayload): void {
@@ -100,16 +89,12 @@ function onProjectChange(project: VisMenuProject): void {
   void router.push(target)
 }
 
-function onBreadcrumbClick(_item: VisBreadcrumbItem, index: number): void {
-  if (index === 0) {
-    navigateToItem(projectItems[0])
-    return
-  }
-  navigateToItem(activePath.value[index - 1])
-}
-
 function toggleTheme(): void {
   theme.value = theme.value === 'light' ? 'dark' : 'light'
+}
+
+function openAiAssistant(): void {
+  aiAssistantMode.value ??= 'copilot'
 }
 
 watch(
@@ -130,104 +115,73 @@ onMounted(() => {
 <template>
   <VisConfigProvider :theme="theme" namespace="vis-el" :z-index="3200">
     <div class="menu-application" :data-theme="theme">
-      <header class="application-header">
-        <VisButton
-          class="application-main-trigger"
-          variant="text"
-          size="md"
-          icon-only
-          icon-name="menu-01"
-          label="打开主导航"
-          @click="mainOpen = true"
-        />
+      <VisMenuHeaderNavigation
+        :theme-action-label="themeLabel"
+        @menu="mainOpen = true"
+        @ai="openAiAssistant"
+        @theme="toggleTheme"
+      />
 
-        <VisBreadcrumb
-          class="application-header__breadcrumb"
-          :items="headerBreadcrumbItems"
-          type="button"
-          size="md"
-          separator="slash"
-          @click="onBreadcrumbClick"
-        />
-
-        <div class="application-header__spacer" />
-
-        <VisInputSearchBox
-          class="application-header__search"
-          placeholder="请输入关键字"
-          aria-label="搜索项目内容"
-        />
-        <div class="application-header__actions">
-          <VisButton variant="text" size="md" icon-only icon-name="settings-01" label="设置" />
-          <VisButton
-            variant="text"
-            size="md"
-            icon-only
-            icon-name="palette"
-            :label="themeLabel"
-            @click="toggleTheme"
+      <div class="application-body">
+        <div v-if="aiAssistantMode !== 'independent'" class="application-workspace">
+          <VisMenu
+            v-model:open-key="openKey"
+            v-model:collapsed="collapsed"
+            v-model:project-switcher-open="projectSwitcherOpen"
+            :items="projectItems"
+            :active-key="activeKey"
+            :project="currentProject"
+            :projects="projects"
+            @select="onSelect"
+            @project-change="onProjectChange"
           />
-          <VisButton variant="text" size="md" icon-only icon-name="bell-01" label="通知" />
+
+          <main
+            class="application-content"
+            :class="{
+              'is-repository-detail': isRepositoryDetail,
+              'is-application-workspace': isApplicationWorkspace,
+            }"
+          >
+            <div v-if="!isFullBleedWorkspace" class="application-content__heading">
+              <div>
+                <span class="application-eyebrow">{{ currentProject.label }}</span>
+                <h1>{{ activeItem.label }}</h1>
+                <p>{{ pageDescription }}</p>
+              </div>
+              <div class="application-heading__actions">
+                <VisButton variant="secondary" size="md" prefix icon-name="filter-lines">筛选</VisButton>
+                <VisButton size="md" prefix icon-name="plus">新建任务</VisButton>
+              </div>
+            </div>
+
+            <RouterView v-slot="{ Component, route: currentRoute }">
+              <Transition name="application-page" mode="out-in">
+                <component :is="Component" :key="currentRoute.fullPath" />
+              </Transition>
+            </RouterView>
+          </main>
         </div>
-        <VisAvatar
-          type="image"
-          size="md"
-          badge="state"
-          image-variant="09"
-          image-alt="当前用户头像"
-          :decorative="false"
+
+        <AiAssistantWorkspace
+          v-if="aiAssistantMode"
+          :mode="aiAssistantMode"
+          @update:mode="aiAssistantMode = $event"
+          @close="aiAssistantMode = null"
         />
-      </header>
-
-      <div class="application-workspace">
-        <VisMenu
-          v-model:open-key="openKey"
-          v-model:collapsed="collapsed"
-          v-model:project-switcher-open="projectSwitcherOpen"
-          :items="projectItems"
-          :active-key="activeKey"
-          :project="currentProject"
-          :projects="projects"
-          @select="onSelect"
-          @project-change="onProjectChange"
-        />
-
-        <main
-          class="application-content"
-          :class="{ 'is-repository-detail': isRepositoryDetail }"
-        >
-          <div v-if="!isRepositoryDetail" class="application-content__heading">
-            <div>
-              <span class="application-eyebrow">{{ currentProject.label }}</span>
-              <h1>{{ activeItem.label }}</h1>
-              <p>{{ pageDescription }}</p>
-            </div>
-            <div class="application-heading__actions">
-              <VisButton variant="secondary" size="md" prefix icon-name="filter-lines">筛选</VisButton>
-              <VisButton size="md" prefix icon-name="plus">新建任务</VisButton>
-            </div>
-          </div>
-
-          <RouterView v-slot="{ Component, route: currentRoute }">
-            <Transition name="application-page" mode="out-in">
-              <component :is="Component" :key="currentRoute.fullPath" />
-            </Transition>
-          </RouterView>
-        </main>
       </div>
 
-      <Transition name="application-drawer">
-        <div v-if="mainOpen" class="application-main-layer">
-          <button class="application-backdrop" type="button" aria-label="关闭主导航" @click="mainOpen = false" />
-          <VisMenu
-            class="application-main-menu"
-            type="main"
-            :sections="mainSections"
-            :active-key="mainActiveKey"
-            @select="onMainSelect"
-          />
-        </div>
-      </Transition>
+      <div v-if="mainOpen" class="application-main-layer">
+        <button class="application-backdrop" type="button" aria-label="关闭主导航" @click="mainOpen = false" />
+        <VisMenu
+          class="application-main-menu"
+          type="main"
+          :sections="mainSections"
+          :active-key="mainActiveKey"
+          @select="onMainSelect"
+          @close="mainOpen = false"
+        />
+      </div>
     </div>
   </VisConfigProvider>
 </template>
@@ -238,53 +192,22 @@ onMounted(() => {
   block-size: 100%;
   color: var(--color-text-primary);
   background: var(--color-bg-canvas);
+  overflow: hidden;
 }
 
-.application-header {
-  box-sizing: border-box;
+.application-body {
+  position: relative;
   inline-size: 100%;
-  block-size: var(--space-56);
-  border-block-end: 1px solid var(--color-border-default);
-  padding-inline: var(--space-16);
+  block-size: calc(100% - var(--space-56));
   display: flex;
-  align-items: center;
-  gap: var(--space-12);
-  background: var(--color-bg-canvas);
-}
-
-.application-main-trigger {
-  --vis-button-bg: var(--color-bg-secondary);
-
-  border-radius: var(--radius-full);
-  flex: 0 0 auto;
-}
-
-.application-header__breadcrumb {
-  min-inline-size: 0;
-  flex: 0 1 auto;
-}
-
-.application-header__spacer {
-  min-inline-size: var(--space-8);
-  flex: 1 1 0;
-}
-
-.application-header__search {
-  inline-size: 200px;
-  flex: 0 0 200px;
-}
-
-.application-header__actions {
-  padding-inline: var(--space-8);
-  display: flex;
-  align-items: center;
-  gap: var(--space-8);
-  flex: 0 0 auto;
+  align-items: stretch;
+  overflow: hidden;
 }
 
 .application-workspace {
-  inline-size: 100%;
-  block-size: calc(100% - var(--space-56));
+  min-inline-size: 0;
+  block-size: 100%;
+  flex: 1 1 0;
   display: flex;
   align-items: stretch;
 }
@@ -307,6 +230,12 @@ onMounted(() => {
   padding: 0;
   overflow: hidden;
   background: var(--color-bg-canvas);
+}
+
+.application-content.is-application-workspace {
+  padding: 0;
+  overflow: hidden;
+  background: var(--color-bg-surface);
 }
 
 .application-content__heading {
@@ -368,57 +297,26 @@ onMounted(() => {
   block-size: 100%;
 }
 
-.application-drawer-enter-active,
-.application-drawer-leave-active,
 .application-page-enter-active,
 .application-page-leave-active {
   transition: opacity 160ms ease;
 }
 
-.application-drawer-enter-active .application-main-menu,
-.application-drawer-leave-active .application-main-menu {
-  transition: transform 160ms ease;
-}
-
-.application-drawer-enter-from,
-.application-drawer-leave-to,
 .application-page-enter-from,
 .application-page-leave-to {
   opacity: 0;
 }
 
-.application-drawer-enter-from .application-main-menu,
-.application-drawer-leave-to .application-main-menu {
-  transform: translateX(-100%);
-}
-
-@media (max-width: 900px) {
-  .application-header__search {
-    display: none;
-  }
-}
-
 @media (max-width: 720px) {
-  .application-header {
-    padding-inline: var(--space-8);
-    gap: var(--space-8);
-  }
-
-  .application-header__actions {
-    padding-inline: 0;
-    gap: var(--space-4);
-  }
-
-  .application-header__actions > :first-child,
-  .application-header__actions > :last-child {
-    display: none;
-  }
-
   .application-content {
     padding: var(--space-20);
   }
 
   .application-content.is-repository-detail {
+    padding: 0;
+  }
+
+  .application-content.is-application-workspace {
     padding: 0;
   }
 

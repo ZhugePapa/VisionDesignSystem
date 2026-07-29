@@ -61,8 +61,7 @@ const resolvedIconName = computed(() => props.iconName ?? defaultIconMap[props.c
 const badgeStyleMap: Record<Exclude<VisBadgeColorType, 'info'>, CSSProperties> = {
   danger: {
     '--vis-badge-solid-bg': 'var(--color-fg-danger-primary)',
-    '--vis-badge-soft-bg': 'var(--color-fg-danger-subtle)',
-    '--vis-badge-soft-border': 'var(--color-border-danger-subtle)',
+    '--vis-badge-soft-bg': 'var(--color-fg-danger-secondary)',
     '--vis-badge-soft-text': 'var(--color-text-danger-primary)',
     '--vis-badge-soft-dot': 'var(--color-fg-danger-primary)',
     '--vis-badge-subtle-bg': 'var(--color-bg-surface)',
@@ -72,8 +71,7 @@ const badgeStyleMap: Record<Exclude<VisBadgeColorType, 'info'>, CSSProperties> =
   },
   warning: {
     '--vis-badge-solid-bg': 'var(--color-fg-warning-primary)',
-    '--vis-badge-soft-bg': 'var(--color-fg-warning-subtle)',
-    '--vis-badge-soft-border': 'var(--color-border-warning-subtle)',
+    '--vis-badge-soft-bg': 'var(--color-fg-warning-secondary)',
     '--vis-badge-soft-text': 'var(--color-text-warning-primary)',
     '--vis-badge-soft-dot': 'var(--color-fg-warning-primary)',
     '--vis-badge-subtle-bg': 'var(--color-bg-surface)',
@@ -83,8 +81,7 @@ const badgeStyleMap: Record<Exclude<VisBadgeColorType, 'info'>, CSSProperties> =
   },
   success: {
     '--vis-badge-solid-bg': 'var(--color-fg-success-primary)',
-    '--vis-badge-soft-bg': 'var(--color-fg-success-subtle)',
-    '--vis-badge-soft-border': 'var(--color-border-success-subtle)',
+    '--vis-badge-soft-bg': 'var(--color-fg-success-secondary)',
     '--vis-badge-soft-text': 'var(--color-text-success-primary)',
     '--vis-badge-soft-dot': 'var(--color-fg-success-primary)',
     '--vis-badge-subtle-bg': 'var(--color-bg-surface)',
@@ -94,8 +91,7 @@ const badgeStyleMap: Record<Exclude<VisBadgeColorType, 'info'>, CSSProperties> =
   },
   brand: {
     '--vis-badge-solid-bg': 'var(--color-fg-brand-primary)',
-    '--vis-badge-soft-bg': 'var(--color-fg-brand-subtle)',
-    '--vis-badge-soft-border': 'var(--color-border-brand-subtle)',
+    '--vis-badge-soft-bg': 'var(--color-fg-brand-secondary)',
     '--vis-badge-soft-text': 'var(--color-text-brand-primary)',
     '--vis-badge-soft-dot': 'var(--color-fg-brand-primary)',
     '--vis-badge-subtle-bg': 'var(--color-bg-surface)',
@@ -105,8 +101,7 @@ const badgeStyleMap: Record<Exclude<VisBadgeColorType, 'info'>, CSSProperties> =
   },
   grey: {
     '--vis-badge-solid-bg': 'var(--color-fg-tertiary)',
-    '--vis-badge-soft-bg': 'var(--color-bg-secondary)',
-    '--vis-badge-soft-border': 'var(--color-border-default)',
+    '--vis-badge-soft-bg': 'var(--color-bg-quaternary)',
     '--vis-badge-soft-text': 'var(--color-text-secondary)',
     '--vis-badge-soft-dot': 'var(--color-fg-tertiary)',
     '--vis-badge-subtle-bg': 'var(--color-bg-surface)',
@@ -159,8 +154,8 @@ const badgeStyle = computed(() => badgeStyleMap[normalizedColorType.value])
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid transparent;
-  border-radius: var(--radius-full);
+  border: 0;
+  border-radius: var(--radius-sm);
   vertical-align: middle;
   overflow: hidden;
   font-family: var(--font-family-sans);
@@ -171,14 +166,14 @@ const badgeStyle = computed(() => badgeStyleMap[normalizedColorType.value])
 
 .vis-badge.visual-status {
   block-size: var(--space-20);
-  gap: var(--space-4);
+  gap: var(--space-6);
   padding-inline: var(--space-8);
 }
 
 .vis-badge.visual-text {
   min-inline-size: 18px;
   block-size: var(--space-20);
-  padding-inline: 5px;
+  padding-inline: var(--space-6);
 }
 
 .vis-badge.visual-text.is-compact-text {
@@ -197,24 +192,25 @@ const badgeStyle = computed(() => badgeStyleMap[normalizedColorType.value])
 .vis-badge.visual-icon {
   inline-size: var(--space-20);
   block-size: var(--space-20);
+  border-radius: var(--radius-full);
   padding: 2px;
 }
 
 .vis-badge.visual-dot {
   inline-size: var(--space-8);
   block-size: var(--space-8);
-  border-color: var(--color-border-white);
+  border: 1px solid var(--color-border-white);
+  border-radius: var(--radius-full);
   background: var(--vis-badge-solid-bg);
 }
 
 .vis-badge.is-soft:is(.visual-status, .visual-text, .visual-icon) {
-  border-color: var(--vis-badge-soft-border);
   background: var(--vis-badge-soft-bg);
   color: var(--vis-badge-soft-text);
 }
 
 .vis-badge.is-subtle.visual-status {
-  border-color: var(--vis-badge-subtle-border);
+  border: 1px solid var(--vis-badge-subtle-border);
   background: var(--vis-badge-subtle-bg);
   color: var(--vis-badge-subtle-text);
 }
@@ -226,8 +222,6 @@ const badgeStyle = computed(() => badgeStyleMap[normalizedColorType.value])
 }
 
 .vis-badge.is-solid.visual-status {
-  border-width: 0;
-  padding-inline: var(--space-6);
   background: var(--vis-badge-solid-bg);
   color: var(--color-text-white);
 }
@@ -259,7 +253,7 @@ const badgeStyle = computed(() => badgeStyleMap[normalizedColorType.value])
 .vis-badge__text {
   color: currentColor;
   font-size: var(--font-text-sm-size);
-  font-weight: 500;
+  font-weight: 400;
   line-height: var(--font-text-sm-line-height);
   text-align: center;
 }

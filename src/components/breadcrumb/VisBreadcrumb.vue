@@ -97,6 +97,7 @@ function handleItemClick(item: VisBreadcrumbItem, index: number, event: Event): 
 }
 
 .vis-breadcrumb.type-link {
+  --vis-breadcrumb-height: var(--vis-breadcrumb-line-height);
   --vis-breadcrumb-label-padding: 0px;
 }
 
@@ -142,6 +143,11 @@ function handleItemClick(item: VisBreadcrumbItem, index: number, event: Event): 
 
 .vis-breadcrumb__label:hover:not(.is-disabled):not(.is-active) {
   color: var(--color-text-primary);
+}
+
+.vis-breadcrumb.type-link .vis-breadcrumb__label:hover:not(.is-disabled):not(.is-active) {
+  text-decoration: underline;
+  text-underline-position: from-font;
 }
 
 .vis-breadcrumb.type-button .vis-breadcrumb__label:hover:not(.is-disabled):not(.is-active) {

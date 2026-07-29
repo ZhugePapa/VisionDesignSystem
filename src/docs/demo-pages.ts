@@ -5,6 +5,7 @@ export const demoPages = [
   { id: 'badge', title: 'Badge', subtitle: '徽标', section: 'shared' },
   { id: 'breadcrumb', title: 'Breadcrumb', subtitle: '面包屑', section: 'shared' },
   { id: 'button', title: 'Button', subtitle: '按钮', section: 'shared' },
+  { id: 'card', title: 'Card', subtitle: '卡片', section: 'shared' },
   { id: 'checkbox', title: 'Checkbox', subtitle: '复选框', section: 'shared' },
   { id: 'code-block', title: 'Code Block', subtitle: '代码块', section: 'shared' },
   { id: 'date-picker', title: 'Date Picker', subtitle: '日期选择器', section: 'shared' },
@@ -43,6 +44,14 @@ export const demoPages = [
   { id: 'tree-view', title: 'TreeView', subtitle: '树视图', section: 'shared' },
   { id: 'upload', title: 'Upload', subtitle: '上传', section: 'shared' },
   { id: 'menu', title: 'Menu', subtitle: '业务菜单', section: 'application' },
+  { id: 'page-header', title: 'PageHeader', subtitle: '页头', section: 'application' },
+  { id: 'ai-actions', title: 'Actions', subtitle: '操作组', section: 'ai' },
+  { id: 'ai-attachment', title: 'Attachment', subtitle: '附件', section: 'ai' },
+  { id: 'ai-bubble', title: 'Bubble', subtitle: '消息气泡', section: 'ai' },
+  { id: 'ai-conversation', title: 'Conversation', subtitle: '会话列表', section: 'ai' },
+  { id: 'ai-prompts', title: 'Prompts', subtitle: '提示建议', section: 'ai' },
+  { id: 'ai-sender', title: 'Sender', subtitle: '发送框', section: 'ai' },
+  { id: 'ai-thinking', title: 'Thinking', subtitle: '思考状态', section: 'ai' },
 ] as const
 
 export type DemoPage = (typeof demoPages)[number]
@@ -55,6 +64,11 @@ export function getDemoRouteName(page: DemoPageId): string {
 }
 
 export function getDemoRoutePath(page: DemoPage): string {
-  const section = page.section === 'application' ? 'application-components' : 'components'
+  const section =
+    page.section === 'application'
+      ? 'application-components'
+      : page.section === 'ai'
+        ? 'ai-components'
+        : 'components'
   return `/${section}/${page.id}`
 }

@@ -16,6 +16,7 @@ export default defineConfig({
     lib: {
       entry: {
         index: fileURLToPath(new URL('./src/index.ts', import.meta.url)),
+        'components/ai/index': fileURLToPath(new URL('./src/components/ai/index.ts', import.meta.url)),
         'components/accordion/index': fileURLToPath(new URL('./src/components/accordion/index.ts', import.meta.url)),
         'components/alert/index': fileURLToPath(new URL('./src/components/alert/index.ts', import.meta.url)),
         'components/avatar/index': fileURLToPath(new URL('./src/components/avatar/index.ts', import.meta.url)),
@@ -24,6 +25,7 @@ export default defineConfig({
           new URL('./src/components/breadcrumb/index.ts', import.meta.url),
         ),
         'components/button/index': fileURLToPath(new URL('./src/components/button/index.ts', import.meta.url)),
+        'components/card/index': fileURLToPath(new URL('./src/components/card/index.ts', import.meta.url)),
         'components/checkbox/index': fileURLToPath(new URL('./src/components/checkbox/index.ts', import.meta.url)),
         'components/code-block/index': fileURLToPath(new URL('./src/components/code-block/index.ts', import.meta.url)),
         'components/config-provider/index': fileURLToPath(
@@ -40,6 +42,9 @@ export default defineConfig({
         'components/dropdown/index': fileURLToPath(new URL('./src/components/dropdown/index.ts', import.meta.url)),
         'components/featured-icon/index': fileURLToPath(
           new URL('./src/components/featured-icon/index.ts', import.meta.url),
+        ),
+        'components/file-icon/index': fileURLToPath(
+          new URL('./src/components/file-icon/index.ts', import.meta.url),
         ),
         'components/icons/index': fileURLToPath(new URL('./src/components/icons/index.ts', import.meta.url)),
         'components/input/index': fileURLToPath(new URL('./src/components/input/index.ts', import.meta.url)),
@@ -61,6 +66,9 @@ export default defineConfig({
           new URL('./src/components/notification/index.ts', import.meta.url),
         ),
         'components/pagination/index': fileURLToPath(new URL('./src/components/pagination/index.ts', import.meta.url)),
+        'components/page-header/index': fileURLToPath(
+          new URL('./src/components/page-header/index.ts', import.meta.url),
+        ),
         'components/popover/index': fileURLToPath(new URL('./src/components/popover/index.ts', import.meta.url)),
         'components/progress-bar/index': fileURLToPath(
           new URL('./src/components/progress-bar/index.ts', import.meta.url),

@@ -1,5 +1,17 @@
 import type { App, Plugin } from 'vue'
 
+import {
+  VisAiActions,
+  VisAiAttachment,
+  VisAiBubble,
+  VisAiConversation,
+  VisAiConversationItem,
+  VisAiPrompts,
+  VisAiSender,
+  VisAiSenderAction,
+  VisAiSkill,
+  VisAiThinking,
+} from './components/ai'
 import VisAlert from './components/alert/VisAlert.vue'
 import VisAccordion from './components/accordion/VisAccordion.vue'
 import VisAccordionItem from './components/accordion/VisAccordionItem.vue'
@@ -7,6 +19,7 @@ import { VisAvatar, VisAvatarGroup, VisAvatarLabel } from './components/avatar'
 import VisBadge from './components/badge/VisBadge.vue'
 import VisBreadcrumb from './components/breadcrumb/VisBreadcrumb.vue'
 import VisButton from './components/button/VisButton.vue'
+import VisCard from './components/card/VisCard.vue'
 import VisCheckbox from './components/checkbox/VisCheckbox.vue'
 import VisCheckboxGroup from './components/checkbox/VisCheckboxGroup.vue'
 import VisCodeBlock from './components/code-block/VisCodeBlock.vue'
@@ -17,6 +30,7 @@ import VisDivider from './components/divider/VisDivider.vue'
 import VisDrawer from './components/drawer/VisDrawer.vue'
 import { VisDropdown, VisDropdownDivider, VisDropdownHeader, VisDropdownItem } from './components/dropdown'
 import { VisFeaturedIcon } from './components/featured-icon'
+import { VisFileIcon } from './components/file-icon'
 import { VisForm, VisFormItem } from './components/form'
 import VisInput from './components/input/VisInput.vue'
 import VisInputNumber from './components/input-number/VisInputNumber.vue'
@@ -29,6 +43,7 @@ import {
   VisMenu,
   VisMenuBrandMark,
   VisMenuGroup,
+  VisMenuHeaderNavigation,
   VisMenuItem,
   VisProjectCell,
   VisProjectLogo,
@@ -37,6 +52,7 @@ import VisModal from './components/modal/VisModal.vue'
 import VisModalConfirm from './components/modal/VisModalConfirm.vue'
 import VisNotification from './components/notification/VisNotification.vue'
 import VisPagination from './components/pagination/VisPagination.vue'
+import VisPageHeader from './components/page-header/VisPageHeader.vue'
 import VisPopover from './components/popover/VisPopover.vue'
 import { VisProgressBar, VisProgressBarMultiple } from './components/progress-bar'
 import { VisProgressCircle } from './components/progress-circle'
@@ -70,6 +86,16 @@ import './styles/style.css'
 
 export {
   Icon,
+  VisAiActions,
+  VisAiAttachment,
+  VisAiBubble,
+  VisAiConversation,
+  VisAiConversationItem,
+  VisAiPrompts,
+  VisAiSender,
+  VisAiSenderAction,
+  VisAiSkill,
+  VisAiThinking,
   VisAccordion,
   VisAccordionItem,
   VisAlert,
@@ -79,6 +105,7 @@ export {
   VisBadge,
   VisBreadcrumb,
   VisButton,
+  VisCard,
   VisCheckbox,
   VisCheckboxGroup,
   VisCodeBlock,
@@ -94,6 +121,7 @@ export {
   VisDropdownHeader,
   VisDropdownItem,
   VisFeaturedIcon,
+  VisFileIcon,
   VisForm,
   VisFormItem,
   VisInput,
@@ -107,6 +135,7 @@ export {
   VisMenu,
   VisMenuBrandMark,
   VisMenuGroup,
+  VisMenuHeaderNavigation,
   VisMenuItem,
   VisProjectCell,
   VisProjectLogo,
@@ -114,6 +143,7 @@ export {
   VisModalConfirm,
   VisNotification,
   VisPagination,
+  VisPageHeader,
   VisPopover,
   VisProgressBar,
   VisProgressBarMultiple,
@@ -142,6 +172,39 @@ export {
   VisTreeView,
   VisUpload,
 }
+export type {
+  VisAiActionFeedback,
+  VisAiActionsProps,
+  VisAiAttachmentItem,
+  VisAiAttachmentProps,
+  VisAiAttachmentType,
+  VisAiBubbleProps,
+  VisAiBubbleState,
+  VisAiConversationItemData,
+  VisAiConversationItemProps,
+  VisAiConversationProps,
+  VisAiKey,
+  VisAiPromptItem,
+  VisAiPromptsProps,
+  VisAiSenderModel,
+  VisAiSenderProps,
+  VisAiSenderSpeed,
+  VisAiSenderSkill,
+  VisAiSenderSubmitPayload,
+  VisAiSkillColor,
+  VisAiSkillProps,
+  VisAiSkillState,
+  VisAiThinkingProps,
+  VisAiThinkingState,
+} from './components/ai'
+export {
+  resolveVisFileIconType,
+  visFileIconTypes,
+} from './components/file-icon'
+export type {
+  VisFileIconProps,
+  VisFileIconType,
+} from './components/file-icon'
 export type {
   VisAccordionItemData,
   VisAccordionItemKey,
@@ -179,6 +242,7 @@ export type {
   VisButtonState,
   VisButtonVariant,
 } from './components/button/button.types'
+export type { VisCardProps, VisCardState } from './components/card/card.types'
 export type {
   VisCheckboxGroupAlign,
   VisCheckboxGroupProps,
@@ -267,6 +331,7 @@ export type { VisMessageProps, VisMessageType } from './components/message/messa
 export type {
   VisMenuBrandMarkProps,
   VisMenuGroupProps,
+  VisMenuHeaderNavigationProps,
   VisMenuItemData,
   VisMenuItemProps,
   VisMenuItemState,
@@ -288,6 +353,11 @@ export type {
 } from './components/modal/modal.types'
 export type { VisNotificationProps, VisNotificationType } from './components/notification/notification.types'
 export type { VisPaginationProps, VisPaginationSize } from './components/pagination/pagination.types'
+export type {
+  VisPageHeaderAction,
+  VisPageHeaderActionPayload,
+  VisPageHeaderProps,
+} from './components/page-header/page-header.types'
 export type { VisPopoverPosition, VisPopoverProps, VisPopoverTrigger } from './components/popover/popover.types'
 export type {
   VisProgressBarColor,
@@ -387,6 +457,16 @@ export type { VisUploadFileItem, VisUploadFileStatus, VisUploadProps, VisUploadT
 
 const components = [
   VisConfigProvider,
+  VisAiActions,
+  VisAiAttachment,
+  VisAiBubble,
+  VisAiConversation,
+  VisAiConversationItem,
+  VisAiPrompts,
+  VisAiSender,
+  VisAiSenderAction,
+  VisAiSkill,
+  VisAiThinking,
   VisAccordion,
   VisAccordionItem,
   VisAlert,
@@ -396,6 +476,7 @@ const components = [
   VisBadge,
   VisBreadcrumb,
   VisButton,
+  VisCard,
   VisCheckbox,
   VisCheckboxGroup,
   VisDatePicker,
@@ -408,6 +489,7 @@ const components = [
   VisDropdownDivider,
   VisDropdownHeader,
   VisDropdownItem,
+  VisFileIcon,
   VisForm,
   VisFormItem,
   VisInput,
@@ -421,6 +503,7 @@ const components = [
   VisMenu,
   VisMenuBrandMark,
   VisMenuGroup,
+  VisMenuHeaderNavigation,
   VisMenuItem,
   VisProjectCell,
   VisProjectLogo,

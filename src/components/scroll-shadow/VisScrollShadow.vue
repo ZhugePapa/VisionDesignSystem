@@ -106,9 +106,15 @@ const edgeStyle = computed(() => ({
 
 <style scoped>
 .vis-scrollshadow {
+  --vis-scrollshadow-color: var(--color-component-scrollshadow-surface);
+
   position: relative;
   overflow: auto;
   -webkit-overflow-scrolling: touch;
+}
+
+.vis-scrollshadow.variant-secondary {
+  --vis-scrollshadow-color: var(--color-component-scrollshadow-secondary);
 }
 
 .vis-scrollshadow.hide-scrollbar {
@@ -123,13 +129,6 @@ const edgeStyle = computed(() => ({
   min-inline-size: 0;
 }
 
-/*
- * Edge overlays — solid color fading to transparent via a gradient,
- * matching the Figma design (layer mask). No backdrop blur.
- * The two variants use different color tokens:
- *   surface   → --color-component-scrollshadow-surface
- *   secondary → --color-component-scrollshadow-secondary
- */
 .vis-scrollshadow__edge {
   position: sticky;
   z-index: 1;
@@ -157,15 +156,8 @@ const edgeStyle = computed(() => ({
   margin-bottom: calc(var(--vis-ss-size) * -1);
   background: linear-gradient(
     to bottom,
-    var(--color-component-scrollshadow-surface) 0%,
-    transparent 100%
-  );
-}
-
-.orientation-vertical.variant-secondary .vis-scrollshadow__edge--start {
-  background: linear-gradient(
-    to bottom,
-    var(--color-component-scrollshadow-secondary) 0%,
+    var(--vis-scrollshadow-color) 0%,
+    var(--vis-scrollshadow-color) 20%,
     transparent 100%
   );
 }
@@ -178,15 +170,8 @@ const edgeStyle = computed(() => ({
   margin-top: calc(var(--vis-ss-size) * -1);
   background: linear-gradient(
     to top,
-    var(--color-component-scrollshadow-surface) 0%,
-    transparent 100%
-  );
-}
-
-.orientation-vertical.variant-secondary .vis-scrollshadow__edge--end {
-  background: linear-gradient(
-    to top,
-    var(--color-component-scrollshadow-secondary) 0%,
+    var(--vis-scrollshadow-color) 0%,
+    var(--vis-scrollshadow-color) 20%,
     transparent 100%
   );
 }
@@ -213,15 +198,8 @@ const edgeStyle = computed(() => ({
   position: sticky;
   background: linear-gradient(
     to right,
-    var(--color-component-scrollshadow-surface) 0%,
-    transparent 100%
-  );
-}
-
-.orientation-horizontal.variant-secondary .vis-scrollshadow__edge--start {
-  background: linear-gradient(
-    to right,
-    var(--color-component-scrollshadow-secondary) 0%,
+    var(--vis-scrollshadow-color) 0%,
+    var(--vis-scrollshadow-color) 20%,
     transparent 100%
   );
 }
@@ -235,15 +213,8 @@ const edgeStyle = computed(() => ({
   position: sticky;
   background: linear-gradient(
     to left,
-    var(--color-component-scrollshadow-surface) 0%,
-    transparent 100%
-  );
-}
-
-.orientation-horizontal.variant-secondary .vis-scrollshadow__edge--end {
-  background: linear-gradient(
-    to left,
-    var(--color-component-scrollshadow-secondary) 0%,
+    var(--vis-scrollshadow-color) 0%,
+    var(--vis-scrollshadow-color) 20%,
     transparent 100%
   );
 }

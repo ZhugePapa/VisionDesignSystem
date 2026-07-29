@@ -77,7 +77,7 @@ These components should not use Element Plus as the visual/behavior base because
 | accordion | Element Plus adapter | P2 | Pending | Wrap `ElCollapse`; map item API. |
 | divider | Self-rendered or Element Plus adapter | P2 | Pending | Simple enough to self-render; migrate before rich editor if needed. |
 | input-search-box | Hybrid composite | P2 | Pending | Compose `VisInput` plus search affordances; Element Plus is not the main base. |
-| page-header | Element Plus adapter or hybrid | P2 | Pending | Compare old layout against `ElPageHeader`; likely hybrid. |
+| page-header | Vision composite | P2 | Done | Migrated as `VisPageHeader`; reuses Vision Breadcrumb, Button, FeaturedIcon, Tabs, and Tag, preserves the old API, and adds semantic data props. |
 | toggle-button | Hybrid/self-rendered | P2 | Pending | No exact Element Plus equivalent; compose button/toggle semantics. |
 
 ## Figma-Only Components

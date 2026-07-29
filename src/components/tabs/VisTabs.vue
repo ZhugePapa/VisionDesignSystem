@@ -151,10 +151,10 @@ function handleAction(event: MouseEvent): void {
 
 .vis-tabs.align-horizontal {
   inline-size: 100%;
-  block-size: var(--space-48);
-  border-block-end: 1px solid var(--color-border-default);
+  block-size: var(--space-40);
+  box-shadow: inset 0 -1px 0 var(--color-border-default);
   align-items: center;
-  gap: var(--space-8);
+  gap: var(--space-16);
 }
 
 .vis-tabs.align-right {
@@ -186,7 +186,8 @@ function handleAction(event: MouseEvent): void {
 
 .vis-tabs.align-horizontal .vis-tabs__item {
   inline-size: auto;
-  block-size: 100%;
+  block-size: var(--space-40);
+  padding-block-end: var(--space-8);
   justify-content: center;
   flex: 0 0 auto;
 }

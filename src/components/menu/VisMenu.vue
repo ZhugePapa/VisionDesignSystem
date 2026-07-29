@@ -5,6 +5,7 @@ import VisButton from '../button/VisButton.vue'
 import { visionConfigKey } from '../config-provider/config-provider.context'
 import VisDropdownDivider from '../dropdown/VisDropdownDivider.vue'
 import VisDropdownItem from '../dropdown/VisDropdownItem.vue'
+import Icon from '../icons/Icon.vue'
 import VisScrollShadow from '../scroll-shadow/VisScrollShadow.vue'
 import VisMenuBrandMark from './VisMenuBrandMark.vue'
 import VisMenuGroup from './VisMenuGroup.vue'
@@ -32,7 +33,7 @@ const props = withDefaults(defineProps<VisMenuProps>(), {
   project: () => ({ key: 'project', label: '飞机照明系统', logoVariant: 'logo_003' }),
   projects: () => [],
   projectSwitcherOpen: undefined,
-  brandTitle: 'VISSLM DevOps',
+  brandTitle: 'VISSLM',
   showFooter: true,
   helpLabel: '帮助',
   moreProjectsLabel: '查看更多项目',
@@ -46,6 +47,7 @@ const emit = defineEmits<{
   'project-change': [project: VisMenuProject]
   'request-more-projects': []
   help: []
+  close: []
 }>()
 
 const config = inject(visionConfigKey, undefined)
@@ -262,10 +264,26 @@ onBeforeUnmount(() => {
     :aria-label="isMain ? '主导航' : '项目导航'"
   >
     <div v-if="isMain" class="vis-menu__brand">
-      <slot name="brand">
-        <VisMenuBrandMark :size="32" />
-        <strong class="vis-menu__brand-title">{{ brandTitle }}</strong>
-      </slot>
+      <VisButton
+        class="vis-menu__brand-close"
+        variant="text"
+        size="md"
+        icon-only
+        icon-name="x-close"
+        label="关闭主导航"
+        @click="emit('close')"
+      >
+        <template #icon>
+          <Icon name="x-close" :size="20" decorative />
+        </template>
+      </VisButton>
+
+      <div class="vis-menu__brand-lockup">
+        <slot name="brand">
+          <VisMenuBrandMark :size="28" />
+          <strong class="vis-menu__brand-title">{{ brandTitle }}</strong>
+        </slot>
+      </div>
     </div>
 
     <div v-else class="vis-menu__project-wrap">
@@ -407,7 +425,7 @@ onBeforeUnmount(() => {
   display: flex;
   flex-direction: column;
   color: var(--color-text-primary);
-  background: var(--color-bg-canvas);
+  background: var(--color-bg-surface-subtle);
   box-shadow: inset -1px 0 0 var(--color-border-default);
   font-family: var(--font-family-sans);
   overflow: visible;
@@ -416,6 +434,7 @@ onBeforeUnmount(() => {
 
 .vis-menu.type-main {
   inline-size: var(--space-256);
+  background: var(--color-bg-canvas);
   box-shadow: var(--shadow-default-md);
 }
 
@@ -427,21 +446,34 @@ onBeforeUnmount(() => {
 .vis-menu__brand {
   box-sizing: border-box;
   inline-size: 100%;
-  block-size: 72px;
-  padding: var(--space-20) var(--space-16);
+  block-size: var(--space-56);
+  padding-inline: var(--space-16);
   display: flex;
   align-items: center;
   gap: var(--space-12);
   flex: 0 0 auto;
+  background: var(--color-bg-canvas);
+}
+
+.vis-menu__brand-close {
+  flex: 0 0 auto;
+}
+
+.vis-menu__brand-lockup {
+  min-inline-size: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-8);
 }
 
 .vis-menu__brand-title {
   min-inline-size: 0;
   overflow: hidden;
   color: var(--color-text-primary);
-  font-size: 20px;
+  font-family: var(--font-family-heading);
+  font-size: var(--font-heading-h3-size);
   font-weight: 600;
-  line-height: 28px;
+  line-height: var(--font-heading-h3-line-height);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
