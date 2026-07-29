@@ -228,6 +228,9 @@
   },
   "scripts": {
     "dev": "vite --host 127.0.0.1",
+    "dev:api": "node --watch server/app.mjs",
+    "start:api": "node server/app.mjs",
+    "test:api": "node --test server/*.test.mjs",
     "typecheck": "vue-tsc --noEmit -p tsconfig.app.json",
     "build": "npm run typecheck && npm run build:docs && npm run build:lib",
     "build:docs": "vite build",

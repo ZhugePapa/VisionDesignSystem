@@ -146,12 +146,14 @@ export interface VisAiSenderSubmitPayload {
 export interface VisAiSenderProps {
   modelValue?: string
   attachments?: VisAiAttachmentItem[]
+  attachmentsEnabled?: boolean
   disabled?: boolean
   loading?: boolean
   placeholder?: string
   deepThinking?: boolean
   model?: VisAiKey
   models?: VisAiSenderModel[]
+  modelSwitchable?: boolean
   speed?: VisAiSenderSpeed
   skill?: VisAiKey
   skills?: VisAiSenderSkill[]

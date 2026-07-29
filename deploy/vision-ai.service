@@ -1,0 +1,21 @@
+[Unit]
+Description=Vision Design System AI API
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/opt/vision-design-system
+EnvironmentFile=/etc/vision-ai.env
+ExecStart=/usr/bin/node /opt/vision-design-system/server/app.mjs
+Restart=on-failure
+RestartSec=3
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=strict
+
+[Install]
+WantedBy=multi-user.target

@@ -26,6 +26,7 @@ defineOptions({ name: 'VisAiSender' })
 const props = withDefaults(defineProps<VisAiSenderProps>(), {
   modelValue: '',
   attachments: () => [],
+  attachmentsEnabled: true,
   disabled: false,
   loading: false,
   placeholder: '请描述您的问题',
@@ -36,6 +37,7 @@ const props = withDefaults(defineProps<VisAiSenderProps>(), {
     { key: 'glm-5.2', label: 'Glm 5.2', iconName: 'cube-01' },
     { key: 'deepseek-v4-pro', label: 'Deepseek v4 pro', iconName: 'cube-01' },
   ],
+  modelSwitchable: true,
   speed: 'high',
   skill: '',
   skills: () => [
@@ -271,7 +273,7 @@ onBeforeUnmount(() => {
               icon-only
               icon-name="plus"
               label="添加内容"
-              :disabled="disabled || loading"
+              :disabled="disabled || loading || !attachmentsEnabled"
               @click="toggleAttachmentMenu(toggle, $event)"
             />
           </template>
@@ -329,13 +331,13 @@ onBeforeUnmount(() => {
               class="vis-ai-sender__model-trigger"
               type="button"
               :disabled="disabled || loading"
-              aria-haspopup="menu"
-              :aria-expanded="modelMenuOpen"
-              @click="toggle"
+              :aria-haspopup="modelSwitchable ? 'menu' : undefined"
+              :aria-expanded="modelSwitchable ? modelMenuOpen : undefined"
+              @click="modelSwitchable && toggle()"
             >
               <span>{{ selectedModel?.label ?? '选择模型' }}</span>
               <span v-if="selectedModel" class="vis-ai-sender__model-speed">{{ selectedSpeedLabel }}</span>
-              <Icon name="chevron-down" :size="16" decorative />
+              <Icon v-if="modelSwitchable" name="chevron-down" :size="16" decorative />
             </button>
           </template>
 

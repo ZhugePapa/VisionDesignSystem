@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
 import aiLogoMarkup from '../../assets/AI-logo-2.svg?raw'
 import {
@@ -12,10 +12,12 @@ import {
   VisAiThinking,
 } from '../../components/ai'
 import type {
+  VisAiActionFeedback,
   VisAiAttachmentItem,
   VisAiConversationItemData,
   VisAiKey,
   VisAiPromptItem,
+  VisAiSenderModel,
   VisAiSenderSpeed,
   VisAiSenderSubmitPayload,
 } from '../../components/ai'
@@ -25,11 +27,35 @@ import {
   VisDropdownItem,
 } from '../../components/dropdown'
 import { VisMarkdown } from '../../components/markdown'
+import {
+  streamVisionAiChat,
+  type VisionAiMessage,
+} from '../../services/ai/chat-client'
 import chatBackgroundUrl from './assets/ai-chat-background.png'
 
 defineOptions({ name: 'AiAssistantWorkspace' })
 
 type AiAssistantMode = 'copilot' | 'independent' | 'float'
+type AiChatTurnStatus = 'streaming' | 'done' | 'stopped' | 'error'
+
+interface AiChatTurn {
+  id: string
+  question: string
+  answer: string
+  reasoning: string
+  status: AiChatTurnStatus
+  thinking: boolean
+  thinkingExpanded: boolean
+  feedback: VisAiActionFeedback
+  attachments: VisAiAttachmentItem[]
+}
+
+interface AiChatSession {
+  id: string
+  title: string
+  pinned: boolean
+  turns: AiChatTurn[]
+}
 
 const props = defineProps<{
   mode: AiAssistantMode
@@ -42,27 +68,33 @@ const emit = defineEmits<{
 
 const senderValue = ref('')
 const deepThinking = ref(false)
-const selectedModel = ref<VisAiKey>('kimi-k3')
+const selectedModel = ref<VisAiKey>('deepseek-v4-flash')
 const selectedSpeed = ref<VisAiSenderSpeed>('high')
 const selectedSkill = ref<VisAiKey | ''>('')
 const attachments = ref<VisAiAttachmentItem[]>([])
-const submittedAttachments = ref<VisAiAttachmentItem[]>([])
-const conversationKey = ref<VisAiKey>('conversation-welcome')
+const sessions = ref<AiChatSession[]>([])
+const conversationKey = ref<VisAiKey>('')
 const conversationCollapsed = ref(false)
 const historyOpen = ref(false)
 const modeMenuOpen = ref(false)
 const responding = ref(false)
-const answerVisible = ref(false)
-const lastQuestion = ref('')
-const actionCurrent = ref(1)
-const actionFeedback = ref<'up' | 'down' | null>(null)
 const assistantRef = ref<HTMLElement | null>(null)
+const transcriptRef = ref<HTMLElement | null>(null)
 const floatPosition = ref<{ x: number; y: number } | null>(null)
 const isDraggingFloat = ref(false)
-let responseTimer: ReturnType<typeof setTimeout> | undefined
+let activeController: AbortController | undefined
+let requestSerial = 0
 let dragPointerId: number | undefined
 let dragOffsetX = 0
 let dragOffsetY = 0
+
+const deepSeekModels: VisAiSenderModel[] = [
+  {
+    key: 'deepseek-v4-flash',
+    label: 'DeepSeek V4 Flash',
+    iconName: 'cube-01',
+  },
+]
 
 const promptItems: VisAiPromptItem[] = [
   {
@@ -91,18 +123,21 @@ const promptItems: VisAiPromptItem[] = [
   },
 ]
 
-const conversationItems = ref<VisAiConversationItemData[]>([
-  { key: 'conversation-requirement', label: '生成需求文档', group: '置顶', pinned: true },
-  { key: 'conversation-milestone', label: '项目关键里程碑有哪些？', group: '今天' },
-  { key: 'conversation-resource', label: '项目的资源分配是否合理？', group: '今天' },
-  { key: 'conversation-trend', label: '项目趋势如何？会延期吗？', group: '一周内' },
-  { key: 'conversation-progress', label: '项目进度与计划差距？', group: '一周内' },
-  { key: 'conversation-permission', label: '账号权限有无异常？', group: '一月内' },
-  { key: 'conversation-leak', label: '有无数据泄露风险？', group: '一月内' },
-  { key: 'conversation-backup', label: '备份是否完整可恢复？', group: '一月内' },
-])
-
-const hasChat = computed(() => Boolean(lastQuestion.value))
+const activeSession = computed(() => (
+  sessions.value.find((session) => session.id === String(conversationKey.value))
+))
+const currentTurns = computed(() => activeSession.value?.turns ?? [])
+const conversationItems = computed<VisAiConversationItemData[]>(() => (
+  sessions.value
+    .map((session) => ({
+      key: session.id,
+      label: session.title,
+      group: session.pinned ? '置顶' : '今天',
+      pinned: session.pinned,
+    }))
+    .sort((left, right) => Number(Boolean(right.pinned)) - Number(Boolean(left.pinned)))
+))
+const hasChat = computed(() => currentTurns.value.length > 0)
 const modeActionLabel = computed(() => (
   props.mode === 'float' ? '右侧吸附' : '浮动窗口'
 ))
@@ -117,22 +152,6 @@ const floatPositionStyle = computed(() => {
   }
 })
 
-const answerMarkdown = `以下是根据你的问题整理的分析结果，可直接用于团队评审：
-
-## 处理建议
-
-1. 明确目标、影响范围和责任人。
-2. 将需求拆解为可验证的任务与验收项。
-3. 关联设计、代码、测试和交付记录。
-
-## 下一步
-
-建议先确认优先级与交付时间，再生成对应的执行清单。`
-
-const thinkingContent = computed(() => (
-  `正在理解“${lastQuestion.value}”的业务目标，并结合当前项目、需求、代码与交付上下文组织回答。`
-))
-
 function setMode(mode: AiAssistantMode): void {
   modeMenuOpen.value = false
   emit('update:mode', mode)
@@ -144,93 +163,177 @@ function closeAssistant(): void {
   emit('close')
 }
 
+function abortActiveRequest(): void {
+  activeController?.abort()
+  activeController = undefined
+}
+
 function resetConversation(): void {
-  if (responseTimer) clearTimeout(responseTimer)
-  responseTimer = undefined
+  abortActiveRequest()
   senderValue.value = ''
   attachments.value = []
-  submittedAttachments.value = []
   selectedSkill.value = ''
-  lastQuestion.value = ''
   responding.value = false
-  answerVisible.value = false
-  conversationKey.value = 'conversation-welcome'
-  actionCurrent.value = 1
-  actionFeedback.value = null
+  conversationKey.value = ''
 }
 
 function selectPrompt(item: VisAiPromptItem): void {
   senderValue.value = item.descriptions?.[0] ?? item.label
 }
 
+function createSession(question: string): AiChatSession {
+  requestSerial += 1
+  const session: AiChatSession = {
+    id: `conversation-${Date.now()}-${requestSerial}`,
+    title: question.slice(0, 28),
+    pinned: false,
+    turns: [],
+  }
+
+  sessions.value = [session, ...sessions.value]
+  conversationKey.value = session.id
+  return session
+}
+
+function messagesForTurn(session: AiChatSession, turnIndex: number): VisionAiMessage[] {
+  const messages: VisionAiMessage[] = []
+
+  for (const turn of session.turns.slice(0, turnIndex)) {
+    messages.push({ role: 'user', content: turn.question })
+    if (turn.answer.trim()) {
+      messages.push({ role: 'assistant', content: turn.answer })
+    }
+  }
+
+  messages.push({ role: 'user', content: session.turns[turnIndex].question })
+  return messages
+}
+
+function errorMarkdown(message: string): string {
+  const normalizedMessage = message.replace(/\s+/g, ' ').trim()
+  return `> **AI 服务暂时不可用**\n>\n> ${normalizedMessage || '请稍后重试。'}`
+}
+
+async function runTurn(session: AiChatSession, turnIndex: number): Promise<void> {
+  abortActiveRequest()
+
+  const turn = session.turns[turnIndex]
+  const controller = new AbortController()
+  activeController = controller
+  responding.value = true
+  turn.answer = ''
+  turn.reasoning = ''
+  turn.status = 'streaming'
+  turn.thinkingExpanded = true
+  turn.feedback = null
+
+  try {
+    await streamVisionAiChat(
+      {
+        messages: messagesForTurn(session, turnIndex),
+        thinking: turn.thinking,
+        reasoningEffort: selectedSpeed.value === 'ultra' ? 'max' : 'high',
+      },
+      {
+        onReasoning: (content) => {
+          turn.reasoning += content
+        },
+        onContent: (content) => {
+          turn.answer += content
+        },
+        onDone: () => {
+          turn.status = 'done'
+        },
+      },
+      controller.signal,
+    )
+
+    if (turn.status === 'streaming') turn.status = 'done'
+  } catch (error) {
+    if (controller.signal.aborted) {
+      turn.status = 'stopped'
+      if (!turn.answer) turn.answer = '> 已停止生成。'
+    } else {
+      turn.status = 'error'
+      turn.answer = errorMarkdown(
+        error instanceof Error ? error.message : '未知错误，请稍后重试。',
+      )
+    }
+  } finally {
+    if (activeController === controller) {
+      activeController = undefined
+      responding.value = false
+    }
+  }
+}
+
 function submitQuestion(payload: VisAiSenderSubmitPayload): void {
   const question = payload.value.trim()
-  if (!question && payload.attachments.length === 0) return
+  if (!question) return
 
-  if (responseTimer) clearTimeout(responseTimer)
-  lastQuestion.value = question || '请分析这些附件'
-  submittedAttachments.value = [...payload.attachments]
+  const session = activeSession.value ?? createSession(question)
+  const turn: AiChatTurn = {
+    id: `turn-${Date.now()}-${session.turns.length + 1}`,
+    question,
+    answer: '',
+    reasoning: '',
+    status: 'streaming',
+    thinking: payload.deepThinking,
+    thinkingExpanded: true,
+    feedback: null,
+    attachments: [],
+  }
+
+  session.turns.push(turn)
   senderValue.value = ''
   attachments.value = []
   selectedSkill.value = ''
-  responding.value = true
-  answerVisible.value = false
-  actionCurrent.value = 1
-  actionFeedback.value = null
-
-  const generatedKey = `conversation-${Date.now()}`
-  conversationKey.value = generatedKey
-  conversationItems.value = [
-    { key: generatedKey, label: lastQuestion.value, group: '今天' },
-    ...conversationItems.value,
-  ]
-
-  responseTimer = setTimeout(() => {
-    responding.value = false
-    answerVisible.value = true
-    responseTimer = undefined
-  }, 900)
+  void runTurn(session, session.turns.length - 1)
 }
 
 function stopResponse(): void {
-  if (responseTimer) clearTimeout(responseTimer)
-  responseTimer = undefined
-  responding.value = false
-  answerVisible.value = true
+  activeController?.abort()
 }
 
-function addAttachment(): void {
-  if (attachments.value.some((item) => item.key === 'demo-requirement')) return
-  attachments.value = [
-    {
-      key: 'demo-requirement',
-      name: '需求说明.doc',
-      type: 'file',
-      extension: 'doc',
-      fileIconType: 'word',
-      size: '6.83kb',
-      removable: true,
-    },
-  ]
+function regenerateTurn(turnId: string): void {
+  const session = activeSession.value
+  if (!session) return
+
+  const turnIndex = session.turns.findIndex((turn) => turn.id === turnId)
+  if (turnIndex < 0) return
+
+  session.turns.splice(turnIndex + 1)
+  void runTurn(session, turnIndex)
 }
 
-function removeAttachment(item: VisAiAttachmentItem): void {
-  attachments.value = attachments.value.filter((entry) => entry.key !== item.key)
+async function copyAnswer(answer: string): Promise<void> {
+  if (!answer) return
+  await navigator.clipboard.writeText(answer)
+}
+
+function thinkingLabel(turn: AiChatTurn): string {
+  if (turn.status === 'streaming') return '正在思考...'
+  if (turn.status === 'stopped') return '已停止思考'
+  if (turn.status === 'error') return '思考中断'
+  return '思考过程'
+}
+
+function thinkingContent(turn: AiChatTurn): string {
+  if (turn.reasoning) return turn.reasoning
+  return turn.status === 'streaming' ? '模型正在组织回答，请稍候。' : ''
 }
 
 function selectConversation(item: VisAiConversationItemData): void {
+  abortActiveRequest()
   conversationKey.value = item.key
-  lastQuestion.value = item.label
   senderValue.value = ''
   attachments.value = []
-  submittedAttachments.value = []
   selectedSkill.value = ''
   responding.value = false
-  answerVisible.value = true
 }
 
 function toggleConversationPin(item: VisAiConversationItemData): void {
-  const target = conversationItems.value.find((entry) => entry.key === item.key)
+  const target = sessions.value.find((session) => session.id === String(item.key))
   if (!target) return
   target.pinned = !target.pinned
 }
@@ -322,12 +425,23 @@ watch(
   },
 )
 
+watch(
+  () => currentTurns.value
+    .map((turn) => `${turn.id}:${turn.reasoning.length}:${turn.answer.length}:${turn.status}`)
+    .join('|'),
+  async () => {
+    await nextTick()
+    const transcript = transcriptRef.value
+    if (transcript) transcript.scrollTop = transcript.scrollHeight
+  },
+)
+
 onMounted(() => {
   window.addEventListener('resize', keepFloatWindowInViewport)
 })
 
 onBeforeUnmount(() => {
-  if (responseTimer) clearTimeout(responseTimer)
+  abortActiveRequest()
   stopFloatDrag()
   window.removeEventListener('resize', keepFloatWindowInViewport)
 })
@@ -415,39 +529,58 @@ onBeforeUnmount(() => {
               />
             </div>
 
-            <div v-else class="ai-assistant__transcript">
-              <div v-if="submittedAttachments.length" class="ai-assistant__submitted-attachments">
-                <VisAiAttachment
-                  v-for="item in submittedAttachments"
-                  :key="String(item.key)"
-                  :item-key="item.key"
-                  :name="item.name"
-                  :type="item.type"
-                  :extension="item.extension"
-                  :file-icon-type="item.fileIconType"
-                  :size="item.size"
-                  :url="item.url"
-                  :alt="item.alt"
-                  :uploading="item.uploading"
-                  :progress="item.progress"
-                  :removable="false"
+            <div v-else ref="transcriptRef" class="ai-assistant__transcript">
+              <section
+                v-for="turn in currentTurns"
+                :key="turn.id"
+                class="ai-assistant__turn"
+              >
+                <div v-if="turn.attachments.length" class="ai-assistant__submitted-attachments">
+                  <VisAiAttachment
+                    v-for="item in turn.attachments"
+                    :key="String(item.key)"
+                    :item-key="item.key"
+                    :name="item.name"
+                    :type="item.type"
+                    :extension="item.extension"
+                    :file-icon-type="item.fileIconType"
+                    :size="item.size"
+                    :url="item.url"
+                    :alt="item.alt"
+                    :uploading="item.uploading"
+                    :progress="item.progress"
+                    :removable="false"
+                  />
+                </div>
+                <div class="ai-assistant__user-message">
+                  <VisAiBubble :content="turn.question" />
+                </div>
+                <VisAiThinking
+                  v-if="turn.reasoning || turn.status === 'streaming'"
+                  v-model:expanded="turn.thinkingExpanded"
+                  :label="thinkingLabel(turn)"
+                  :content="thinkingContent(turn)"
                 />
-              </div>
-              <div class="ai-assistant__user-message">
-                <VisAiBubble :content="lastQuestion" />
-              </div>
-              <VisAiThinking
-                :expanded="true"
-                label="正在思考..."
-                :content="thinkingContent"
-              />
-              <div v-if="answerVisible" class="ai-assistant__answer">
-                <VisMarkdown :content="answerMarkdown" />
-                <VisAiActions
-                  v-model:current="actionCurrent"
-                  v-model:feedback="actionFeedback"
-                />
-              </div>
+                <div v-if="turn.answer" class="ai-assistant__answer">
+                  <VisMarkdown
+                    :content="turn.answer"
+                    :streaming="{
+                      hasNextChunk: turn.status === 'streaming',
+                      enableAnimation: true,
+                      tail: true,
+                    }"
+                  />
+                  <VisAiActions
+                    v-if="turn.status !== 'streaming'"
+                    v-model:feedback="turn.feedback"
+                    :current="1"
+                    :total="1"
+                    :disabled="responding"
+                    @copy="copyAnswer(turn.answer)"
+                    @refresh="regenerateTurn(turn.id)"
+                  />
+                </div>
+              </section>
             </div>
           </div>
 
@@ -458,11 +591,12 @@ onBeforeUnmount(() => {
             v-model:speed="selectedSpeed"
             v-model:skill="selectedSkill"
             :attachments="attachments"
+            :attachments-enabled="false"
             :loading="responding"
+            :models="deepSeekModels"
+            :model-switchable="false"
             @submit="submitQuestion"
             @stop="stopResponse"
-            @attachment-request="addAttachment"
-            @remove-attachment="removeAttachment"
           />
         </div>
       </div>
@@ -551,39 +685,58 @@ onBeforeUnmount(() => {
           />
         </div>
 
-        <div v-else class="ai-assistant__transcript">
-          <div v-if="submittedAttachments.length" class="ai-assistant__submitted-attachments">
-            <VisAiAttachment
-              v-for="item in submittedAttachments"
-              :key="String(item.key)"
-              :item-key="item.key"
-              :name="item.name"
-              :type="item.type"
-              :extension="item.extension"
-              :file-icon-type="item.fileIconType"
-              :size="item.size"
-              :url="item.url"
-              :alt="item.alt"
-              :uploading="item.uploading"
-              :progress="item.progress"
-              :removable="false"
+        <div v-else ref="transcriptRef" class="ai-assistant__transcript">
+          <section
+            v-for="turn in currentTurns"
+            :key="turn.id"
+            class="ai-assistant__turn"
+          >
+            <div v-if="turn.attachments.length" class="ai-assistant__submitted-attachments">
+              <VisAiAttachment
+                v-for="item in turn.attachments"
+                :key="String(item.key)"
+                :item-key="item.key"
+                :name="item.name"
+                :type="item.type"
+                :extension="item.extension"
+                :file-icon-type="item.fileIconType"
+                :size="item.size"
+                :url="item.url"
+                :alt="item.alt"
+                :uploading="item.uploading"
+                :progress="item.progress"
+                :removable="false"
+              />
+            </div>
+            <div class="ai-assistant__user-message">
+              <VisAiBubble :content="turn.question" />
+            </div>
+            <VisAiThinking
+              v-if="turn.reasoning || turn.status === 'streaming'"
+              v-model:expanded="turn.thinkingExpanded"
+              :label="thinkingLabel(turn)"
+              :content="thinkingContent(turn)"
             />
-          </div>
-          <div class="ai-assistant__user-message">
-            <VisAiBubble :content="lastQuestion" />
-          </div>
-          <VisAiThinking
-            :expanded="true"
-            label="正在思考..."
-            :content="thinkingContent"
-          />
-          <div v-if="answerVisible" class="ai-assistant__answer">
-            <VisMarkdown :content="answerMarkdown" />
-            <VisAiActions
-              v-model:current="actionCurrent"
-              v-model:feedback="actionFeedback"
-            />
-          </div>
+            <div v-if="turn.answer" class="ai-assistant__answer">
+              <VisMarkdown
+                :content="turn.answer"
+                :streaming="{
+                  hasNextChunk: turn.status === 'streaming',
+                  enableAnimation: true,
+                  tail: true,
+                }"
+              />
+              <VisAiActions
+                v-if="turn.status !== 'streaming'"
+                v-model:feedback="turn.feedback"
+                :current="1"
+                :total="1"
+                :disabled="responding"
+                @copy="copyAnswer(turn.answer)"
+                @refresh="regenerateTurn(turn.id)"
+              />
+            </div>
+          </section>
         </div>
       </div>
 
@@ -594,11 +747,12 @@ onBeforeUnmount(() => {
         v-model:speed="selectedSpeed"
         v-model:skill="selectedSkill"
         :attachments="attachments"
+        :attachments-enabled="false"
         :loading="responding"
+        :models="deepSeekModels"
+        :model-switchable="false"
         @submit="submitQuestion"
         @stop="stopResponse"
-        @attachment-request="addAttachment"
-        @remove-attachment="removeAttachment"
       />
     </template>
   </section>
@@ -808,8 +962,15 @@ onBeforeUnmount(() => {
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  gap: var(--space-16);
+  gap: var(--space-24);
   overflow-y: auto;
+}
+
+.ai-assistant__turn {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--space-16);
 }
 
 .ai-assistant__submitted-attachments,

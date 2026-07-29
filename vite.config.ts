@@ -11,6 +11,14 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url)),
     },
   },
+  server: {
+    proxy: {
+      '/api': {
+        target: process.env.VISION_AI_API_URL ?? 'http://127.0.0.1:3100',
+        changeOrigin: true,
+      },
+    },
+  },
   build: {
     outDir: 'dist/docs',
     rollupOptions: {
