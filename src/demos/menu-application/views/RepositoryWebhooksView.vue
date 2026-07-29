@@ -4,11 +4,11 @@ import { ref } from 'vue'
 import { VisBadge } from '../../../components/badge'
 import VisButton from '../../../components/button/VisButton.vue'
 import { VisDivider } from '../../../components/divider'
-import { VisFeaturedIcon } from '../../../components/featured-icon'
 import Icon from '../../../components/icons/Icon.vue'
 import type { IconName } from '../../../components/icons/generated/registry.generated'
+import { VisPageHeader } from '../../../components/page-header'
 import { VisTable, type VisTableColumn } from '../../../components/table'
-import { VisTabs, type VisTabsItem } from '../../../components/tabs'
+import type { VisTabsItem } from '../../../components/tabs'
 import { VisTag } from '../../../components/tag'
 
 interface WebhookIntegration {
@@ -129,32 +129,27 @@ function toggleIntegration(id: string): void {
 
 <template>
   <section class="repository-page" aria-label="Software-Factory 仓库 Webhook 设置">
-    <header class="repository-header">
-      <div class="repository-summary">
-        <VisFeaturedIcon size="xl" type="modern" color="grey" icon="code-02" />
-        <div class="repository-summary__copy">
-          <div class="repository-summary__title-row">
-            <h1>Software-Factory</h1>
-            <VisButton
-              class="repository-switcher"
-              variant="text"
-              size="sm"
-              icon-only
-              icon-name="chevron-down"
-              label="切换代码仓库"
-            />
-          </div>
-          <p>Repository ID: 3034893</p>
-        </div>
-      </div>
-
-      <VisTabs
-        class="repository-tabs"
-        :model-value="'settings'"
-        :items="repositoryTabs"
-        aria-label="仓库导航"
-      />
-    </header>
+    <VisPageHeader
+      class="repository-header"
+      title="Software-Factory"
+      description="Repository ID: 3034893"
+      :breadcrumb="false"
+      icon="code-02"
+      :tabs="repositoryTabs"
+      active-tab="settings"
+      aria-label="Software-Factory 仓库导航"
+    >
+      <template #suffix>
+        <VisButton
+          class="repository-switcher"
+          variant="text"
+          size="sm"
+          icon-only
+          icon-name="chevron-down"
+          label="切换代码仓库"
+        />
+      </template>
+    </VisPageHeader>
 
     <div class="repository-settings">
       <aside class="settings-sidebar" aria-label="仓库设置导航">
@@ -281,39 +276,8 @@ function toggleIntegration(id: string): void {
 }
 
 .repository-header {
-  box-sizing: border-box;
-  block-size: 124px;
-  border-block-end: 1px solid var(--color-border-default);
-  padding-inline: var(--space-20);
-  flex: 0 0 124px;
+  flex: 0 0 auto;
   background: var(--color-bg-canvas);
-}
-
-.repository-summary {
-  block-size: 76px;
-  display: flex;
-  align-items: center;
-  gap: var(--space-12);
-  transform: translateY(var(--space-8));
-}
-
-.repository-summary__copy {
-  min-inline-size: 0;
-}
-
-.repository-summary__title-row {
-  display: flex;
-  align-items: center;
-  gap: var(--space-4);
-}
-
-.repository-summary h1 {
-  margin: 0;
-  color: var(--color-text-primary);
-  font-size: var(--font-heading-h4-size);
-  font-weight: 600;
-  line-height: var(--font-heading-h4-line-height);
-  letter-spacing: 0;
 }
 
 .webhook-heading h2 {
@@ -325,24 +289,8 @@ function toggleIntegration(id: string): void {
   letter-spacing: 0;
 }
 
-.repository-summary p {
-  margin: 0;
-  color: var(--color-text-tertiary);
-  font-size: var(--font-text-md-size);
-  font-weight: 400;
-  line-height: var(--font-text-md-line-height);
-}
-
 .repository-switcher {
   flex: 0 0 auto;
-}
-
-.repository-tabs {
-  block-size: var(--space-48);
-}
-
-.repository-tabs :deep(.vis-tabs__item) {
-  margin-inline-end: var(--space-8);
 }
 
 .repository-settings {

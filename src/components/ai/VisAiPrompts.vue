@@ -49,29 +49,32 @@ function itemKey(key: VisAiKey): string {
       :aria-disabled="disabled || item.disabled ? 'true' : undefined"
       @click="selectPrompt(item, disabled)"
     >
-      <Icon
-        v-if="item.iconName"
-        class="vis-ai-prompts__icon"
-        :name="item.iconName"
-        :size="16"
-        decorative
-      />
+      <span v-if="item.iconName" class="vis-ai-prompts__icon-container">
+        <Icon
+          class="vis-ai-prompts__icon"
+          :name="item.iconName"
+          :size="oneLine ? 16 : 20"
+          :stroke-width="1"
+          decorative
+        />
+      </span>
       <span class="vis-ai-prompts__content">
         <span class="vis-ai-prompts__label">
           {{ oneLine ? item.descriptions?.[0] ?? item.label : item.label }}
         </span>
-        <VisButton
-          v-for="(description, index) in item.descriptions"
-          v-if="!oneLine"
-          :key="`${itemKey(item.key)}-${index}`"
-          class="vis-ai-prompts__description"
-          variant="link-grey"
-          size="sm"
-          :disabled="disabled || item.disabled"
-          @click.stop="selectPrompt(item, disabled)"
-        >
-          {{ description }}
-        </VisButton>
+        <span v-if="!oneLine" class="vis-ai-prompts__descriptions">
+          <VisButton
+            v-for="(description, index) in item.descriptions"
+            :key="`${itemKey(item.key)}-${index}`"
+            class="vis-ai-prompts__description"
+            variant="link-grey"
+            size="md"
+            :disabled="disabled || item.disabled"
+            @click.stop="selectPrompt(item, disabled)"
+          >
+            {{ description }}
+          </VisButton>
+        </span>
       </span>
     </component>
   </div>
@@ -100,7 +103,7 @@ function itemKey(key: VisAiKey): string {
   min-block-size: 110px;
   border: 0;
   border-radius: var(--radius-sm);
-  padding: var(--space-12);
+  padding: var(--space-16);
   display: flex;
   align-items: flex-start;
   gap: var(--space-8);
@@ -128,9 +131,15 @@ function itemKey(key: VisAiKey): string {
   cursor: not-allowed;
 }
 
-.vis-ai-prompts__icon {
+.vis-ai-prompts__icon-container {
   flex: 0 0 auto;
-  margin-block: 2px;
+  block-size: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.vis-ai-prompts__icon {
   color: var(--color-component-icon-aqua);
 }
 
@@ -151,7 +160,7 @@ function itemKey(key: VisAiKey): string {
   flex: 1 1 0;
   display: flex;
   flex-direction: column;
-  gap: var(--space-4);
+  gap: var(--space-6);
 }
 
 .vis-ai-prompts__label {
@@ -159,9 +168,9 @@ function itemKey(key: VisAiKey): string {
 }
 
 .vis-ai-prompts__label {
-  font-size: var(--font-text-md-size);
+  font-size: var(--font-text-lg-size);
   font-weight: 500;
-  line-height: var(--font-text-md-line-height);
+  line-height: var(--font-text-lg-line-height);
 }
 
 .vis-ai-prompts__description {
@@ -170,10 +179,18 @@ function itemKey(key: VisAiKey): string {
   text-align: start;
 }
 
+.vis-ai-prompts__descriptions {
+  inline-size: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
 .vis-ai-prompts.is-one-line .vis-ai-prompts__item {
+  block-size: 44px;
   min-block-size: 44px;
   border: 1px solid var(--color-border-default);
-  padding-block: 11px;
+  padding: var(--space-12) var(--space-16);
   align-items: center;
 }
 
@@ -181,10 +198,20 @@ function itemKey(key: VisAiKey): string {
   border-color: var(--color-border-default);
 }
 
+.vis-ai-prompts.is-one-line .vis-ai-prompts__icon-container {
+  block-size: 16px;
+}
+
+.vis-ai-prompts.is-one-line .vis-ai-prompts__content {
+  gap: 0;
+}
+
 .vis-ai-prompts.is-one-line .vis-ai-prompts__label {
   overflow: hidden;
   color: var(--color-text-secondary);
+  font-size: var(--font-text-md-size);
   font-weight: 400;
+  line-height: var(--font-text-md-line-height);
   text-overflow: ellipsis;
   white-space: nowrap;
 }

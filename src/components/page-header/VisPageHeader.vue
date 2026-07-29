@@ -243,6 +243,7 @@ function handleAction(action: VisPageHeaderAction, event: MouseEvent): void {
 
 .vis-page-header.has-tabs {
   padding-block-end: 0;
+  box-shadow: inset 0 -1px 0 var(--color-border-default);
 }
 
 .vis-page-header__navigation {

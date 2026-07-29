@@ -17,7 +17,6 @@ import type {
   VisAiConversationItemData,
   VisAiKey,
   VisAiPromptItem,
-  VisAiSenderModel,
   VisAiSenderSpeed,
   VisAiSenderSubmitPayload,
 } from '../../components/ai'
@@ -68,7 +67,7 @@ const emit = defineEmits<{
 
 const senderValue = ref('')
 const deepThinking = ref(false)
-const selectedModel = ref<VisAiKey>('deepseek-v4-flash')
+const selectedModel = ref<VisAiKey>('kimi-k3')
 const selectedSpeed = ref<VisAiSenderSpeed>('high')
 const selectedSkill = ref<VisAiKey | ''>('')
 const attachments = ref<VisAiAttachmentItem[]>([])
@@ -87,14 +86,6 @@ let requestSerial = 0
 let dragPointerId: number | undefined
 let dragOffsetX = 0
 let dragOffsetY = 0
-
-const deepSeekModels: VisAiSenderModel[] = [
-  {
-    key: 'deepseek-v4-flash',
-    label: 'DeepSeek V4 Flash',
-    iconName: 'cube-01',
-  },
-]
 
 const promptItems: VisAiPromptItem[] = [
   {
@@ -179,6 +170,26 @@ function resetConversation(): void {
 
 function selectPrompt(item: VisAiPromptItem): void {
   senderValue.value = item.descriptions?.[0] ?? item.label
+}
+
+function addAttachment(): void {
+  if (attachments.value.some((item) => item.key === 'demo-requirement')) return
+
+  attachments.value = [
+    {
+      key: 'demo-requirement',
+      name: '需求说明.doc',
+      type: 'file',
+      extension: 'doc',
+      fileIconType: 'word',
+      size: '6.83kb',
+      removable: true,
+    },
+  ]
+}
+
+function removeAttachment(item: VisAiAttachmentItem): void {
+  attachments.value = attachments.value.filter((entry) => entry.key !== item.key)
 }
 
 function createSession(question: string): AiChatSession {
@@ -281,7 +292,7 @@ function submitQuestion(payload: VisAiSenderSubmitPayload): void {
     thinking: payload.deepThinking,
     thinkingExpanded: true,
     feedback: null,
-    attachments: [],
+    attachments: payload.attachments.map((item) => ({ ...item })),
   }
 
   session.turns.push(turn)
@@ -591,12 +602,11 @@ onBeforeUnmount(() => {
             v-model:speed="selectedSpeed"
             v-model:skill="selectedSkill"
             :attachments="attachments"
-            :attachments-enabled="false"
             :loading="responding"
-            :models="deepSeekModels"
-            :model-switchable="false"
             @submit="submitQuestion"
             @stop="stopResponse"
+            @attachment-request="addAttachment"
+            @remove-attachment="removeAttachment"
           />
         </div>
       </div>
@@ -747,12 +757,11 @@ onBeforeUnmount(() => {
         v-model:speed="selectedSpeed"
         v-model:skill="selectedSkill"
         :attachments="attachments"
-        :attachments-enabled="false"
         :loading="responding"
-        :models="deepSeekModels"
-        :model-switchable="false"
         @submit="submitQuestion"
         @stop="stopResponse"
+        @attachment-request="addAttachment"
+        @remove-attachment="removeAttachment"
       />
     </template>
   </section>

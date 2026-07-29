@@ -1,0 +1,99 @@
+name: Deploy ECS
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-ecs-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Build and deploy
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment:
+      name: production
+      url: https://vision.leoht.space
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 26
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Test API
+        run: npm run test:api
+
+      - name: Build
+        run: npm run build
+
+      - name: Package release
+        run: tar -czf vision-release.tgz dist/docs server
+
+      - name: Configure SSH
+        env:
+          ECS_HOST: ${{ secrets.ECS_HOST }}
+          ECS_KNOWN_HOSTS: ${{ secrets.ECS_KNOWN_HOSTS }}
+          ECS_PORT: ${{ secrets.ECS_PORT }}
+          ECS_SSH_KEY: ${{ secrets.ECS_SSH_KEY }}
+          ECS_USER: ${{ secrets.ECS_USER }}
+        run: |
+          set -euo pipefail
+          for variable in ECS_HOST ECS_KNOWN_HOSTS ECS_PORT ECS_SSH_KEY ECS_USER; do
+            if [ -z "${!variable:-}" ]; then
+              echo "::error::Missing required Actions secret: ${variable}"
+              exit 1
+            fi
+          done
+
+          install -m 700 -d "${HOME}/.ssh"
+          printf '%s\n' "${ECS_SSH_KEY}" | tr -d '\r' > "${HOME}/.ssh/id_ed25519"
+          chmod 600 "${HOME}/.ssh/id_ed25519"
+          printf '%s\n' "${ECS_KNOWN_HOSTS}" > "${HOME}/.ssh/known_hosts"
+          chmod 600 "${HOME}/.ssh/known_hosts"
+
+      - name: Upload release
+        env:
+          ECS_HOST: ${{ secrets.ECS_HOST }}
+          ECS_PORT: ${{ secrets.ECS_PORT }}
+          ECS_USER: ${{ secrets.ECS_USER }}
+        run: |
+          scp \
+            -P "${ECS_PORT}" \
+            vision-release.tgz \
+            deploy/deploy-release.sh \
+            "${ECS_USER}@${ECS_HOST}:/tmp/"
+
+      - name: Activate release
+        env:
+          ECS_HOST: ${{ secrets.ECS_HOST }}
+          ECS_PORT: ${{ secrets.ECS_PORT }}
+          ECS_USER: ${{ secrets.ECS_USER }}
+        run: |
+          ssh -p "${ECS_PORT}" "${ECS_USER}@${ECS_HOST}" \
+            "bash /tmp/deploy-release.sh /tmp/vision-release.tgz '${GITHUB_SHA}'"
+
+      - name: Verify production
+        run: |
+          curl \
+            --fail \
+            --location \
+            --retry 5 \
+            --retry-delay 2 \
+            --show-error \
+            --silent \
+            https://vision.leoht.space/api/health
