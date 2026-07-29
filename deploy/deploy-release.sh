@@ -75,13 +75,32 @@ systemctl restart vision-ai
 nginx -t
 systemctl reload nginx
 
-curl \
-  --fail \
-  --retry 5 \
-  --retry-delay 1 \
-  --show-error \
-  --silent \
-  http://127.0.0.1:3100/api/health
+health_url="http://127.0.0.1:3100/api/health"
+health_response=""
+health_check_passed=false
+
+for attempt in {1..30}; do
+  if health_response="$(curl --fail --silent --max-time 2 "${health_url}" 2>/dev/null)"; then
+    health_check_passed=true
+    break
+  fi
+
+  if ! systemctl is-active --quiet vision-ai; then
+    echo "vision-ai stopped before its health endpoint became available." >&2
+    break
+  fi
+
+  sleep 1
+done
+
+if [[ "${health_check_passed}" != true ]]; then
+  echo "vision-ai health check did not pass within 30 seconds." >&2
+  systemctl status vision-ai --no-pager --full || true
+  journalctl -u vision-ai --no-pager -n 80 || true
+  false
+fi
+
+printf '%s\n' "${health_response}"
 
 trap - ERR
 cleanup
