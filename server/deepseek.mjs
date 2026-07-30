@@ -1,5 +1,3 @@
-export const DEEPSEEK_MODEL = 'deepseek-v4-flash'
-
 function eventData(block) {
   const lines = block
     .split('\n')
@@ -26,6 +24,7 @@ export async function streamDeepSeek({
   fetchImpl = fetch,
   maxTokens = 4096,
   messages,
+  model,
   reasoningEffort = 'high',
   signal,
   systemPrompt,
@@ -40,7 +39,7 @@ export async function streamDeepSeek({
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: DEEPSEEK_MODEL,
+      model,
       messages: [
         { role: 'system', content: systemPrompt },
         ...messages,

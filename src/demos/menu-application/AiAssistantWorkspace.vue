@@ -17,6 +17,7 @@ import type {
   VisAiConversationItemData,
   VisAiKey,
   VisAiPromptItem,
+  VisAiSenderModel,
   VisAiSenderSpeed,
   VisAiSenderSubmitPayload,
 } from '../../components/ai'
@@ -27,6 +28,7 @@ import {
 } from '../../components/dropdown'
 import { VisMarkdown } from '../../components/markdown'
 import {
+  fetchVisionAiModels,
   streamVisionAiChat,
   type VisionAiMessage,
 } from '../../services/ai/chat-client'
@@ -42,6 +44,7 @@ interface AiChatTurn {
   question: string
   answer: string
   reasoning: string
+  model: VisAiKey
   status: AiChatTurnStatus
   thinking: boolean
   thinkingExpanded: boolean
@@ -67,7 +70,13 @@ const emit = defineEmits<{
 
 const senderValue = ref('')
 const deepThinking = ref(false)
-const selectedModel = ref<VisAiKey>('kimi-k3')
+const selectedModel = ref<VisAiKey>('')
+const senderModels = ref<VisAiSenderModel[]>([
+  { key: 'deepseek-v4-flash', label: 'DeepSeek V4 Flash', iconName: 'cube-01' },
+  { key: 'deepseek-v4-pro', label: 'DeepSeek V4 Pro', iconName: 'cube-01' },
+  { key: 'glm-5.2', label: 'GLM-5.2', iconName: 'cube-01' },
+  { key: 'kimi-k3', label: 'Kimi K3', iconName: 'cube-01' },
+])
 const selectedSpeed = ref<VisAiSenderSpeed>('high')
 const selectedSkill = ref<VisAiKey | ''>('')
 const attachments = ref<VisAiAttachmentItem[]>([])
@@ -168,6 +177,25 @@ function resetConversation(): void {
   conversationKey.value = ''
 }
 
+async function loadAvailableModels(): Promise<void> {
+  try {
+    const catalog = await fetchVisionAiModels()
+    senderModels.value = catalog.models.map((model) => ({
+      key: model.id,
+      label: model.label,
+      iconName: 'cube-01',
+      disabled: !model.available,
+    }))
+
+    const selected = senderModels.value.find((model) => model.key === selectedModel.value)
+    if (!selected || selected.disabled) {
+      selectedModel.value = catalog.defaultModel
+    }
+  } catch {
+    // Keep the local catalog visible when the API is unavailable during component development.
+  }
+}
+
 function selectPrompt(item: VisAiPromptItem): void {
   senderValue.value = item.descriptions?.[0] ?? item.label
 }
@@ -241,6 +269,7 @@ async function runTurn(session: AiChatSession, turnIndex: number): Promise<void>
   try {
     await streamVisionAiChat(
       {
+        model: String(turn.model),
         messages: messagesForTurn(session, turnIndex),
         thinking: turn.thinking,
         reasoningEffort: selectedSpeed.value === 'ultra' ? 'max' : 'high',
@@ -288,6 +317,7 @@ function submitQuestion(payload: VisAiSenderSubmitPayload): void {
     question,
     answer: '',
     reasoning: '',
+    model: payload.model ?? selectedModel.value,
     status: 'streaming',
     thinking: payload.deepThinking,
     thinkingExpanded: true,
@@ -449,6 +479,7 @@ watch(
 
 onMounted(() => {
   window.addEventListener('resize', keepFloatWindowInViewport)
+  void loadAvailableModels()
 })
 
 onBeforeUnmount(() => {
@@ -602,6 +633,7 @@ onBeforeUnmount(() => {
             v-model:speed="selectedSpeed"
             v-model:skill="selectedSkill"
             :attachments="attachments"
+            :models="senderModels"
             :loading="responding"
             @submit="submitQuestion"
             @stop="stopResponse"
@@ -757,6 +789,7 @@ onBeforeUnmount(() => {
         v-model:speed="selectedSpeed"
         v-model:skill="selectedSkill"
         :attachments="attachments"
+        :models="senderModels"
         :loading="responding"
         @submit="submitQuestion"
         @stop="stopResponse"

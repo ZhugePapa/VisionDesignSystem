@@ -2,7 +2,13 @@ import { createHash } from 'node:crypto'
 import { createServer } from 'node:http'
 import { pathToFileURL } from 'node:url'
 
-import { DEEPSEEK_MODEL, streamDeepSeek } from './deepseek.mjs'
+import { streamDeepSeek } from './deepseek.mjs'
+import {
+  defaultAiModelId,
+  listAiModels,
+  resolveAiModel,
+} from './models.mjs'
+import { streamOllama } from './ollama.mjs'
 
 const DEFAULT_SYSTEM_PROMPT = `你是 Vision Design System 演示应用中的“小 VI 智能助理”。
 你主要帮助软件研发团队分析项目、需求、代码质量、流水线和交付风险。
@@ -123,9 +129,7 @@ export function createVisionAiServer({
   env = process.env,
   fetchImpl = fetch,
 } = {}) {
-  const apiKey = env.DEEPSEEK_API_KEY
   const allowedOrigin = env.AI_ALLOWED_ORIGIN?.replace(/\/$/, '')
-  const baseUrl = env.DEEPSEEK_BASE_URL || 'https://api.deepseek.com'
   const maxTokens = positiveInteger(env.AI_MAX_TOKENS, 4096)
   const timeoutMs = positiveInteger(env.AI_REQUEST_TIMEOUT_MS, 10 * 60_000)
   const isWithinRateLimit = createRateLimiter(
@@ -136,10 +140,20 @@ export function createVisionAiServer({
     const url = new URL(req.url || '/', 'http://localhost')
 
     if (req.method === 'GET' && url.pathname === '/api/health') {
+      const models = listAiModels(env)
       json(res, 200, {
         status: 'ok',
-        model: DEEPSEEK_MODEL,
-        configured: Boolean(apiKey),
+        defaultModel: defaultAiModelId(env),
+        configured: models.some((model) => model.available),
+        models: models.filter((model) => model.available).map((model) => model.id),
+      })
+      return
+    }
+
+    if (req.method === 'GET' && url.pathname === '/api/ai/models') {
+      json(res, 200, {
+        defaultModel: defaultAiModelId(env),
+        models: listAiModels(env),
       })
       return
     }
@@ -161,15 +175,12 @@ export function createVisionAiServer({
       return
     }
 
-    if (!apiKey) {
-      json(res, 503, { error: 'AI service is not configured' })
-      return
-    }
-
     let body
+    let model
     try {
       body = await readJson(req)
       body.messages = validatedMessages(body.messages)
+      model = resolveAiModel(body.model, env)
     } catch (error) {
       json(res, error.statusCode || 400, { error: error.message })
       return
@@ -191,12 +202,14 @@ export function createVisionAiServer({
     res.flushHeaders()
 
     try {
-      await streamDeepSeek({
-        apiKey,
-        baseUrl,
+      const streamModel = model.provider === 'ollama' ? streamOllama : streamDeepSeek
+      await streamModel({
+        apiKey: model.apiKey,
+        baseUrl: model.baseUrl,
         fetchImpl,
         maxTokens,
         messages: body.messages,
+        model: model.upstreamModel,
         reasoningEffort: body.reasoningEffort === 'max' ? 'max' : 'high',
         signal: controller.signal,
         systemPrompt: env.AI_SYSTEM_PROMPT || DEFAULT_SYSTEM_PROMPT,

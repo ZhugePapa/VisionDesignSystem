@@ -51,6 +51,8 @@ tar -xzf "${archive_path}" -C "${staging_dir}"
 test -f "${staging_dir}/dist/docs/index.html"
 test -f "${staging_dir}/server/app.mjs"
 test -f "${staging_dir}/server/deepseek.mjs"
+test -f "${staging_dir}/server/models.mjs"
+test -f "${staging_dir}/server/ollama.mjs"
 
 if [[ -d "${app_dir}/dist/docs" ]]; then
   mkdir -p "${backup_dir}/dist/docs"

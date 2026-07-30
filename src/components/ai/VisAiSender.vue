@@ -33,9 +33,10 @@ const props = withDefaults(defineProps<VisAiSenderProps>(), {
   deepThinking: false,
   model: '',
   models: () => [
+    { key: 'deepseek-v4-flash', label: 'DeepSeek V4 Flash', iconName: 'cube-01' },
+    { key: 'deepseek-v4-pro', label: 'DeepSeek V4 Pro', iconName: 'cube-01' },
+    { key: 'glm-5.2', label: 'GLM-5.2', iconName: 'cube-01' },
     { key: 'kimi-k3', label: 'Kimi K3', iconName: 'cube-01' },
-    { key: 'glm-5.2', label: 'Glm 5.2', iconName: 'cube-01' },
-    { key: 'deepseek-v4-pro', label: 'Deepseek v4 pro', iconName: 'cube-01' },
   ],
   modelSwitchable: true,
   speed: 'high',

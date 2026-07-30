@@ -7,9 +7,23 @@ export interface VisionAiMessage {
 }
 
 export interface VisionAiChatRequest {
+  model: string
   messages: VisionAiMessage[]
   thinking: boolean
   reasoningEffort: VisionAiReasoningEffort
+}
+
+export interface VisionAiModel {
+  id: string
+  label: string
+  provider: 'deepseek' | 'ollama'
+  available: boolean
+  supportsThinking: boolean
+}
+
+export interface VisionAiModelCatalog {
+  defaultModel: string
+  models: VisionAiModel[]
 }
 
 export interface VisionAiStreamHandlers {
@@ -38,6 +52,15 @@ async function responseError(response: Response): Promise<Error> {
   } catch {
     return new Error(fallback)
   }
+}
+
+export async function fetchVisionAiModels(): Promise<VisionAiModelCatalog> {
+  const response = await fetch('/api/ai/models', {
+    headers: { Accept: 'application/json' },
+  })
+
+  if (!response.ok) throw await responseError(response)
+  return response.json() as Promise<VisionAiModelCatalog>
 }
 
 function parseEventBlock(block: string): { event: string; data: unknown } | null {
