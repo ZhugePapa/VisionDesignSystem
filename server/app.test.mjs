@@ -173,7 +173,7 @@ test('lists model availability without exposing credentials', async (context) =>
     env: {
       DEEPSEEK_API_KEY: 'deepseek-secret',
       OLLAMA_API_KEY: 'ollama-secret',
-      AI_DEFAULT_MODEL: 'kimi-k3',
+      AI_DEFAULT_MODEL: 'kimi-k2.7-code',
     },
   })
   server.listen(0, '127.0.0.1')
@@ -185,14 +185,14 @@ test('lists model availability without exposing credentials', async (context) =>
   const payload = await response.json()
 
   assert.equal(response.status, 200)
-  assert.equal(payload.defaultModel, 'kimi-k3')
+  assert.equal(payload.defaultModel, 'kimi-k2.7-code')
   assert.deepEqual(
     payload.models.map((model) => [model.id, model.available]),
     [
       ['deepseek-v4-flash', true],
       ['deepseek-v4-pro', true],
       ['glm-5.2', true],
-      ['kimi-k3', true],
+      ['kimi-k2.7-code', true],
     ],
   )
   assert.doesNotMatch(JSON.stringify(payload), /secret/)
@@ -203,7 +203,7 @@ test('can disable an account-gated model without removing it from the catalog', 
     env: {
       OLLAMA_API_KEY: 'ollama-secret',
       OLLAMA_KIMI_ENABLED: 'false',
-      AI_DEFAULT_MODEL: 'kimi-k3',
+      AI_DEFAULT_MODEL: 'kimi-k2.7-code',
     },
   })
   server.listen(0, '127.0.0.1')
@@ -213,7 +213,7 @@ test('can disable an account-gated model without removing it from the catalog', 
   const address = server.address()
   const catalogResponse = await fetch(`http://127.0.0.1:${address.port}/api/ai/models`)
   const catalog = await catalogResponse.json()
-  const kimi = catalog.models.find((model) => model.id === 'kimi-k3')
+  const kimi = catalog.models.find((model) => model.id === 'kimi-k2.7-code')
 
   assert.equal(catalog.defaultModel, 'glm-5.2')
   assert.equal(kimi.available, false)
@@ -222,14 +222,14 @@ test('can disable an account-gated model without removing it from the catalog', 
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      model: 'kimi-k3',
+      model: 'kimi-k2.7-code',
       messages: [{ role: 'user', content: '你好' }],
       thinking: false,
     }),
   })
 
   assert.equal(chatResponse.status, 503)
-  assert.deepEqual(await chatResponse.json(), { error: 'Kimi K3 当前未启用。' })
+  assert.deepEqual(await chatResponse.json(), { error: 'Kimi K2.7 Code 当前未启用。' })
 })
 
 test('reports whether the server key is configured', async (context) => {

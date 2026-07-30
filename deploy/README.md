@@ -27,11 +27,11 @@ stored in the repository or GitHub Actions.
 | --- | --- | --- |
 | `DEEPSEEK_API_KEY` | DeepSeek V4 Flash and V4 Pro credential | Required for DeepSeek |
 | `DEEPSEEK_BASE_URL` | DeepSeek API origin | `https://api.deepseek.com` |
-| `OLLAMA_API_KEY` | Ollama Cloud credential for GLM-5.2 and Kimi K3 | Required for Ollama |
+| `OLLAMA_API_KEY` | Ollama Cloud credential for GLM-5.2 and Kimi K2.7 Code | Required for Ollama |
 | `OLLAMA_BASE_URL` | Ollama Cloud API origin | `https://ollama.com` |
 | `OLLAMA_GLM_MODEL` | Ollama Cloud upstream model name | `glm-5.2` |
-| `OLLAMA_KIMI_MODEL` | Ollama Cloud upstream model name | `kimi-k3` |
-| `OLLAMA_KIMI_ENABLED` | Enables Kimi K3 after Extra Usage is available | `true` |
+| `OLLAMA_KIMI_MODEL` | Ollama Cloud upstream model name | `kimi-k2.7-code` |
+| `OLLAMA_KIMI_ENABLED` | Enables Kimi K2.7 Code in the public catalog | `true` |
 | `AI_DEFAULT_MODEL` | Initially selected public model ID | `deepseek-v4-flash` |
 
 The browser sends only a public model ID. The API resolves that ID through the

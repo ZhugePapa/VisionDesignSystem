@@ -30,10 +30,10 @@ const modelDefinitions = [
     defaultBaseUrl: 'https://ollama.com',
   },
   {
-    id: 'kimi-k3',
-    label: 'Kimi K3',
+    id: 'kimi-k2.7-code',
+    label: 'Kimi K2.7 Code',
     provider: 'ollama',
-    upstreamModel: 'kimi-k3',
+    upstreamModel: 'kimi-k2.7-code',
     upstreamModelEnv: 'OLLAMA_KIMI_MODEL',
     availabilityEnv: 'OLLAMA_KIMI_ENABLED',
     apiKeyEnv: 'OLLAMA_API_KEY',
