@@ -41,8 +41,17 @@ jobs:
       - name: Build
         run: npm run build
 
+      - name: Prepare production runtime
+        run: npm prune --omit=dev
+
       - name: Package release
-        run: tar -czf vision-release.tgz dist/docs server
+        run: |
+          tar -czf vision-release.tgz \
+            dist/docs \
+            server \
+            node_modules \
+            package.json \
+            package-lock.json
 
       - name: Configure SSH
         env:

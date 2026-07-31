@@ -39,6 +39,7 @@ const modelDefinitions = [
     apiKeyEnv: 'OLLAMA_API_KEY',
     baseUrlEnv: 'OLLAMA_BASE_URL',
     defaultBaseUrl: 'https://ollama.com',
+    supportsImages: true,
   },
 ]
 
@@ -54,6 +55,7 @@ function publicModel(definition, env) {
     provider: definition.provider,
     available: Boolean(env[definition.apiKeyEnv]) && modelIsEnabled(definition, env),
     supportsThinking: true,
+    supportsImages: definition.supportsImages === true,
   }
 }
 

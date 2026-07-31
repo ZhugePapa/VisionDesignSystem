@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, ref, watch } from 'vue'
 
 import VisButton from '../button/VisButton.vue'
 import {
@@ -18,8 +18,8 @@ import type {
   VisAiSenderSubmitPayload,
 } from './ai.types'
 import VisAiAttachment from './VisAiAttachment.vue'
+import VisAiPromptComposer from './VisAiPromptComposer.vue'
 import VisAiSenderAction from './VisAiSenderAction.vue'
-import VisAiSkill from './VisAiSkill.vue'
 
 defineOptions({ name: 'VisAiSender' })
 
@@ -85,16 +85,16 @@ const emit = defineEmits<{
   submit: [payload: VisAiSenderSubmitPayload]
   stop: []
   attachmentRequest: []
+  filesRequest: [files: File[]]
   documentRequest: []
   removeAttachment: [item: VisAiAttachmentItem]
+  retryAttachment: [item: VisAiAttachmentItem]
   previewAttachment: [item: VisAiAttachmentItem]
 }>()
 
-const textareaRef = ref<HTMLTextAreaElement | null>(null)
 const attachmentMenuOpen = ref(false)
 const modelMenuOpen = ref(false)
 const speedMenuOpen = ref(false)
-const isComposing = ref(false)
 let speedCloseTimer: ReturnType<typeof setTimeout> | undefined
 
 const speedOptions: Array<{ value: VisAiSenderSpeed; label: string }> = [
@@ -113,12 +113,14 @@ const canSubmit = computed(
   () =>
     !props.disabled &&
     !props.loading &&
+    props.attachments.every((item) => (
+      !item.uploading
+      && item.status !== 'uploading'
+      && item.status !== 'parsing'
+      && item.status !== 'error'
+    )) &&
     (props.modelValue.trim().length > 0 || props.attachments.length > 0),
 )
-
-function updateValue(event: Event): void {
-  emit('update:modelValue', (event.target as HTMLTextAreaElement).value)
-}
 
 function submit(): void {
   if (!canSubmit.value) return
@@ -133,26 +135,6 @@ function submit(): void {
   })
 }
 
-function onKeydown(event: KeyboardEvent): void {
-  if (
-    event.key === 'Backspace' &&
-    !isComposing.value &&
-    selectedSkill.value &&
-    event.currentTarget instanceof HTMLTextAreaElement &&
-    event.currentTarget.selectionStart === 0 &&
-    event.currentTarget.selectionEnd === 0
-  ) {
-    event.preventDefault()
-    emit('update:skill', '')
-    nextTick(() => textareaRef.value?.focus())
-    return
-  }
-
-  if (!props.submitOnEnter || event.key !== 'Enter' || event.shiftKey || isComposing.value) return
-  event.preventDefault()
-  submit()
-}
-
 function chooseModel(key: VisAiKey): void {
   const item = props.models.find((model) => model.key === key)
   if (!item || item.disabled) return
@@ -164,7 +146,6 @@ function chooseSkill(item: VisAiSenderSkill): void {
   if (item.disabled) return
   emit('update:skill', item.key)
   attachmentMenuOpen.value = false
-  nextTick(() => textareaRef.value?.focus())
 }
 
 function chooseSpeed(speed: VisAiSenderSpeed): void {
@@ -187,6 +168,11 @@ function scheduleSpeedMenuClose(): void {
 
 function removeAttachment(item: VisAiAttachmentItem): void {
   emit('removeAttachment', item)
+}
+
+function retryAttachment(item: VisAiAttachmentItem): void {
+  if (props.disabled || props.loading) return
+  emit('retryAttachment', item)
 }
 
 function toggleAttachmentMenu(toggle: () => void, event: MouseEvent): void {
@@ -213,7 +199,11 @@ onBeforeUnmount(() => {
       'has-attachments': attachments.length > 0,
     }"
   >
-    <div v-if="attachments.length" class="vis-ai-sender__attachments">
+    <div
+      v-if="attachments.length"
+      class="vis-ai-sender__attachments"
+      aria-label="已添加的附件"
+    >
       <VisAiAttachment
         v-for="item in attachments"
         :key="String(item.key)"
@@ -227,35 +217,29 @@ onBeforeUnmount(() => {
         :alt="item.alt"
         :uploading="item.uploading"
         :progress="item.progress"
-        :removable="item.removable"
+        :status="item.status"
+        :error="item.error"
+        :removable="item.removable !== false && !disabled && !loading"
         @remove="removeAttachment(item)"
+        @retry="retryAttachment(item)"
         @preview="emit('previewAttachment', item)"
       />
     </div>
 
     <div class="vis-ai-sender__editor">
-      <VisAiSkill
-        v-if="selectedSkill"
-        :label="selectedSkill.label"
-        :icon="Boolean(selectedSkill.iconName)"
-        :icon-name="selectedSkill.iconName"
-        :color="selectedSkill.color"
-      />
-
-      <textarea
-        ref="textareaRef"
-        class="vis-ai-sender__textarea"
-        rows="1"
-        :value="modelValue"
-        :placeholder="placeholder"
+      <VisAiPromptComposer
+        :model-value="modelValue"
+        :skill="selectedSkill"
+        :placeholder="selectedSkill ? '' : placeholder"
         :disabled="disabled"
         :readonly="loading"
-        :maxlength="maxLength"
-        :autofocus="autoFocus"
-        @input="updateValue"
-        @keydown="onKeydown"
-        @compositionstart="isComposing = true"
-        @compositionend="isComposing = false"
+        :max-length="maxLength"
+        :auto-focus="autoFocus"
+        @update:model-value="emit('update:modelValue', $event)"
+        @submit="submitOnEnter && submit()"
+        @remove-skill="emit('update:skill', '')"
+        @files="emit('filesRequest', $event)"
+        @skill-request="attachmentMenuOpen = true"
       />
     </div>
 
@@ -437,47 +421,29 @@ onBeforeUnmount(() => {
 }
 
 .vis-ai-sender__attachments {
+  inline-size: 100%;
+  min-inline-size: 0;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: var(--space-8);
   overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+}
+
+.vis-ai-sender__attachments::-webkit-scrollbar {
+  display: none;
+}
+
+.vis-ai-sender__attachments > * {
+  flex: 0 0 auto;
 }
 
 .vis-ai-sender__editor {
   min-block-size: 44px;
   display: flex;
   align-items: flex-start;
-  flex-wrap: wrap;
-  column-gap: var(--space-8);
-  row-gap: var(--space-4);
   overflow: hidden;
-}
-
-.vis-ai-sender__textarea {
-  min-inline-size: 160px;
-  min-block-size: 44px;
-  max-block-size: 160px;
-  flex: 1 1 240px;
-  border: 0;
-  padding: 0;
-  outline: 0;
-  resize: none;
-  color: var(--color-text-primary);
-  background: transparent;
-  font-family: var(--font-family-text);
-  font-size: var(--font-text-md-size);
-  font-weight: 400;
-  line-height: var(--font-text-md-line-height);
-  field-sizing: content;
-}
-
-.vis-ai-sender__textarea::placeholder {
-  color: var(--color-text-tertiary);
-}
-
-.vis-ai-sender__textarea:disabled {
-  color: var(--color-text-disabled);
-  cursor: not-allowed;
 }
 
 .vis-ai-sender__footer {

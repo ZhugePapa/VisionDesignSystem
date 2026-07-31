@@ -16,15 +16,25 @@ const props = withDefaults(defineProps<VisAiAttachmentProps>(), {
   alt: '',
   uploading: false,
   progress: 25,
+  status: 'ready',
+  error: '',
   removable: true,
 })
 
 const emit = defineEmits<{
   remove: [key: VisAiAttachmentProps['itemKey']]
   preview: [key: VisAiAttachmentProps['itemKey']]
+  retry: [key: VisAiAttachmentProps['itemKey']]
 }>()
 
-const fileMeta = computed(() => [props.extension, props.size].filter(Boolean))
+const isBusy = computed(
+  () => props.uploading || props.status === 'uploading' || props.status === 'parsing',
+)
+const fileMeta = computed(() => {
+  if (props.status === 'error') return ['上传失败，点击重试']
+  if (props.status === 'parsing') return ['处理中...']
+  return [props.extension, props.size].filter(Boolean)
+})
 const resolvedFileIconType = computed(
   () => props.fileIconType ?? resolveVisFileIconType(props.extension),
 )
@@ -36,40 +46,64 @@ function removeAttachment(): void {
 
 function previewAttachment(): void {
   if (props.type !== 'image') return
+  if (props.status === 'error') {
+    emit('retry', props.itemKey)
+    return
+  }
   emit('preview', props.itemKey)
+}
+
+function retryAttachment(): void {
+  if (props.status !== 'error') return
+  emit('retry', props.itemKey)
 }
 </script>
 
 <template>
   <article
     class="vis-ai-attachment"
-    :class="[`type-${type}`, { 'is-uploading': uploading }]"
-    :aria-busy="uploading ? 'true' : undefined"
+    :class="[
+      `type-${type}`,
+      {
+        'is-uploading': isBusy,
+        'is-error': status === 'error',
+      },
+    ]"
+    :aria-busy="isBusy ? 'true' : undefined"
+    :title="status === 'error' ? (error || '上传失败，点击重试') : undefined"
+    :role="type !== 'image' && status === 'error' ? 'button' : undefined"
+    :tabindex="type !== 'image' && status === 'error' ? 0 : undefined"
+    @click="retryAttachment"
+    @keydown.enter.prevent="retryAttachment"
+    @keydown.space.prevent="retryAttachment"
   >
     <button
       v-if="type === 'image'"
       class="vis-ai-attachment__image-button"
       type="button"
       :aria-label="`预览 ${name}`"
-      @click="previewAttachment"
+      @click.stop="previewAttachment"
     >
       <img v-if="url" class="vis-ai-attachment__image" :src="url" :alt="alt || name" />
       <span v-else class="vis-ai-attachment__image-placeholder">
         <Icon name="image-01" :size="20" decorative />
       </span>
-      <span v-if="uploading" class="vis-ai-attachment__upload-mask">
+      <span v-if="isBusy" class="vis-ai-attachment__upload-mask">
         <VisProgressCircle size="sm" :value="progress" decorative />
+      </span>
+      <span v-else-if="status === 'error'" class="vis-ai-attachment__error-mask">
+        <Icon name="refresh-cw-01" :size="16" decorative />
       </span>
     </button>
 
     <template v-else>
       <span class="vis-ai-attachment__file-icon" aria-hidden="true">
-        <VisProgressCircle v-if="uploading" size="sm" :value="progress" decorative />
+        <VisProgressCircle v-if="isBusy" size="sm" :value="progress" decorative />
         <VisFileIcon v-else :type="resolvedFileIconType" :size="32" decorative />
       </span>
       <span class="vis-ai-attachment__content">
         <span class="vis-ai-attachment__name" :title="name">{{ name }}</span>
-        <span v-if="uploading" class="vis-ai-attachment__meta">上传中...</span>
+        <span v-if="status === 'uploading' || (uploading && status !== 'parsing')" class="vis-ai-attachment__meta">上传中...</span>
         <span v-else-if="fileMeta.length" class="vis-ai-attachment__meta">
           <span v-for="value in fileMeta" :key="value">{{ value }}</span>
         </span>
@@ -104,6 +138,14 @@ function previewAttachment(): void {
 
 .vis-ai-attachment:hover {
   background: var(--color-bg-surface-subtle);
+}
+
+.vis-ai-attachment.is-error {
+  border-color: var(--color-border-error);
+}
+
+.vis-ai-attachment.type-file.is-error {
+  cursor: pointer;
 }
 
 .vis-ai-attachment.type-file {
@@ -216,6 +258,16 @@ function previewAttachment(): void {
   place-items: center;
   background: var(--primitive-alpha-black-40);
   backdrop-filter: blur(2.5px);
+}
+
+.vis-ai-attachment__error-mask {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  display: grid;
+  place-items: center;
+  color: var(--color-fg-white);
+  background: var(--primitive-alpha-black-40);
 }
 
 .vis-ai-attachment__upload-mask :deep(.vis-progress-circle) {

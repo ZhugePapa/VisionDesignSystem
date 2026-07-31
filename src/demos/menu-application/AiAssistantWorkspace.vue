@@ -12,8 +12,8 @@ import {
   VisAiThinking,
 } from '../../components/ai'
 import type {
-  VisAiActionFeedback,
   VisAiAttachmentItem,
+  VisAiConversationAction,
   VisAiConversationItemData,
   VisAiKey,
   VisAiPromptItem,
@@ -26,37 +26,40 @@ import {
   VisDropdown,
   VisDropdownItem,
 } from '../../components/dropdown'
+import VisInput from '../../components/input/VisInput.vue'
 import { VisMarkdown } from '../../components/markdown'
 import {
   fetchVisionAiModels,
-  streamVisionAiChat,
-  type VisionAiMessage,
 } from '../../services/ai/chat-client'
+import {
+  createVisionAiConversation,
+  deleteVisionAiConversation,
+  fetchVisionAiConversations,
+  fetchVisionAiTurns,
+  streamVisionAiConversation,
+  updateVisionAiConversation,
+  type VisionAiConversation,
+  type VisionAiTurn,
+} from '../../services/ai/conversation-client'
+import {
+  deleteVisionAiFile,
+  uploadVisionAiFiles,
+} from '../../services/ai/file-client'
+import {
+  fetchVisionAuthUser,
+  signInVisionAccount,
+  signOutVisionAccount,
+  type VisionAuthUser,
+} from '../../services/auth/auth-client'
 import chatBackgroundUrl from './assets/ai-chat-background.png'
 
 defineOptions({ name: 'AiAssistantWorkspace' })
 
 type AiAssistantMode = 'copilot' | 'independent' | 'float'
-type AiChatTurnStatus = 'streaming' | 'done' | 'stopped' | 'error'
-
-interface AiChatTurn {
-  id: string
-  question: string
-  answer: string
-  reasoning: string
-  model: VisAiKey
-  status: AiChatTurnStatus
-  thinking: boolean
-  thinkingExpanded: boolean
-  feedback: VisAiActionFeedback
-  attachments: VisAiAttachmentItem[]
-}
-
-interface AiChatSession {
-  id: string
-  title: string
-  pinned: boolean
+type AiChatTurn = VisionAiTurn
+interface AiChatSession extends VisionAiConversation {
   turns: AiChatTurn[]
+  turnsLoaded: boolean
 }
 
 const props = defineProps<{
@@ -86,15 +89,35 @@ const conversationCollapsed = ref(false)
 const historyOpen = ref(false)
 const modeMenuOpen = ref(false)
 const responding = ref(false)
+const authLoading = ref(true)
+const authUser = ref<VisionAuthUser | null>(null)
+const loginUsername = ref('')
+const loginPassword = ref('')
+const loginError = ref('')
+const loginSubmitting = ref(false)
 const assistantRef = ref<HTMLElement | null>(null)
 const transcriptRef = ref<HTMLElement | null>(null)
+const fileInputRef = ref<HTMLInputElement | null>(null)
 const floatPosition = ref<{ x: number; y: number } | null>(null)
 const isDraggingFloat = ref(false)
+const isFileDragActive = ref(false)
+const uploadError = ref('')
 let activeController: AbortController | undefined
-let requestSerial = 0
 let dragPointerId: number | undefined
 let dragOffsetX = 0
 let dragOffsetY = 0
+let fileDragDepth = 0
+let restoringDraft = false
+const uploadControllers = new Map<string, AbortController>()
+const retryFiles = new Map<string, File>()
+
+const acceptedAttachmentTypes = [
+  '.png', '.jpg', '.jpeg', '.webp',
+  '.pdf', '.docx',
+  '.txt', '.md', '.log', '.csv', '.json', '.yaml', '.yml', '.xml',
+  '.html', '.css', '.js', '.jsx', '.ts', '.tsx', '.vue',
+  '.py', '.java', '.go', '.rs', '.c', '.h', '.cpp', '.hpp', '.sql', '.sh',
+].join(',')
 
 const promptItems: VisAiPromptItem[] = [
   {
@@ -152,6 +175,53 @@ const floatPositionStyle = computed(() => {
   }
 })
 
+function draftStorageKey(conversationId: VisAiKey = conversationKey.value): string | null {
+  if (!authUser.value?.id) return null
+  return `vision-ai-draft:${authUser.value.id}:${String(conversationId || 'new')}`
+}
+
+function saveDraft(conversationId: VisAiKey = conversationKey.value): void {
+  const key = draftStorageKey(conversationId)
+  if (!key || restoringDraft) return
+  const readyAttachments = attachments.value.filter(
+    (item) => item.status === 'ready' && item.fileId,
+  )
+  if (!senderValue.value && !selectedSkill.value && !readyAttachments.length) {
+    window.localStorage.removeItem(key)
+    return
+  }
+  window.localStorage.setItem(key, JSON.stringify({
+    value: senderValue.value,
+    skill: selectedSkill.value,
+    attachments: readyAttachments,
+  }))
+}
+
+function restoreDraft(conversationId: VisAiKey = conversationKey.value): void {
+  const key = draftStorageKey(conversationId)
+  restoringDraft = true
+  try {
+    const stored = key ? window.localStorage.getItem(key) : null
+    const draft = stored ? JSON.parse(stored) as {
+      value?: string
+      skill?: VisAiKey
+      attachments?: VisAiAttachmentItem[]
+    } : null
+    senderValue.value = draft?.value ?? ''
+    selectedSkill.value = draft?.skill ?? ''
+    attachments.value = Array.isArray(draft?.attachments)
+      ? draft.attachments.map((item) => ({ ...item, status: 'ready', uploading: false }))
+      : []
+  } catch {
+    senderValue.value = ''
+    selectedSkill.value = ''
+    attachments.value = []
+    if (key) window.localStorage.removeItem(key)
+  } finally {
+    restoringDraft = false
+  }
+}
+
 function setMode(mode: AiAssistantMode): void {
   modeMenuOpen.value = false
   emit('update:mode', mode)
@@ -168,13 +238,42 @@ function abortActiveRequest(): void {
   activeController = undefined
 }
 
+function abortUploads(): void {
+  uploadControllers.forEach((controller) => controller.abort())
+  uploadControllers.clear()
+  retryFiles.clear()
+}
+
 function resetConversation(): void {
   abortActiveRequest()
-  senderValue.value = ''
-  attachments.value = []
-  selectedSkill.value = ''
+  saveDraft()
   responding.value = false
   conversationKey.value = ''
+  restoreDraft('')
+}
+
+function sessionFromConversation(conversation: VisionAiConversation): AiChatSession {
+  return {
+    ...conversation,
+    turns: [],
+    turnsLoaded: false,
+  }
+}
+
+async function loadConversationTurns(session: AiChatSession): Promise<void> {
+  if (session.turnsLoaded) return
+  session.turns = await fetchVisionAiTurns(session.id)
+  session.turnsLoaded = true
+}
+
+async function loadConversations(): Promise<void> {
+  const conversations = await fetchVisionAiConversations()
+  sessions.value = conversations.map(sessionFromConversation)
+
+  if (!conversationKey.value && sessions.value.length) {
+    conversationKey.value = sessions.value[0].id
+    await loadConversationTurns(sessions.value[0])
+  }
 }
 
 async function loadAvailableModels(): Promise<void> {
@@ -196,37 +295,215 @@ async function loadAvailableModels(): Promise<void> {
   }
 }
 
+async function initializeAuth(): Promise<void> {
+  authLoading.value = true
+  try {
+    authUser.value = await fetchVisionAuthUser()
+    if (authUser.value) {
+      await Promise.all([
+        loadAvailableModels(),
+        loadConversations(),
+      ])
+      restoreDraft()
+    }
+  } catch {
+    authUser.value = null
+  } finally {
+    authLoading.value = false
+  }
+}
+
+async function submitLogin(): Promise<void> {
+  const username = loginUsername.value.trim()
+  if (!username || !loginPassword.value || loginSubmitting.value) return
+
+  loginSubmitting.value = true
+  loginError.value = ''
+  try {
+    authUser.value = await signInVisionAccount(username, loginPassword.value)
+    loginPassword.value = ''
+    await Promise.all([
+      loadAvailableModels(),
+      loadConversations(),
+    ])
+    restoreDraft()
+  } catch {
+    loginError.value = '账号或密码错误，请重新输入。'
+  } finally {
+    loginSubmitting.value = false
+  }
+}
+
+async function logout(): Promise<void> {
+  abortActiveRequest()
+  abortUploads()
+  try {
+    await signOutVisionAccount()
+  } finally {
+    authUser.value = null
+    sessions.value = []
+    conversationKey.value = ''
+    senderValue.value = ''
+    attachments.value = []
+    responding.value = false
+    historyOpen.value = false
+    modeMenuOpen.value = false
+  }
+}
+
 function selectPrompt(item: VisAiPromptItem): void {
   senderValue.value = item.descriptions?.[0] ?? item.label
 }
 
-function addAttachment(): void {
-  if (attachments.value.some((item) => item.key === 'demo-requirement')) return
+function extensionOf(name: string): string {
+  return name.split('.').pop()?.toLowerCase() ?? ''
+}
 
-  attachments.value = [
-    {
-      key: 'demo-requirement',
-      name: '需求说明.doc',
-      type: 'file',
-      extension: 'doc',
-      fileIconType: 'word',
-      size: '6.83kb',
-      removable: true,
-    },
-  ]
+function isImageFile(file: File): boolean {
+  return ['png', 'jpg', 'jpeg', 'webp'].includes(extensionOf(file.name))
+}
+
+function formatFileSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+}
+
+function openAttachmentPicker(): void {
+  fileInputRef.value?.click()
+}
+
+async function uploadOneFile(file: File, existingKey?: VisAiKey): Promise<void> {
+  const temporaryKey = String(existingKey || `upload-${crypto.randomUUID()}`)
+  const optimistic: VisAiAttachmentItem = {
+    key: temporaryKey,
+    name: file.name,
+    type: isImageFile(file) ? 'image' : 'file',
+    extension: extensionOf(file.name),
+    size: formatFileSize(file.size),
+    uploading: true,
+    progress: 0,
+    status: 'uploading',
+    removable: true,
+  }
+  const existingIndex = attachments.value.findIndex(
+    (item) => String(item.key) === temporaryKey,
+  )
+  if (existingIndex >= 0) attachments.value.splice(existingIndex, 1, optimistic)
+  else attachments.value.push(optimistic)
+  const controller = new AbortController()
+  uploadControllers.set(temporaryKey, controller)
+  retryFiles.set(temporaryKey, file)
+
+  try {
+    const [uploaded] = await uploadVisionAiFiles([file], (progress) => {
+      const current = attachments.value.find((item) => item.key === temporaryKey)
+      if (current) current.progress = progress
+    }, controller.signal)
+    if (!uploaded) throw new Error('服务器没有返回已上传文件。')
+    const index = attachments.value.findIndex((item) => item.key === temporaryKey)
+    if (index >= 0) {
+      attachments.value.splice(index, 1, {
+        ...uploaded,
+        uploading: false,
+        progress: 100,
+        status: 'ready',
+        removable: true,
+      })
+      retryFiles.delete(temporaryKey)
+    } else {
+      await deleteVisionAiFile(uploaded.fileId)
+    }
+  } catch (error) {
+    if (error instanceof DOMException && error.name === 'AbortError') {
+      attachments.value = attachments.value.filter(
+        (item) => String(item.key) !== temporaryKey,
+      )
+      retryFiles.delete(temporaryKey)
+      return
+    }
+    const current = attachments.value.find((item) => item.key === temporaryKey)
+    if (current) {
+      current.uploading = false
+      current.status = 'error'
+      current.error = error instanceof Error ? error.message : '上传失败。'
+    }
+    uploadError.value = error instanceof Error ? error.message : '上传失败。'
+  } finally {
+    uploadControllers.delete(temporaryKey)
+  }
+}
+
+function uploadFiles(input: FileList | File[]): void {
+  uploadError.value = ''
+  const availableSlots = Math.max(0, 8 - attachments.value.length)
+  const files = Array.from(input).slice(0, availableSlots)
+  if (!files.length) {
+    uploadError.value = availableSlots === 0
+      ? '单次会话最多添加 8 个附件。'
+      : '没有可上传的文件。'
+    return
+  }
+  if (Array.from(input).length > availableSlots) {
+    uploadError.value = `已达到 8 个附件上限，仅添加前 ${availableSlots} 个。`
+  }
+  files.forEach((file) => void uploadOneFile(file))
+}
+
+function chooseAttachmentFiles(event: Event): void {
+  const input = event.target as HTMLInputElement
+  if (input.files) uploadFiles(input.files)
+  input.value = ''
 }
 
 function removeAttachment(item: VisAiAttachmentItem): void {
   attachments.value = attachments.value.filter((entry) => entry.key !== item.key)
+  uploadControllers.get(String(item.key))?.abort()
+  uploadControllers.delete(String(item.key))
+  retryFiles.delete(String(item.key))
+  if (item.fileId) void deleteVisionAiFile(item.fileId)
 }
 
-function createSession(question: string): AiChatSession {
-  requestSerial += 1
+function retryAttachment(item: VisAiAttachmentItem): void {
+  const file = retryFiles.get(String(item.key))
+  if (!file || item.status !== 'error') return
+  uploadError.value = ''
+  void uploadOneFile(file, item.key)
+}
+
+function containsFiles(event: DragEvent): boolean {
+  return Array.from(event.dataTransfer?.types ?? []).includes('Files')
+}
+
+function startFileDrag(event: DragEvent): void {
+  if (!containsFiles(event) || !authUser.value) return
+  fileDragDepth += 1
+  isFileDragActive.value = true
+}
+
+function continueFileDrag(event: DragEvent): void {
+  if (!containsFiles(event)) return
+  if (event.dataTransfer) event.dataTransfer.dropEffect = 'copy'
+}
+
+function leaveFileDrag(event: DragEvent): void {
+  if (!containsFiles(event)) return
+  fileDragDepth = Math.max(0, fileDragDepth - 1)
+  if (fileDragDepth === 0) isFileDragActive.value = false
+}
+
+function dropFiles(event: DragEvent): void {
+  fileDragDepth = 0
+  isFileDragActive.value = false
+  if (event.dataTransfer?.files.length) uploadFiles(event.dataTransfer.files)
+}
+
+async function createSession(question: string): Promise<AiChatSession> {
+  const conversation = await createVisionAiConversation(question.slice(0, 28))
   const session: AiChatSession = {
-    id: `conversation-${Date.now()}-${requestSerial}`,
-    title: question.slice(0, 28),
-    pinned: false,
+    ...conversation,
     turns: [],
+    turnsLoaded: true,
   }
 
   sessions.value = [session, ...sessions.value]
@@ -234,26 +511,16 @@ function createSession(question: string): AiChatSession {
   return session
 }
 
-function messagesForTurn(session: AiChatSession, turnIndex: number): VisionAiMessage[] {
-  const messages: VisionAiMessage[] = []
-
-  for (const turn of session.turns.slice(0, turnIndex)) {
-    messages.push({ role: 'user', content: turn.question })
-    if (turn.answer.trim()) {
-      messages.push({ role: 'assistant', content: turn.answer })
-    }
-  }
-
-  messages.push({ role: 'user', content: session.turns[turnIndex].question })
-  return messages
-}
-
 function errorMarkdown(message: string): string {
   const normalizedMessage = message.replace(/\s+/g, ' ').trim()
   return `> **AI 服务暂时不可用**\n>\n> ${normalizedMessage || '请稍后重试。'}`
 }
 
-async function runTurn(session: AiChatSession, turnIndex: number): Promise<void> {
+async function runTurn(
+  session: AiChatSession,
+  turnIndex: number,
+  regenerate = false,
+): Promise<void> {
   abortActiveRequest()
 
   const turn = session.turns[turnIndex]
@@ -267,14 +534,20 @@ async function runTurn(session: AiChatSession, turnIndex: number): Promise<void>
   turn.feedback = null
 
   try {
-    await streamVisionAiChat(
+    await streamVisionAiConversation(
+      session.id,
       {
         model: String(turn.model),
-        messages: messagesForTurn(session, turnIndex),
+        question: regenerate ? undefined : turn.question,
+        regenerateTurnId: regenerate ? turn.id : undefined,
         thinking: turn.thinking,
         reasoningEffort: selectedSpeed.value === 'ultra' ? 'max' : 'high',
+        attachments: regenerate ? undefined : turn.attachments,
       },
       {
+        onStart: ({ turnId }) => {
+          turn.id = turnId
+        },
         onReasoning: (content) => {
           turn.reasoning += content
         },
@@ -307,13 +580,28 @@ async function runTurn(session: AiChatSession, turnIndex: number): Promise<void>
   }
 }
 
-function submitQuestion(payload: VisAiSenderSubmitPayload): void {
-  const question = payload.value.trim()
-  if (!question) return
+async function submitQuestion(payload: VisAiSenderSubmitPayload): Promise<void> {
+  const question = payload.value.trim() || '请分析这些附件。'
+  const attachmentsReady = payload.attachments.every((item) => item.status === 'ready')
+  if (
+    (!question && !payload.attachments.length)
+    || !attachmentsReady
+    || responding.value
+    || !authUser.value
+  ) return
 
-  const session = activeSession.value ?? createSession(question)
+  let session = activeSession.value
+  if (!session) {
+    try {
+      session = await createSession(question)
+    } catch (error) {
+      loginError.value = error instanceof Error ? error.message : '创建会话失败。'
+      return
+    }
+  }
+  const timestamp = new Date().toISOString()
   const turn: AiChatTurn = {
-    id: `turn-${Date.now()}-${session.turns.length + 1}`,
+    id: `pending-${Date.now()}-${session.turns.length + 1}`,
     question,
     answer: '',
     reasoning: '',
@@ -323,13 +611,16 @@ function submitQuestion(payload: VisAiSenderSubmitPayload): void {
     thinkingExpanded: true,
     feedback: null,
     attachments: payload.attachments.map((item) => ({ ...item })),
+    createdAt: timestamp,
+    updatedAt: timestamp,
   }
 
   session.turns.push(turn)
   senderValue.value = ''
   attachments.value = []
   selectedSkill.value = ''
-  void runTurn(session, session.turns.length - 1)
+  saveDraft()
+  await runTurn(session, session.turns.length - 1)
 }
 
 function stopResponse(): void {
@@ -344,7 +635,7 @@ function regenerateTurn(turnId: string): void {
   if (turnIndex < 0) return
 
   session.turns.splice(turnIndex + 1)
-  void runTurn(session, turnIndex)
+  void runTurn(session, turnIndex, true)
 }
 
 async function copyAnswer(answer: string): Promise<void> {
@@ -364,24 +655,60 @@ function thinkingContent(turn: AiChatTurn): string {
   return turn.status === 'streaming' ? '模型正在组织回答，请稍候。' : ''
 }
 
-function selectConversation(item: VisAiConversationItemData): void {
+async function selectConversation(item: VisAiConversationItemData): Promise<void> {
   abortActiveRequest()
+  saveDraft()
   conversationKey.value = item.key
-  senderValue.value = ''
-  attachments.value = []
-  selectedSkill.value = ''
+  restoreDraft(item.key)
   responding.value = false
+  const session = sessions.value.find((entry) => entry.id === String(item.key))
+  if (session) await loadConversationTurns(session)
 }
 
-function toggleConversationPin(item: VisAiConversationItemData): void {
+async function toggleConversationPin(item: VisAiConversationItemData): Promise<void> {
   const target = sessions.value.find((session) => session.id === String(item.key))
   if (!target) return
-  target.pinned = !target.pinned
+  const pinned = !target.pinned
+  target.pinned = pinned
+  try {
+    const conversation = await updateVisionAiConversation(target.id, { pinned })
+    Object.assign(target, conversation)
+  } catch {
+    target.pinned = !pinned
+  }
+}
+
+async function handleConversationAction(payload: {
+  item: VisAiConversationItemData
+  action: VisAiConversationAction
+}): Promise<void> {
+  const target = sessions.value.find(
+    (session) => session.id === String(payload.item.key),
+  )
+  if (!target || payload.action === 'pin' || payload.action === 'share') return
+
+  if (payload.action === 'rename') {
+    const title = window.prompt('重命名会话', target.title)?.trim()
+    if (!title || title === target.title) return
+    const conversation = await updateVisionAiConversation(target.id, { title })
+    Object.assign(target, conversation)
+    return
+  }
+
+  if (payload.action === 'delete') {
+    if (!window.confirm(`确认删除会话“${target.title}”？`)) return
+    await deleteVisionAiConversation(target.id)
+    sessions.value = sessions.value.filter((session) => session.id !== target.id)
+    if (conversationKey.value === target.id) {
+      conversationKey.value = sessions.value[0]?.id ?? ''
+      if (sessions.value[0]) await loadConversationTurns(sessions.value[0])
+    }
+  }
 }
 
 function chooseHistory(item: VisAiConversationItemData): void {
   historyOpen.value = false
-  selectConversation(item)
+  void selectConversation(item)
 }
 
 function chooseModeAction(): void {
@@ -467,6 +794,17 @@ watch(
 )
 
 watch(
+  [
+    senderValue,
+    selectedSkill,
+    () => attachments.value.map((item) => (
+      `${String(item.key)}:${item.status}:${item.progress ?? 0}`
+    )).join('|'),
+  ],
+  () => saveDraft(),
+)
+
+watch(
   () => currentTurns.value
     .map((turn) => `${turn.id}:${turn.reasoning.length}:${turn.answer.length}:${turn.status}`)
     .join('|'),
@@ -479,11 +817,12 @@ watch(
 
 onMounted(() => {
   window.addEventListener('resize', keepFloatWindowInViewport)
-  void loadAvailableModels()
+  void initializeAuth()
 })
 
 onBeforeUnmount(() => {
   abortActiveRequest()
+  abortUploads()
   stopFloatDrag()
   window.removeEventListener('resize', keepFloatWindowInViewport)
 })
@@ -502,8 +841,88 @@ onBeforeUnmount(() => {
     ]"
     :style="floatPositionStyle"
     aria-label="小 VI 智能助理"
+    @dragenter.prevent="startFileDrag"
+    @dragover.prevent="continueFileDrag"
+    @dragleave.prevent="leaveFileDrag"
+    @drop.prevent="dropFiles"
   >
-    <template v-if="mode === 'independent'">
+    <input
+      ref="fileInputRef"
+      class="ai-assistant__file-input"
+      type="file"
+      multiple
+      aria-hidden="true"
+      tabindex="-1"
+      :accept="acceptedAttachmentTypes"
+      @change="chooseAttachmentFiles"
+    >
+    <div v-if="isFileDragActive" class="ai-assistant__drop-overlay">
+      <span class="ai-assistant__drop-icon" aria-hidden="true">＋</span>
+      <strong>松开以上传文件或图片</strong>
+      <span>最多 8 个文件，单个不超过 10 MB</span>
+    </div>
+    <div v-if="authLoading" class="ai-assistant__auth-state">
+      <span class="ai-assistant__auth-spinner" aria-hidden="true" />
+      <span>正在读取登录状态</span>
+    </div>
+
+    <form
+      v-else-if="!authUser"
+      class="ai-assistant__login"
+      @submit.prevent="submitLogin"
+    >
+      <VisButton
+        class="ai-assistant__login-close"
+        variant="text"
+        size="md"
+        icon-only
+        icon-name="x-close"
+        label="关闭 AI 助手"
+        @click="closeAssistant"
+      />
+      <span class="ai-assistant__login-logo" aria-hidden="true" v-html="aiLogoMarkup" />
+      <div class="ai-assistant__login-heading">
+        <h2>登录小 VI 智能助理</h2>
+        <p>登录后，会话将在当前账号下云端保存。</p>
+      </div>
+      <div class="ai-assistant__login-fields">
+        <label>
+          <span>账号</span>
+          <VisInput
+            v-model="loginUsername"
+            name="username"
+            autocomplete="username"
+            placeholder="请输入账号"
+            prefix
+            prefix-icon="user-01"
+          />
+        </label>
+        <label>
+          <span>密码</span>
+          <VisInput
+            v-model="loginPassword"
+            name="password"
+            type="password"
+            autocomplete="current-password"
+            placeholder="请输入密码"
+            prefix
+            prefix-icon="lock-01"
+          />
+        </label>
+      </div>
+      <p v-if="loginError" class="ai-assistant__login-error">{{ loginError }}</p>
+      <VisButton
+        class="ai-assistant__login-submit"
+        html-type="submit"
+        size="lg"
+        :loading="loginSubmitting"
+        :disabled="!loginUsername.trim() || !loginPassword"
+      >
+        登录
+      </VisButton>
+    </form>
+
+    <template v-else-if="mode === 'independent'">
       <VisAiConversation
         v-if="!conversationCollapsed"
         v-model="conversationKey"
@@ -513,6 +932,7 @@ onBeforeUnmount(() => {
         @create="resetConversation"
         @select="selectConversation"
         @pin="toggleConversationPin"
+        @action="handleConversationAction"
       />
 
       <VisAiConversation
@@ -548,6 +968,14 @@ onBeforeUnmount(() => {
             <VisDropdownItem label="浮动窗口" @select="setMode('float')" />
             <VisDropdownItem label="右侧吸附" @select="setMode('copilot')" />
           </VisDropdown>
+          <VisButton
+            variant="text"
+            size="md"
+            icon-only
+            icon-name="log-out-01"
+            :label="`退出 ${authUser.displayUsername ?? authUser.username ?? authUser.name}`"
+            @click="logout"
+          />
           <VisButton
             variant="text"
             size="md"
@@ -637,9 +1065,12 @@ onBeforeUnmount(() => {
             :loading="responding"
             @submit="submitQuestion"
             @stop="stopResponse"
-            @attachment-request="addAttachment"
+            @attachment-request="openAttachmentPicker"
+            @files-request="uploadFiles"
             @remove-attachment="removeAttachment"
+            @retry-attachment="retryAttachment"
           />
+          <p v-if="uploadError" class="ai-assistant__upload-error">{{ uploadError }}</p>
         </div>
       </div>
     </template>
@@ -704,6 +1135,14 @@ onBeforeUnmount(() => {
             </template>
             <VisDropdownItem :label="modeActionLabel" @select="chooseModeAction" />
           </VisDropdown>
+          <VisButton
+            variant="text"
+            size="md"
+            icon-only
+            icon-name="log-out-01"
+            :label="`退出 ${authUser.displayUsername ?? authUser.username ?? authUser.name}`"
+            @click="logout"
+          />
           <VisButton
             variant="text"
             size="md"
@@ -793,9 +1232,12 @@ onBeforeUnmount(() => {
         :loading="responding"
         @submit="submitQuestion"
         @stop="stopResponse"
-        @attachment-request="addAttachment"
+        @attachment-request="openAttachmentPicker"
+        @files-request="uploadFiles"
         @remove-attachment="removeAttachment"
+        @retry-attachment="retryAttachment"
       />
+      <p v-if="uploadError" class="ai-assistant__upload-error">{{ uploadError }}</p>
     </template>
   </section>
 </template>
@@ -809,6 +1251,174 @@ onBeforeUnmount(() => {
   color: var(--color-text-primary);
   background: var(--color-bg-canvas);
   font-family: var(--font-family-text);
+}
+
+.ai-assistant__file-input {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.ai-assistant__drop-overlay {
+  position: absolute;
+  z-index: 100;
+  inset: var(--space-12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: var(--space-8);
+  border: 2px dashed var(--color-border-brand);
+  border-radius: var(--radius-lg);
+  color: var(--color-text-brand-primary);
+  background: color-mix(in srgb, var(--color-bg-brand-primary) 94%, transparent);
+  text-align: center;
+  pointer-events: none;
+}
+
+.ai-assistant__drop-overlay > span:last-child {
+  color: var(--color-text-secondary);
+  font-size: var(--font-text-sm-size);
+}
+
+.ai-assistant__drop-icon {
+  display: grid;
+  inline-size: 48px;
+  block-size: 48px;
+  place-items: center;
+  border-radius: 50%;
+  color: var(--color-fg-white);
+  background: var(--color-bg-brand-solid);
+  font-size: 28px;
+  line-height: 1;
+}
+
+.ai-assistant__upload-error {
+  margin: calc(var(--space-8) * -1) var(--space-16) var(--space-4);
+  color: var(--color-text-error-primary);
+  font-size: var(--font-text-sm-size);
+  line-height: var(--font-text-sm-line-height);
+}
+
+.ai-assistant__auth-state,
+.ai-assistant__login {
+  box-sizing: border-box;
+  min-inline-size: 0;
+  min-block-size: 0;
+  flex: 1 1 0;
+  align-self: stretch;
+}
+
+.ai-assistant__auth-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-8);
+  color: var(--color-text-tertiary);
+  font-size: var(--font-text-md-size);
+}
+
+.ai-assistant__auth-spinner {
+  inline-size: var(--space-16);
+  block-size: var(--space-16);
+  border: 2px solid var(--color-border-secondary);
+  border-block-start-color: var(--color-fg-brand-primary);
+  border-radius: 50%;
+  animation: ai-auth-spin 720ms linear infinite;
+}
+
+.ai-assistant__login {
+  position: relative;
+  inline-size: min(360px, 100%);
+  margin: auto;
+  padding: var(--space-32);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--space-24);
+}
+
+.ai-assistant.mode-copilot .ai-assistant__login,
+.ai-assistant.mode-float .ai-assistant__login {
+  padding-inline: 0;
+}
+
+.ai-assistant__login-close {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-end: 0;
+}
+
+.ai-assistant__login-logo {
+  inline-size: var(--space-48);
+  block-size: var(--space-48);
+  display: block;
+}
+
+.ai-assistant__login-logo :deep(svg) {
+  inline-size: 100%;
+  block-size: 100%;
+  display: block;
+}
+
+.ai-assistant__login-heading {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.ai-assistant__login-heading h2,
+.ai-assistant__login-heading p,
+.ai-assistant__login-error {
+  margin: 0;
+}
+
+.ai-assistant__login-heading h2 {
+  color: var(--color-text-primary);
+  font-size: var(--font-heading-h4-size);
+  font-weight: 600;
+  line-height: var(--font-heading-h4-line-height);
+}
+
+.ai-assistant__login-heading p {
+  color: var(--color-text-tertiary);
+  font-size: var(--font-text-md-size);
+  line-height: var(--font-text-md-line-height);
+}
+
+.ai-assistant__login-fields {
+  display: grid;
+  gap: var(--space-16);
+}
+
+.ai-assistant__login-fields label {
+  display: grid;
+  gap: var(--space-8);
+  color: var(--color-text-secondary);
+  font-size: var(--font-text-md-size);
+  font-weight: 500;
+}
+
+.ai-assistant__login-fields :deep(.vis-input) {
+  inline-size: 100%;
+}
+
+.ai-assistant__login-error {
+  color: var(--color-text-danger-primary);
+  font-size: var(--font-text-sm-size);
+  line-height: var(--font-text-sm-line-height);
+}
+
+.ai-assistant__login-submit {
+  inline-size: 100%;
+}
+
+@keyframes ai-auth-spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .ai-assistant.mode-copilot,

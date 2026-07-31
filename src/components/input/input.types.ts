@@ -21,5 +21,6 @@ export interface VisInputProps {
   maxLength?: number | boolean
   type?: string
   name?: string
+  autocomplete?: string
   ariaLabel?: string
 }

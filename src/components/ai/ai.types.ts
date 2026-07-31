@@ -66,6 +66,7 @@ export interface VisAiSkillProps {
 
 export interface VisAiAttachmentItem {
   key: VisAiKey
+  fileId?: string
   name: string
   type?: VisAiAttachmentType
   extension?: string
@@ -75,6 +76,8 @@ export interface VisAiAttachmentItem {
   alt?: string
   uploading?: boolean
   progress?: number
+  status?: 'uploading' | 'parsing' | 'ready' | 'error'
+  error?: string
   removable?: boolean
 }
 

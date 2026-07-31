@@ -4,6 +4,22 @@ import test from 'node:test'
 
 import { createVisionAiServer } from './app.mjs'
 
+function testRuntime(userId = 'test-user') {
+  return {
+    authService: {
+      handleRequest: async (_req, res) => {
+        res.writeHead(404)
+        res.end()
+      },
+      getSession: async () => ({
+        user: { id: userId, name: 'Test User' },
+        session: { id: 'test-session' },
+      }),
+    },
+    conversationStore: {},
+  }
+}
+
 test('streams normalized DeepSeek reasoning and markdown content for the selected model', async (context) => {
   let upstreamUrl
   let upstreamBody
@@ -33,12 +49,13 @@ test('streams normalized DeepSeek reasoning and markdown content for the selecte
     })
   }
 
-  const server = createVisionAiServer({
+  const server = await createVisionAiServer({
     env: {
       DEEPSEEK_API_KEY: 'test-key',
       AI_RATE_LIMIT_PER_MINUTE: '100',
     },
     fetchImpl,
+    runtime: testRuntime(),
   })
   server.listen(0, '127.0.0.1')
   await once(server, 'listening')
@@ -98,12 +115,13 @@ test('streams normalized Ollama thinking and content for a cloud model', async (
     })
   }
 
-  const server = createVisionAiServer({
+  const server = await createVisionAiServer({
     env: {
       OLLAMA_API_KEY: 'ollama-test-key',
       AI_RATE_LIMIT_PER_MINUTE: '100',
     },
     fetchImpl,
+    runtime: testRuntime(),
   })
   server.listen(0, '127.0.0.1')
   await once(server, 'listening')
@@ -138,7 +156,7 @@ test('streams normalized Ollama thinking and content for a cloud model', async (
 
 test('rejects models outside the server allowlist', async (context) => {
   let upstreamCalled = false
-  const server = createVisionAiServer({
+  const server = await createVisionAiServer({
     env: {
       DEEPSEEK_API_KEY: 'test-key',
       AI_RATE_LIMIT_PER_MINUTE: '100',
@@ -147,6 +165,7 @@ test('rejects models outside the server allowlist', async (context) => {
       upstreamCalled = true
       throw new Error('must not be called')
     },
+    runtime: testRuntime(),
   })
   server.listen(0, '127.0.0.1')
   await once(server, 'listening')
@@ -169,12 +188,13 @@ test('rejects models outside the server allowlist', async (context) => {
 })
 
 test('lists model availability without exposing credentials', async (context) => {
-  const server = createVisionAiServer({
+  const server = await createVisionAiServer({
     env: {
       DEEPSEEK_API_KEY: 'deepseek-secret',
       OLLAMA_API_KEY: 'ollama-secret',
       AI_DEFAULT_MODEL: 'kimi-k2.7-code',
     },
+    runtime: testRuntime(),
   })
   server.listen(0, '127.0.0.1')
   await once(server, 'listening')
@@ -199,12 +219,13 @@ test('lists model availability without exposing credentials', async (context) =>
 })
 
 test('can disable an account-gated model without removing it from the catalog', async (context) => {
-  const server = createVisionAiServer({
+  const server = await createVisionAiServer({
     env: {
       OLLAMA_API_KEY: 'ollama-secret',
       OLLAMA_KIMI_ENABLED: 'false',
       AI_DEFAULT_MODEL: 'kimi-k2.7-code',
     },
+    runtime: testRuntime(),
   })
   server.listen(0, '127.0.0.1')
   await once(server, 'listening')
@@ -233,7 +254,10 @@ test('can disable an account-gated model without removing it from the catalog', 
 })
 
 test('reports whether the server key is configured', async (context) => {
-  const server = createVisionAiServer({ env: {} })
+  const server = await createVisionAiServer({
+    env: {},
+    runtime: testRuntime(),
+  })
   server.listen(0, '127.0.0.1')
   await once(server, 'listening')
   context.after(() => server.close())
@@ -243,6 +267,8 @@ test('reports whether the server key is configured', async (context) => {
 
   assert.deepEqual(await response.json(), {
     status: 'ok',
+    auth: 'enabled',
+    database: 'connected',
     defaultModel: 'deepseek-v4-flash',
     configured: false,
     models: [],

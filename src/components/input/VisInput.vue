@@ -25,6 +25,7 @@ const props = withDefaults(
     maxLength?: number | boolean
     type?: string
     name?: string
+    autocomplete?: string
     ariaLabel?: string
   }>(),
   {
@@ -45,6 +46,7 @@ const props = withDefaults(
     maxLength: false,
     type: 'text',
     name: undefined,
+    autocomplete: undefined,
     ariaLabel: undefined,
   },
 )
@@ -162,6 +164,7 @@ watch(
         class="vis-input__control"
         :type="type"
         :name="name"
+        :autocomplete="autocomplete"
         :value="displayValue"
         :placeholder="placeholder"
         :disabled="disabled"

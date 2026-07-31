@@ -31,6 +31,17 @@ rollback() {
     rsync -a --delete "${backup_dir}/server/" "${app_dir}/server/"
   fi
 
+  if [[ -d "${backup_dir}/node_modules" ]]; then
+    mkdir -p "${app_dir}/node_modules"
+    rsync -a --delete "${backup_dir}/node_modules/" "${app_dir}/node_modules/"
+  fi
+
+  for manifest in package.json package-lock.json; do
+    if [[ -f "${backup_dir}/${manifest}" ]]; then
+      cp "${backup_dir}/${manifest}" "${app_dir}/${manifest}"
+    fi
+  done
+
   if [[ -f "${backup_dir}/.deploy-version" ]]; then
     cp "${backup_dir}/.deploy-version" "${version_file}"
   else
@@ -53,6 +64,9 @@ test -f "${staging_dir}/server/app.mjs"
 test -f "${staging_dir}/server/deepseek.mjs"
 test -f "${staging_dir}/server/models.mjs"
 test -f "${staging_dir}/server/ollama.mjs"
+test -f "${staging_dir}/node_modules/better-auth/package.json"
+test -f "${staging_dir}/package.json"
+test -f "${staging_dir}/package-lock.json"
 
 if [[ -d "${app_dir}/dist/docs" ]]; then
   mkdir -p "${backup_dir}/dist/docs"
@@ -64,13 +78,26 @@ if [[ -d "${app_dir}/server" ]]; then
   rsync -a "${app_dir}/server/" "${backup_dir}/server/"
 fi
 
+if [[ -d "${app_dir}/node_modules" ]]; then
+  mkdir -p "${backup_dir}/node_modules"
+  rsync -a "${app_dir}/node_modules/" "${backup_dir}/node_modules/"
+fi
+
+for manifest in package.json package-lock.json; do
+  if [[ -f "${app_dir}/${manifest}" ]]; then
+    cp "${app_dir}/${manifest}" "${backup_dir}/${manifest}"
+  fi
+done
+
 if [[ -f "${version_file}" ]]; then
   cp "${version_file}" "${backup_dir}/.deploy-version"
 fi
 
-mkdir -p "${app_dir}/dist/docs" "${app_dir}/server"
+mkdir -p "${app_dir}/dist/docs" "${app_dir}/server" "${app_dir}/node_modules" "${app_dir}/data"
 rsync -a --delete "${staging_dir}/dist/docs/" "${app_dir}/dist/docs/"
 rsync -a --delete "${staging_dir}/server/" "${app_dir}/server/"
+rsync -a --delete "${staging_dir}/node_modules/" "${app_dir}/node_modules/"
+cp "${staging_dir}/package.json" "${staging_dir}/package-lock.json" "${app_dir}/"
 printf '%s\n' "${release_id}" > "${version_file}"
 
 systemctl restart vision-ai
