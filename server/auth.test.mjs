@@ -24,7 +24,7 @@ async function signIn(baseUrl, username, password) {
   return sessionCookie(response)
 }
 
-test('seeds ten accounts, blocks registration, and isolates cloud conversations', async (context) => {
+test('seeds the shared and personal accounts, blocks registration, and isolates cloud conversations', async (context) => {
   const directory = mkdtempSync(join(tmpdir(), 'vision-auth-test-'))
   let upstreamBody
   const encoder = new TextEncoder()
@@ -79,6 +79,8 @@ test('seeds ten accounts, blocks registration, and isolates cloud conversations'
   assert.equal(registrationResponse.status, 403)
 
   const firstCookie = await signIn(baseUrl, 'vision01', 'test')
+  const personalCookie = await signIn(baseUrl, 'lyl', 'dameinv')
+  assert.match(personalCookie, /vision-auth\.session_token=/)
   const createResponse = await fetch(`${baseUrl}/api/ai/conversations`, {
     method: 'POST',
     headers: {

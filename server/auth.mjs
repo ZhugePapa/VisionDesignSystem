@@ -9,6 +9,7 @@ import { admin, username } from 'better-auth/plugins'
 
 const DEV_AUTH_SECRET = 'vision-design-system-local-auth-secret-change-me'
 const DEV_SEED_PASSWORD = 'vision123456'
+const LYL_SEED_PASSWORD = 'dameinv'
 
 function normalizedOrigins(env) {
   return [
@@ -89,21 +90,19 @@ async function migrateAuth(auth) {
 async function seedAccounts(auth, database, env) {
   const password = seedPassword(env)
 
-  for (let index = 1; index <= 10; index += 1) {
-    const suffix = String(index).padStart(2, '0')
-    const usernameValue = `vision${suffix}`
+  async function seedAccount({ usernameValue, displayName, accountPassword }) {
     const email = `${usernameValue}@accounts.vision.local`
     const existing = database
       .prepare('SELECT id FROM "user" WHERE email = ? OR username = ? LIMIT 1')
       .get(email, usernameValue)
 
-    if (existing) continue
+    if (existing) return
 
     await auth.api.createUser({
       body: {
         email,
-        name: `Vision 用户 ${suffix}`,
-        password,
+        name: displayName,
+        password: accountPassword,
         role: 'user',
         data: {
           username: usernameValue,
@@ -112,6 +111,22 @@ async function seedAccounts(auth, database, env) {
       },
     })
   }
+
+  for (let index = 1; index <= 10; index += 1) {
+    const suffix = String(index).padStart(2, '0')
+    const usernameValue = `vision${suffix}`
+    await seedAccount({
+      usernameValue,
+      displayName: `Vision 用户 ${suffix}`,
+      accountPassword: password,
+    })
+  }
+
+  await seedAccount({
+    usernameValue: 'lyl',
+    displayName: 'lyl',
+    accountPassword: LYL_SEED_PASSWORD,
+  })
 }
 
 export async function createAuthService(env = process.env) {
@@ -140,4 +155,3 @@ export async function createAuthService(env = process.env) {
     close: () => database.close(),
   }
 }
-

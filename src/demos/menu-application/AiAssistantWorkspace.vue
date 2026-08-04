@@ -28,6 +28,7 @@ import {
 } from '../../components/dropdown'
 import VisInput from '../../components/input/VisInput.vue'
 import { VisMarkdown } from '../../components/markdown'
+import { VisTooltip } from '../../components/tooltip'
 import {
   fetchVisionAiModels,
 } from '../../services/ai/chat-client'
@@ -62,9 +63,12 @@ interface AiChatSession extends VisionAiConversation {
   turnsLoaded: boolean
 }
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   mode: AiAssistantMode
-}>()
+  modeLocked?: boolean
+}>(), {
+  modeLocked: false,
+})
 
 const emit = defineEmits<{
   'update:mode': [mode: AiAssistantMode]
@@ -160,6 +164,7 @@ const conversationItems = computed<VisAiConversationItemData[]>(() => (
     }))
     .sort((left, right) => Number(Boolean(right.pinned)) - Number(Boolean(left.pinned)))
 ))
+const hasHistory = computed(() => conversationItems.value.length > 0)
 const hasChat = computed(() => currentTurns.value.length > 0)
 const modeActionLabel = computed(() => (
   props.mode === 'float' ? '右侧吸附' : '浮动窗口'
@@ -223,6 +228,7 @@ function restoreDraft(conversationId: VisAiKey = conversationKey.value): void {
 }
 
 function setMode(mode: AiAssistantMode): void {
+  if (props.modeLocked) return
   modeMenuOpen.value = false
   emit('update:mode', mode)
 }
@@ -785,6 +791,13 @@ function keepFloatWindowInViewport(): void {
 }
 
 watch(
+  hasHistory,
+  (value) => {
+    if (!value) historyOpen.value = false
+  },
+)
+
+watch(
   () => props.mode,
   () => {
     stopFloatDrag()
@@ -837,6 +850,7 @@ onBeforeUnmount(() => {
       {
         'has-chat': hasChat,
         'is-dragging': isDraggingFloat,
+        'is-mode-locked': modeLocked,
       },
     ]"
     :style="floatPositionStyle"
@@ -872,6 +886,7 @@ onBeforeUnmount(() => {
       @submit.prevent="submitLogin"
     >
       <VisButton
+        v-if="!modeLocked"
         class="ai-assistant__login-close"
         variant="text"
         size="md"
@@ -946,7 +961,54 @@ onBeforeUnmount(() => {
 
       <div class="ai-assistant__independent-content">
         <div class="ai-assistant__independent-actions">
+          <div v-if="modeLocked" class="ai-assistant__locked-session-actions">
+            <VisTooltip content="新会话" position="bottom">
+              <VisButton
+                variant="text"
+                size="md"
+                icon-only
+                icon-name="message-plus-circle"
+                label="发起新会话"
+                @click="resetConversation"
+              />
+            </VisTooltip>
+            <VisTooltip content="历史会话" position="bottom" :disabled="historyOpen">
+              <VisDropdown
+                v-if="hasHistory"
+                v-model:open="historyOpen"
+                class="ai-assistant__header-dropdown ai-assistant__history-dropdown"
+              >
+                <template #trigger="{ toggle }">
+                  <VisButton
+                    variant="text"
+                    size="md"
+                    icon-only
+                    icon-name="clock-fast-forward"
+                    label="历史会话"
+                    @click="toggle"
+                  />
+                </template>
+                <VisDropdownItem
+                  v-for="item in conversationItems.slice(0, 6)"
+                  :key="String(item.key)"
+                  :label="item.label"
+                  :active="conversationKey === item.key"
+                  @select="chooseHistory(item)"
+                />
+              </VisDropdown>
+              <VisButton
+                v-else
+                variant="text"
+                size="md"
+                icon-only
+                icon-name="clock-fast-forward"
+                label="历史会话"
+                disabled
+              />
+            </VisTooltip>
+          </div>
           <VisButton
+            v-if="!modeLocked"
             variant="text"
             size="md"
             icon-only
@@ -954,7 +1016,11 @@ onBeforeUnmount(() => {
             label="退出全屏"
             @click="setMode('copilot')"
           />
-          <VisDropdown v-model:open="modeMenuOpen" class="ai-assistant__header-dropdown">
+          <VisDropdown
+            v-if="!modeLocked"
+            v-model:open="modeMenuOpen"
+            class="ai-assistant__header-dropdown"
+          >
             <template #trigger="{ toggle }">
               <VisButton
                 variant="text"
@@ -977,6 +1043,7 @@ onBeforeUnmount(() => {
             @click="logout"
           />
           <VisButton
+            v-if="!modeLocked"
             variant="text"
             size="md"
             icon-only
@@ -1087,70 +1154,95 @@ onBeforeUnmount(() => {
         <strong>小 VI 智能助理</strong>
         <span class="ai-assistant__header-spacer" />
         <div class="ai-assistant__header-actions">
-          <VisButton
-            variant="text"
-            size="md"
-            icon-only
-            icon-name="message-plus-circle"
-            label="发起新会话"
-            @click="resetConversation"
-          />
-          <VisDropdown v-model:open="historyOpen" class="ai-assistant__header-dropdown ai-assistant__history-dropdown">
-            <template #trigger="{ toggle }">
-              <VisButton
-                variant="text"
-                size="md"
-                icon-only
-                icon-name="clock-fast-forward"
-                label="历史会话"
-                @click="toggle"
-              />
-            </template>
-            <VisDropdownItem
-              v-for="item in conversationItems.slice(0, 6)"
-              :key="String(item.key)"
-              :label="item.label"
-              :active="conversationKey === item.key"
-              @select="chooseHistory(item)"
+          <VisTooltip content="新会话" position="bottom">
+            <VisButton
+              variant="text"
+              size="md"
+              icon-only
+              icon-name="message-plus-circle"
+              label="发起新会话"
+              @click="resetConversation"
             />
-          </VisDropdown>
-          <VisButton
-            variant="text"
-            size="md"
-            icon-only
-            icon-name="expand-05"
-            label="切换为独立式"
-            @click="setMode('independent')"
-          />
-          <VisDropdown v-model:open="modeMenuOpen" class="ai-assistant__header-dropdown">
-            <template #trigger="{ toggle }">
-              <VisButton
-                variant="text"
-                size="md"
-                icon-only
-                icon-name="dots-horizontal"
-                label="更多显示方式"
-                @click="toggle"
+          </VisTooltip>
+          <VisTooltip content="历史会话" position="bottom" :disabled="historyOpen">
+            <VisDropdown
+              v-if="hasHistory"
+              v-model:open="historyOpen"
+              class="ai-assistant__header-dropdown ai-assistant__history-dropdown"
+            >
+              <template #trigger="{ toggle }">
+                <VisButton
+                  variant="text"
+                  size="md"
+                  icon-only
+                  icon-name="clock-fast-forward"
+                  label="历史会话"
+                  @click="toggle"
+                />
+              </template>
+              <VisDropdownItem
+                v-for="item in conversationItems.slice(0, 6)"
+                :key="String(item.key)"
+                :label="item.label"
+                :active="conversationKey === item.key"
+                @select="chooseHistory(item)"
               />
-            </template>
-            <VisDropdownItem :label="modeActionLabel" @select="chooseModeAction" />
-          </VisDropdown>
-          <VisButton
-            variant="text"
-            size="md"
-            icon-only
-            icon-name="log-out-01"
-            :label="`退出 ${authUser.displayUsername ?? authUser.username ?? authUser.name}`"
-            @click="logout"
-          />
-          <VisButton
-            variant="text"
-            size="md"
-            icon-only
-            icon-name="x-close"
-            label="关闭 AI 助手"
-            @click="closeAssistant"
-          />
+            </VisDropdown>
+            <VisButton
+              v-else
+              variant="text"
+              size="md"
+              icon-only
+              icon-name="clock-fast-forward"
+              label="历史会话"
+              disabled
+            />
+          </VisTooltip>
+          <VisTooltip content="全屏" position="bottom">
+            <VisButton
+              variant="text"
+              size="md"
+              icon-only
+              icon-name="expand-05"
+              label="切换为独立式"
+              @click="setMode('independent')"
+            />
+          </VisTooltip>
+          <VisTooltip content="更多" position="bottom" :disabled="modeMenuOpen">
+            <VisDropdown v-model:open="modeMenuOpen" class="ai-assistant__header-dropdown">
+              <template #trigger="{ toggle }">
+                <VisButton
+                  variant="text"
+                  size="md"
+                  icon-only
+                  icon-name="dots-horizontal"
+                  label="更多显示方式"
+                  @click="toggle"
+                />
+              </template>
+              <VisDropdownItem :label="modeActionLabel" @select="chooseModeAction" />
+            </VisDropdown>
+          </VisTooltip>
+          <VisTooltip content="退出登录" position="bottom">
+            <VisButton
+              variant="text"
+              size="md"
+              icon-only
+              icon-name="log-out-01"
+              :label="`退出 ${authUser.displayUsername ?? authUser.username ?? authUser.name}`"
+              @click="logout"
+            />
+          </VisTooltip>
+          <VisTooltip content="关闭" position="bottom">
+            <VisButton
+              variant="text"
+              size="md"
+              icon-only
+              icon-name="x-close"
+              label="关闭 AI 助手"
+              @click="closeAssistant"
+            />
+          </VisTooltip>
         </div>
       </header>
 
@@ -1265,16 +1357,15 @@ onBeforeUnmount(() => {
 .ai-assistant__drop-overlay {
   position: absolute;
   z-index: 100;
-  inset: var(--space-12);
+  inset: 0;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-direction: column;
   gap: var(--space-8);
-  border: 2px dashed var(--color-border-brand);
-  border-radius: var(--radius-lg);
-  color: var(--color-text-brand-primary);
-  background: color-mix(in srgb, var(--color-bg-brand-primary) 94%, transparent);
+  border-radius: inherit;
+  color: var(--color-text-primary);
+  background: var(--primitive-alpha-white-80);
   text-align: center;
   pointer-events: none;
 }
@@ -1511,6 +1602,12 @@ onBeforeUnmount(() => {
   gap: var(--space-4);
 }
 
+.ai-assistant__locked-session-actions {
+  display: none;
+  align-items: center;
+  gap: var(--space-4);
+}
+
 .ai-assistant__header-dropdown :deep(.vis-dropdown) {
   inset-inline-start: auto;
   inset-inline-end: 0;
@@ -1705,6 +1802,10 @@ onBeforeUnmount(() => {
 
   .ai-assistant__conversation {
     display: none;
+  }
+
+  .ai-assistant__locked-session-actions {
+    display: flex;
   }
 
   .ai-assistant__prompts,

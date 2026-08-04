@@ -25,6 +25,7 @@ export default defineConfig({
       input: {
         main: fileURLToPath(new URL('./index.html', import.meta.url)),
         demo: fileURLToPath(new URL('./demo/index.html', import.meta.url)),
+        chat: fileURLToPath(new URL('./chat/index.html', import.meta.url)),
       },
     },
   },

@@ -18,12 +18,10 @@ const iconName = computed(
   () => (props.node.attrs.iconName || 'book-open-01') as IconName,
 )
 
-function selectNode(event: MouseEvent): void {
+function selectNode(): void {
   const position = props.getPos()
   if (typeof position !== 'number') return
-  props.editor.commands.setNodeSelection(position)
-  const target = event.currentTarget
-  if (target instanceof HTMLElement) target.focus()
+  props.editor.chain().setNodeSelection(position).focus().run()
 }
 </script>
 
@@ -31,14 +29,11 @@ function selectNode(event: MouseEvent): void {
   <NodeViewWrapper as="span">
     <span
       class="vis-ai-prompt-skill-node"
-      :class="{ 'is-selected': selected }"
       contenteditable="false"
       role="button"
-      tabindex="0"
+      tabindex="-1"
       :aria-label="`已选择技能 ${label}，按 Delete 或 Backspace 移除`"
       @mousedown.prevent="selectNode"
-      @keydown.delete.prevent.stop="deleteNode"
-      @keydown.backspace.prevent.stop="deleteNode"
     >
       <VisAiSkill
         :label="label"
@@ -59,8 +54,4 @@ function selectNode(event: MouseEvent): void {
   user-select: none;
 }
 
-.vis-ai-prompt-skill-node.is-selected {
-  outline: 2px solid var(--color-effect-focus-ring-brand);
-  outline-offset: 1px;
-}
 </style>

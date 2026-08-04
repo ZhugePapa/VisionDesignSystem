@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { mergeAttributes, Node } from '@tiptap/core'
 import Placeholder from '@tiptap/extension-placeholder'
-import { NodeSelection } from '@tiptap/pm/state'
+import { NodeSelection, TextSelection } from '@tiptap/pm/state'
 import type { EditorView } from '@tiptap/pm/view'
 import StarterKit from '@tiptap/starter-kit'
 import { EditorContent, useEditor, VueNodeViewRenderer } from '@tiptap/vue-3'
@@ -149,6 +149,52 @@ function deletePromptSkill(view: EditorView, event: KeyboardEvent): boolean {
   return true
 }
 
+function moveAcrossPromptSkill(view: EditorView, event: KeyboardEvent): boolean {
+  if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return false
+
+  const { selection } = view.state
+  let position: number | undefined
+
+  if (
+    selection instanceof NodeSelection
+    && selection.node.type.name === 'promptSkill'
+  ) {
+    position = event.key === 'ArrowRight' ? selection.to : selection.from
+  } else if (selection.empty && event.key === 'ArrowRight') {
+    const node = selection.$from.nodeAfter
+    if (node?.type.name === 'promptSkill') {
+      position = selection.from + node.nodeSize
+    } else if (
+      selection.$from.nodeBefore?.type.name === 'promptSkill'
+      && node?.isText
+    ) {
+      position = selection.from + 1
+    }
+  } else if (selection.empty && event.key === 'ArrowLeft') {
+    const node = selection.$from.nodeBefore
+    if (node?.type.name === 'promptSkill') {
+      position = selection.from - node.nodeSize
+    }
+  }
+
+  if (position === undefined) return false
+  event.preventDefault()
+  view.dispatch(view.state.tr.setSelection(
+    TextSelection.create(view.state.doc, position),
+  ))
+  view.focus()
+  return true
+}
+
+function documentHasPromptSkill(): boolean {
+  if (!editor.value) return false
+  let hasSkill = false
+  editor.value.state.doc.descendants((node) => {
+    if (node.type.name === 'promptSkill') hasSkill = true
+  })
+  return hasSkill
+}
+
 let syncing = false
 const editor = useEditor({
   content: contentDocument(),
@@ -176,6 +222,7 @@ const editor = useEditor({
     },
     handleKeyDown: (view, event) => {
       if (deletePromptSkill(view, event)) return true
+      if (moveAcrossPromptSkill(view, event)) return true
       if (
         event.key !== 'Enter'
         || event.isComposing
@@ -183,7 +230,7 @@ const editor = useEditor({
       ) return false
 
       event.preventDefault()
-      if (event.ctrlKey || event.metaKey) {
+      if (event.shiftKey || event.ctrlKey || event.metaKey) {
         editor.value?.chain().focus().setHardBreak().run()
       } else {
         emit('submit')
@@ -206,6 +253,7 @@ const editor = useEditor({
       const files = pastedFiles(event)
       if (!files.length) return false
       event.preventDefault()
+      event.stopPropagation()
       emit('files', files)
       return true
     },
@@ -247,10 +295,12 @@ const skillSignature = computed(() => JSON.stringify(
 function syncDocument(focus = false): void {
   if (!editor.value) return
   syncing = true
+  const hadSkill = documentHasPromptSkill()
   const position = editor.value.state.selection.from
   editor.value.commands.setContent(contentDocument(), { emitUpdate: false })
   const maxPosition = editor.value.state.doc.content.size
-  editor.value.commands.setTextSelection(Math.min(position, maxPosition))
+  const nextPosition = props.skill && !hadSkill ? position + 1 : position
+  editor.value.commands.setTextSelection(Math.min(nextPosition, maxPosition))
   if (focus) editor.value.commands.focus()
   syncing = false
 }
@@ -311,9 +361,13 @@ onBeforeUnmount(() => editor.value?.destroy())
 .vis-ai-prompt-composer :deep(.vis-ai-prompt-composer__content p.is-editor-empty:first-child::before) {
   float: inline-start;
   height: 0;
-  color: var(--color-text-placeholder);
+  color: var(--color-text-tertiary);
   content: attr(data-placeholder);
   pointer-events: none;
+}
+
+.vis-ai-prompt-composer :deep(.vis-ai-prompt-composer__content .ProseMirror-selectednode) {
+  outline: none;
 }
 
 </style>
