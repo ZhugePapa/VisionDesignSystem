@@ -43,6 +43,7 @@ once and retained in `/etc/vision-ai.env`.
 | `BETTER_AUTH_URL` | Public origin used for signed authentication cookies | `https://vision.leoht.space` |
 | `BETTER_AUTH_SECRET` | High-entropy secret used to sign authentication state | Required |
 | `AI_SEED_PASSWORD` | Initial password shared by the ten built-in accounts | Required |
+| `VISION_BUILTIN_ACCOUNT_PASSWORD` | Stable login password applied once to `vision01`–`vision10` | `vision123456` |
 | `VISION_AI_DATABASE_PATH` | Persistent SQLite database outside release contents | `/opt/vision-design-system/data/vision-ai.sqlite` |
 | `VISION_AI_UPLOAD_DIR` | Persistent, authenticated attachment storage outside release contents | `/opt/vision-design-system/data/uploads` |
 
@@ -54,9 +55,10 @@ without exposing provider secrets.
 ## Built-in AI accounts
 
 The API creates `vision01` through `vision10` on first start. Public registration
-is disabled. All ten accounts initially use `AI_SEED_PASSWORD`; changing that
-environment variable later does not reset passwords for accounts that already
-exist.
+is disabled. A one-time migration applies `VISION_BUILTIN_ACCOUNT_PASSWORD` to
+all ten accounts, including accounts created by releases before the stable
+password was introduced. Later environment changes do not repeatedly reset
+passwords after that migration has been recorded.
 
 Authentication and AI conversations are stored in the SQLite file configured by
 `VISION_AI_DATABASE_PATH`. The deployment script preserves the application

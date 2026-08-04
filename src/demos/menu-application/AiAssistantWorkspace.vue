@@ -1394,8 +1394,7 @@ onBeforeUnmount(() => {
   line-height: var(--font-text-sm-line-height);
 }
 
-.ai-assistant__auth-state,
-.ai-assistant__login {
+.ai-assistant__auth-state {
   box-sizing: border-box;
   min-inline-size: 0;
   min-block-size: 0;
@@ -1423,7 +1422,8 @@ onBeforeUnmount(() => {
 
 .ai-assistant__login {
   position: relative;
-  inline-size: min(360px, 100%);
+  box-sizing: border-box;
+  inline-size: min(480px, calc(100% - var(--space-40)));
   margin: auto;
   padding: var(--space-32);
   display: flex;

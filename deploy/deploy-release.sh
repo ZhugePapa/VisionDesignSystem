@@ -64,6 +64,7 @@ prepare_persistent_runtime() {
   ensure_environment_value BETTER_AUTH_URL "${public_url}"
   ensure_environment_value BETTER_AUTH_SECRET "${auth_secret}"
   ensure_environment_value AI_SEED_PASSWORD "${default_seed_password}"
+  ensure_environment_value VISION_BUILTIN_ACCOUNT_PASSWORD vision123456
   ensure_environment_value VISION_AI_DATABASE_PATH "${app_dir}/data/vision-ai.sqlite"
   ensure_environment_value VISION_AI_UPLOAD_DIR "${app_dir}/data/uploads"
 

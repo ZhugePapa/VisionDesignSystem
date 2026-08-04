@@ -3,6 +3,7 @@ import { once } from 'node:events'
 import { mkdtempSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import { DatabaseSync } from 'node:sqlite'
 import test from 'node:test'
 
 import { createVisionAiServer } from './app.mjs'
@@ -23,6 +24,66 @@ async function signIn(baseUrl, username, password) {
   assert.equal(response.status, 200)
   return sessionCookie(response)
 }
+
+async function closeServer(server) {
+  server.close()
+  await once(server, 'close')
+}
+
+test('migrates existing built-in accounts to the stable shared password once', async (context) => {
+  const directory = mkdtempSync(join(tmpdir(), 'vision-auth-password-test-'))
+  const databasePath = join(directory, 'vision.sqlite')
+  const baseEnv = {
+    VISION_AI_DATABASE_PATH: databasePath,
+    BETTER_AUTH_SECRET: 'test-secret-with-at-least-thirty-two-random-characters',
+    BETTER_AUTH_URL: 'http://127.0.0.1',
+    AI_SEED_PASSWORD: 'unknown-initial-password',
+    DEEPSEEK_API_KEY: 'test-key',
+  }
+  let activeServer
+
+  context.after(async () => {
+    if (activeServer?.listening) await closeServer(activeServer)
+    rmSync(directory, { recursive: true, force: true })
+  })
+
+  activeServer = await createVisionAiServer({ env: baseEnv })
+  activeServer.listen(0, '127.0.0.1')
+  await once(activeServer, 'listening')
+  let address = activeServer.address()
+  let baseUrl = `http://127.0.0.1:${address.port}`
+  await signIn(baseUrl, 'vision01', 'unknown-initial-password')
+  await closeServer(activeServer)
+
+  const database = new DatabaseSync(databasePath)
+  database
+    .prepare('DELETE FROM vision_auth_migration WHERE key = ?')
+    .run('builtin-account-password-v1')
+  database.close()
+
+  activeServer = await createVisionAiServer({
+    env: {
+      ...baseEnv,
+      VISION_BUILTIN_ACCOUNT_PASSWORD: 'vision123456',
+    },
+  })
+  activeServer.listen(0, '127.0.0.1')
+  await once(activeServer, 'listening')
+  address = activeServer.address()
+  baseUrl = `http://127.0.0.1:${address.port}`
+
+  await signIn(baseUrl, 'vision01', 'vision123456')
+  const oldPasswordResponse = await fetch(`${baseUrl}/api/auth/sign-in/username`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      username: 'vision01',
+      password: 'unknown-initial-password',
+    }),
+  })
+  assert.equal(oldPasswordResponse.status, 401)
+  await closeServer(activeServer)
+})
 
 test('seeds the shared and personal accounts, blocks registration, and isolates cloud conversations', async (context) => {
   const directory = mkdtempSync(join(tmpdir(), 'vision-auth-test-'))

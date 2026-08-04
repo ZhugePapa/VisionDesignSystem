@@ -90,6 +90,7 @@ test('deployment prepares a writable persistent AI runtime without replacing exi
   assert.match(environment, /^BETTER_AUTH_URL=https:\/\/example\.test$/m)
   assert.match(environment, /^BETTER_AUTH_SECRET=[a-f0-9]{64}$/m)
   assert.match(environment, /^AI_SEED_PASSWORD=seed-password$/m)
+  assert.match(environment, /^VISION_BUILTIN_ACCOUNT_PASSWORD=vision123456$/m)
   assert.match(environment, new RegExp(`^VISION_AI_DATABASE_PATH=${appDirectory}/data/vision-ai\\.sqlite$`, 'm'))
   assert.match(environment, new RegExp(`^VISION_AI_UPLOAD_DIR=${appDirectory}/data/uploads$`, 'm'))
   assert.equal((environment.match(/^BETTER_AUTH_SECRET=/gm) ?? []).length, 1)

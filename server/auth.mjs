@@ -10,6 +10,7 @@ import { admin, username } from 'better-auth/plugins'
 const DEV_AUTH_SECRET = 'vision-design-system-local-auth-secret-change-me'
 const DEV_SEED_PASSWORD = 'vision123456'
 const LYL_SEED_PASSWORD = 'dameinv'
+const BUILTIN_PASSWORD_MIGRATION = 'builtin-account-password-v1'
 
 function normalizedOrigins(env) {
   return [
@@ -39,7 +40,7 @@ function authSecret(env) {
 }
 
 function seedPassword(env) {
-  const password = env.AI_SEED_PASSWORD
+  const password = env.VISION_BUILTIN_ACCOUNT_PASSWORD || env.AI_SEED_PASSWORD
   if (password) return password
   if (env.NODE_ENV === 'production') {
     throw new Error('AI_SEED_PASSWORD is required in production')
@@ -129,6 +130,39 @@ async function seedAccounts(auth, database, env) {
   })
 }
 
+async function migrateBuiltinAccountPasswords(auth, database, env) {
+  database.exec(`
+    CREATE TABLE IF NOT EXISTS vision_auth_migration (
+      key TEXT PRIMARY KEY,
+      appliedAt TEXT NOT NULL
+    )
+  `)
+
+  const applied = database
+    .prepare('SELECT key FROM vision_auth_migration WHERE key = ? LIMIT 1')
+    .get(BUILTIN_PASSWORD_MIGRATION)
+  if (applied) return
+
+  const password = seedPassword(env)
+  const context = await auth.$context
+
+  for (let index = 1; index <= 10; index += 1) {
+    const usernameValue = `vision${String(index).padStart(2, '0')}`
+    const user = database
+      .prepare('SELECT id FROM "user" WHERE username = ? LIMIT 1')
+      .get(usernameValue)
+    if (!user) continue
+
+    const passwordHash = await context.password.hash(password)
+    await context.internalAdapter.updatePassword(user.id, passwordHash)
+    await context.internalAdapter.deleteUserSessions(user.id)
+  }
+
+  database
+    .prepare('INSERT INTO vision_auth_migration (key, appliedAt) VALUES (?, ?)')
+    .run(BUILTIN_PASSWORD_MIGRATION, new Date().toISOString())
+}
+
 export async function createAuthService(env = process.env) {
   const path = databasePath(env)
   mkdirSync(dirname(path), { recursive: true })
@@ -141,6 +175,7 @@ export async function createAuthService(env = process.env) {
   const auth = createAuth(database, env)
   await migrateAuth(auth)
   await seedAccounts(auth, database, env)
+  await migrateBuiltinAccountPasswords(auth, database, env)
 
   const nodeHandler = toNodeHandler(auth)
 
