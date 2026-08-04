@@ -23,6 +23,13 @@ documentation and API before restarting `vision-ai`.
 Provider credentials stay on the ECS host in `/etc/vision-ai.env`. They are not
 stored in the repository or GitHub Actions.
 
+Every release also repairs the persistent runtime before restarting the API: it
+creates missing authentication and storage variables without replacing non-empty
+values, creates the database and upload directories for `www-data`, and installs
+a systemd drop-in that keeps those directories writable while
+`ProtectSystem=strict` is enabled. Missing authentication secrets are generated
+once and retained in `/etc/vision-ai.env`.
+
 | Variable | Purpose | Default |
 | --- | --- | --- |
 | `DEEPSEEK_API_KEY` | DeepSeek V4 Flash and V4 Pro credential | Required for DeepSeek |

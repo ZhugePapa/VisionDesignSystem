@@ -16,6 +16,7 @@ NoNewPrivileges=true
 PrivateTmp=true
 ProtectHome=true
 ProtectSystem=strict
+ReadWritePaths=/opt/vision-design-system/data
 
 [Install]
 WantedBy=multi-user.target

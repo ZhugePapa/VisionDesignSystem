@@ -9,6 +9,79 @@ deploy_dir="${app_dir}/.deploy"
 staging_dir="${deploy_dir}/staging-${release_id}"
 backup_dir="${deploy_dir}/backup-${release_id}"
 version_file="${app_dir}/.deploy-version"
+environment_file="${VISION_ENV_FILE:-/etc/vision-ai.env}"
+systemd_override_dir="${VISION_SYSTEMD_OVERRIDE_DIR:-/etc/systemd/system/vision-ai.service.d}"
+service_user="${VISION_SERVICE_USER:-www-data}"
+service_group="${VISION_SERVICE_GROUP:-www-data}"
+public_url="${VISION_PUBLIC_URL:-https://vision.leoht.space}"
+default_seed_password="${VISION_DEFAULT_SEED_PASSWORD:-}"
+
+environment_value() {
+  local key="$1"
+  sed -n "s/^${key}=//p" "${environment_file}" | tail -n 1
+}
+
+ensure_environment_value() {
+  local key="$1"
+  local default_value="$2"
+  local current_value=""
+
+  if [[ -f "${environment_file}" ]]; then
+    current_value="$(environment_value "${key}")"
+  fi
+
+  if [[ -n "${current_value}" ]]; then
+    return
+  fi
+
+  if grep -q "^${key}=" "${environment_file}" 2>/dev/null; then
+    sed -i.bak "s|^${key}=.*$|${key}=${default_value}|" "${environment_file}"
+    rm -f "${environment_file}.bak"
+  else
+    if [[ -s "${environment_file}" && -n "$(tail -c 1 "${environment_file}")" ]]; then
+      printf '\n' >> "${environment_file}"
+    fi
+    printf '%s=%s\n' "${key}" "${default_value}" >> "${environment_file}"
+  fi
+}
+
+prepare_persistent_runtime() {
+  local auth_secret=""
+  local database_path=""
+  local database_dir=""
+  local upload_dir=""
+
+  mkdir -p "$(dirname "${environment_file}")" "${systemd_override_dir}"
+  touch "${environment_file}"
+  chmod 600 "${environment_file}"
+
+  auth_secret="$(openssl rand -hex 32)"
+  if [[ -z "${default_seed_password}" ]]; then
+    default_seed_password="$(openssl rand -hex 16)"
+  fi
+  ensure_environment_value NODE_ENV production
+  ensure_environment_value AI_ALLOWED_ORIGIN "${public_url}"
+  ensure_environment_value BETTER_AUTH_URL "${public_url}"
+  ensure_environment_value BETTER_AUTH_SECRET "${auth_secret}"
+  ensure_environment_value AI_SEED_PASSWORD "${default_seed_password}"
+  ensure_environment_value VISION_AI_DATABASE_PATH "${app_dir}/data/vision-ai.sqlite"
+  ensure_environment_value VISION_AI_UPLOAD_DIR "${app_dir}/data/uploads"
+
+  database_path="$(environment_value VISION_AI_DATABASE_PATH)"
+  database_dir="$(dirname "${database_path}")"
+  upload_dir="$(environment_value VISION_AI_UPLOAD_DIR)"
+
+  install -d -o "${service_user}" -g "${service_group}" -m 0750 \
+    "${database_dir}" \
+    "${upload_dir}"
+  chown -R "${service_user}:${service_group}" "${database_dir}" "${upload_dir}"
+
+  printf '%s\n' \
+    '[Service]' \
+    "ReadWritePaths=${database_dir} ${upload_dir}" \
+    > "${systemd_override_dir}/persistence.conf"
+  systemctl daemon-reload
+}
 
 cleanup() {
   rm -rf "${staging_dir}"
@@ -100,6 +173,7 @@ rsync -a --delete "${staging_dir}/node_modules/" "${app_dir}/node_modules/"
 cp "${staging_dir}/package.json" "${staging_dir}/package-lock.json" "${app_dir}/"
 printf '%s\n' "${release_id}" > "${version_file}"
 
+prepare_persistent_runtime
 systemctl restart vision-ai
 nginx -t
 systemctl reload nginx
