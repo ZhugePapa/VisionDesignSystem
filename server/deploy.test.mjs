@@ -25,9 +25,8 @@ function createRelease(directory, releaseName) {
   const requiredFiles = [
     'dist/docs/index.html',
     'server/app.mjs',
-    'server/deepseek.mjs',
     'server/models.mjs',
-    'server/ollama.mjs',
+    'server/opencode-go.mjs',
     'node_modules/better-auth/package.json',
     'package.json',
     'package-lock.json',
@@ -57,7 +56,14 @@ test('deployment prepares a writable persistent AI runtime without replacing exi
   mkdirSync(resolve(environmentFile, '..'), { recursive: true })
   mkdirSync(commandDirectory, { recursive: true })
   writeFileSync(environmentFile, [
-    'DEEPSEEK_API_KEY=keep-existing-key',
+    'DEEPSEEK_API_KEY=remove-existing-key',
+    'DEEPSEEK_BASE_URL=https://api.deepseek.com',
+    'OLLAMA_API_KEY=remove-ollama-key',
+    'OLLAMA_BASE_URL=https://ollama.com',
+    'OLLAMA_GLM_MODEL=glm-5.2',
+    'OLLAMA_KIMI_MODEL=kimi-k2.7-code',
+    'OLLAMA_KIMI_ENABLED=true',
+    'OPENCODE_GO_API_KEY=keep-opencode-key',
     'BETTER_AUTH_SECRET=',
     'VISION_AI_DATABASE_PATH=',
   ].join('\n'))
@@ -84,7 +90,10 @@ test('deployment prepares a writable persistent AI runtime without replacing exi
   })
 
   const environment = readFileSync(environmentFile, 'utf8')
-  assert.match(environment, /^DEEPSEEK_API_KEY=keep-existing-key$/m)
+  assert.doesNotMatch(environment, /^(?:DEEPSEEK|OLLAMA)_[A-Z_]+=/m)
+  assert.match(environment, /^OPENCODE_GO_API_KEY=keep-opencode-key$/m)
+  assert.match(environment, /^OPENCODE_GO_BASE_URL=https:\/\/opencode\.ai\/zen\/go\/v1$/m)
+  assert.match(environment, /^AI_DEFAULT_MODEL=gpt-5\.6-luna$/m)
   assert.match(environment, /^NODE_ENV=production$/m)
   assert.match(environment, /^AI_ALLOWED_ORIGIN=https:\/\/example\.test$/m)
   assert.match(environment, /^BETTER_AUTH_URL=https:\/\/example\.test$/m)

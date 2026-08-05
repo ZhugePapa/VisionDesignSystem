@@ -526,7 +526,10 @@ export function attachmentContext(files) {
 export function imagePayload(files) {
   return files
     .filter((file) => file.mimeType?.startsWith('image/'))
-    .map((file) => readFileSync(file.storagePath).toString('base64'))
+    .map((file) => ({
+      data: readFileSync(file.storagePath).toString('base64'),
+      mimeType: file.mimeType,
+    }))
 }
 
 export const fileUploadLimits = {

@@ -38,7 +38,7 @@ test('migrates existing built-in accounts to the stable shared password once', a
     BETTER_AUTH_SECRET: 'test-secret-with-at-least-thirty-two-random-characters',
     BETTER_AUTH_URL: 'http://127.0.0.1',
     AI_SEED_PASSWORD: 'unknown-initial-password',
-    DEEPSEEK_API_KEY: 'test-key',
+    OPENCODE_GO_API_KEY: 'test-key',
   }
   let activeServer
 
@@ -95,7 +95,7 @@ test('seeds the shared and personal accounts, blocks registration, and isolates 
       BETTER_AUTH_SECRET: 'test-secret-with-at-least-thirty-two-random-characters',
       BETTER_AUTH_URL: 'http://127.0.0.1',
       AI_SEED_PASSWORD: 'test',
-      DEEPSEEK_API_KEY: 'test-key',
+      OPENCODE_GO_API_KEY: 'test-key',
     },
     fetchImpl: async (_url, options) => {
       upstreamBody = JSON.parse(options.body)

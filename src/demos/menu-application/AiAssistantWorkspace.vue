@@ -79,10 +79,9 @@ const senderValue = ref('')
 const deepThinking = ref(false)
 const selectedModel = ref<VisAiKey>('')
 const senderModels = ref<VisAiSenderModel[]>([
+  { key: 'gpt-5.6-luna', label: 'GPT-5.6 Luna', iconName: 'cube-01' },
   { key: 'deepseek-v4-flash', label: 'DeepSeek V4 Flash', iconName: 'cube-01' },
-  { key: 'deepseek-v4-pro', label: 'DeepSeek V4 Pro', iconName: 'cube-01' },
   { key: 'glm-5.2', label: 'GLM-5.2', iconName: 'cube-01' },
-  { key: 'kimi-k2.7-code', label: 'Kimi K2.7 Code', iconName: 'cube-01' },
 ])
 const selectedSpeed = ref<VisAiSenderSpeed>('high')
 const selectedSkill = ref<VisAiKey | ''>('')

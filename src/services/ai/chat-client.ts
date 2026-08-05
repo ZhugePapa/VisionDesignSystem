@@ -16,7 +16,7 @@ export interface VisionAiChatRequest {
 export interface VisionAiModel {
   id: string
   label: string
-  provider: 'deepseek' | 'ollama'
+  provider: 'opencode-go'
   available: boolean
   supportsThinking: boolean
 }

@@ -4,7 +4,6 @@ import { pathToFileURL } from 'node:url'
 
 import { createAuthService } from './auth.mjs'
 import { ConversationStore } from './conversations.mjs'
-import { streamDeepSeek } from './deepseek.mjs'
 import {
   AiFileStore,
   attachmentContext,
@@ -16,7 +15,11 @@ import {
   listAiModels,
   resolveAiModel,
 } from './models.mjs'
-import { streamOllama } from './ollama.mjs'
+import {
+  completeOpenCodeGoResponse,
+  streamOpenCodeGoChat,
+  streamOpenCodeGoResponses,
+} from './opencode-go.mjs'
 
 const DEFAULT_SYSTEM_PROMPT = `你是 Vision Design System 演示应用中的“小 VI 智能助理”。
 你主要帮助软件研发团队分析项目、需求、代码质量、流水线和交付风险。
@@ -224,7 +227,9 @@ async function streamProvider({
   onEvent,
   userId,
 }) {
-  const streamModel = model.provider === 'ollama' ? streamOllama : streamDeepSeek
+  const streamModel = model.apiStyle === 'responses'
+    ? streamOpenCodeGoResponses
+    : streamOpenCodeGoChat
   await streamModel({
     apiKey: model.apiKey,
     baseUrl: model.baseUrl,
@@ -248,50 +253,24 @@ async function describeImages({
   userId,
   fileStore,
 }) {
-  const apiKey = env.OLLAMA_API_KEY
+  const apiKey = env.OPENCODE_GO_API_KEY
   if (!apiKey) {
     const error = new Error('当前模型不能直接读取图片，且服务器尚未配置图片预解析模型。')
     error.statusCode = 503
     throw error
   }
-  const baseUrl = (env.OLLAMA_BASE_URL || 'https://ollama.com').replace(/\/$/, '')
-  const model = env.OLLAMA_KIMI_MODEL || 'kimi-k2.7-code'
-  const response = await fetchImpl(`${baseUrl}/api/chat`, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      model,
-      messages: [{
-        role: 'user',
-        content: [
-          '请分析这些图片，为另一个纯文本模型生成可靠的上下文。',
-          '逐张给出：文件名、完整可见文字（OCR）、界面或场景结构、关键细节；不要推测不可见信息。',
-          `文件名：${files.map((file) => file.name).join('、')}`,
-        ].join('\n'),
-        images: imagePayload(files),
-      }],
-      stream: false,
-      think: false,
-      options: { num_predict: 2048 },
-    }),
+  const description = await completeOpenCodeGoResponse({
+    apiKey,
+    baseUrl: env.OPENCODE_GO_BASE_URL,
+    fetchImpl,
+    images: imagePayload(files),
+    model: 'gpt-5.6-luna',
+    prompt: [
+      '请分析这些图片，为另一个纯文本模型生成可靠的上下文。',
+      '逐张给出：文件名、完整可见文字（OCR）、界面或场景结构、关键细节；不要推测不可见信息。',
+      `文件名：${files.map((file) => file.name).join('、')}`,
+    ].join('\n'),
   })
-  if (!response.ok) {
-    let message = `图片预解析失败（${response.status}）`
-    try {
-      const payload = await response.json()
-      message = payload?.error || payload?.message || message
-    } catch {
-      // Keep the status-based message.
-    }
-    const error = new Error(message)
-    error.statusCode = 502
-    throw error
-  }
-  const payload = await response.json()
-  const description = String(payload?.message?.content || '').trim()
   if (!description) {
     const error = new Error('图片预解析模型没有返回可用内容。')
     error.statusCode = 502

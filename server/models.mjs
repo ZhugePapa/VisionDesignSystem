@@ -1,59 +1,37 @@
-export const DEFAULT_MODEL_ID = 'deepseek-v4-flash'
+export const DEFAULT_MODEL_ID = 'gpt-5.6-luna'
+
+const API_KEY_ENV = 'OPENCODE_GO_API_KEY'
+const BASE_URL_ENV = 'OPENCODE_GO_BASE_URL'
+const DEFAULT_BASE_URL = 'https://opencode.ai/zen/go/v1'
 
 const modelDefinitions = [
   {
-    id: 'deepseek-v4-flash',
-    label: 'DeepSeek V4 Flash',
-    provider: 'deepseek',
-    upstreamModel: 'deepseek-v4-flash',
-    apiKeyEnv: 'DEEPSEEK_API_KEY',
-    baseUrlEnv: 'DEEPSEEK_BASE_URL',
-    defaultBaseUrl: 'https://api.deepseek.com',
+    id: 'gpt-5.6-luna',
+    label: 'GPT-5.6 Luna',
+    provider: 'opencode-go',
+    apiStyle: 'responses',
+    supportsImages: true,
   },
   {
-    id: 'deepseek-v4-pro',
-    label: 'DeepSeek V4 Pro',
-    provider: 'deepseek',
-    upstreamModel: 'deepseek-v4-pro',
-    apiKeyEnv: 'DEEPSEEK_API_KEY',
-    baseUrlEnv: 'DEEPSEEK_BASE_URL',
-    defaultBaseUrl: 'https://api.deepseek.com',
+    id: 'deepseek-v4-flash',
+    label: 'DeepSeek V4 Flash',
+    provider: 'opencode-go',
+    apiStyle: 'chat-completions',
   },
   {
     id: 'glm-5.2',
     label: 'GLM-5.2',
-    provider: 'ollama',
-    upstreamModel: 'glm-5.2',
-    upstreamModelEnv: 'OLLAMA_GLM_MODEL',
-    apiKeyEnv: 'OLLAMA_API_KEY',
-    baseUrlEnv: 'OLLAMA_BASE_URL',
-    defaultBaseUrl: 'https://ollama.com',
-  },
-  {
-    id: 'kimi-k2.7-code',
-    label: 'Kimi K2.7 Code',
-    provider: 'ollama',
-    upstreamModel: 'kimi-k2.7-code',
-    upstreamModelEnv: 'OLLAMA_KIMI_MODEL',
-    availabilityEnv: 'OLLAMA_KIMI_ENABLED',
-    apiKeyEnv: 'OLLAMA_API_KEY',
-    baseUrlEnv: 'OLLAMA_BASE_URL',
-    defaultBaseUrl: 'https://ollama.com',
-    supportsImages: true,
+    provider: 'opencode-go',
+    apiStyle: 'chat-completions',
   },
 ]
-
-function modelIsEnabled(definition, env) {
-  if (!definition.availabilityEnv) return true
-  return env[definition.availabilityEnv] !== 'false'
-}
 
 function publicModel(definition, env) {
   return {
     id: definition.id,
     label: definition.label,
     provider: definition.provider,
-    available: Boolean(env[definition.apiKeyEnv]) && modelIsEnabled(definition, env),
+    available: Boolean(env[API_KEY_ENV]),
     supportsThinking: true,
     supportsImages: definition.supportsImages === true,
   }
@@ -65,19 +43,9 @@ export function listAiModels(env = process.env) {
 
 export function defaultAiModelId(env = process.env) {
   const requested = env.AI_DEFAULT_MODEL || DEFAULT_MODEL_ID
-  const requestedModel = modelDefinitions.find((definition) => definition.id === requested)
-
-  if (
-    requestedModel
-    && env[requestedModel.apiKeyEnv]
-    && modelIsEnabled(requestedModel, env)
-  ) {
-    return requestedModel.id
-  }
-
-  return modelDefinitions.find((definition) => (
-    env[definition.apiKeyEnv] && modelIsEnabled(definition, env)
-  ))?.id ?? DEFAULT_MODEL_ID
+  return modelDefinitions.some((definition) => definition.id === requested)
+    ? requested
+    : DEFAULT_MODEL_ID
 }
 
 export function resolveAiModel(requestedId, env = process.env) {
@@ -92,15 +60,9 @@ export function resolveAiModel(requestedId, env = process.env) {
     throw error
   }
 
-  if (!modelIsEnabled(definition, env)) {
-    const error = new Error(`${definition.label} 当前未启用。`)
-    error.statusCode = 503
-    throw error
-  }
-
-  const apiKey = env[definition.apiKeyEnv]
+  const apiKey = env[API_KEY_ENV]
   if (!apiKey) {
-    const error = new Error(`${definition.label} 尚未配置。`)
+    const error = new Error('OpenCode Go 尚未配置。')
     error.statusCode = 503
     throw error
   }
@@ -108,9 +70,8 @@ export function resolveAiModel(requestedId, env = process.env) {
   return {
     ...publicModel(definition, env),
     apiKey,
-    baseUrl: env[definition.baseUrlEnv] || definition.defaultBaseUrl,
-    upstreamModel: definition.upstreamModelEnv
-      ? env[definition.upstreamModelEnv] || definition.upstreamModel
-      : definition.upstreamModel,
+    apiStyle: definition.apiStyle,
+    baseUrl: env[BASE_URL_ENV] || DEFAULT_BASE_URL,
+    upstreamModel: definition.id,
   }
 }

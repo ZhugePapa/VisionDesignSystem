@@ -20,145 +20,141 @@ function testRuntime(userId = 'test-user') {
   }
 }
 
-test('streams normalized DeepSeek reasoning and markdown content for the selected model', async (context) => {
-  let upstreamUrl
-  let upstreamBody
+function startServer(context, options) {
+  return createVisionAiServer(options).then(async (server) => {
+    server.listen(0, '127.0.0.1')
+    await once(server, 'listening')
+    context.after(() => server.close())
+    const address = server.address()
+    return `http://127.0.0.1:${address.port}`
+  })
+}
+
+test('streams both OpenCode Go chat-completions models through one credential', async (context) => {
+  const requests = []
   const encoder = new TextEncoder()
-  const fetchImpl = async (url, options) => {
-    upstreamUrl = url
-    upstreamBody = JSON.parse(options.body)
-
-    return new Response(new ReadableStream({
-      start(controller) {
-        controller.enqueue(encoder.encode(': keep-alive\n\n'))
-        controller.enqueue(encoder.encode(
-          'data: {"choices":[{"delta":{"reasoning_content":"先分析"}}]}\n\n',
-        ))
-        controller.enqueue(encoder.encode(
-          'data: {"choices":[{"delta":{"content":"## 结论\\n\\n"}}]}\n\n',
-        ))
-        controller.enqueue(encoder.encode(
-          'data: {"choices":[{"delta":{"content":"可以执行。"}}],"usage":{"total_tokens":12}}\n\n',
-        ))
-        controller.enqueue(encoder.encode('data: [DONE]\n\n'))
-        controller.close()
-      },
-    }), {
-      status: 200,
-      headers: { 'Content-Type': 'text/event-stream' },
-    })
-  }
-
-  const server = await createVisionAiServer({
+  const baseUrl = await startServer(context, {
     env: {
-      DEEPSEEK_API_KEY: 'test-key',
+      OPENCODE_GO_API_KEY: 'opencode-test-key',
       AI_RATE_LIMIT_PER_MINUTE: '100',
     },
-    fetchImpl,
+    fetchImpl: async (url, options) => {
+      requests.push({ url, options, body: JSON.parse(options.body) })
+      return new Response(new ReadableStream({
+        start(controller) {
+          controller.enqueue(encoder.encode(': keep-alive\n\n'))
+          controller.enqueue(encoder.encode(
+            'data: {"choices":[{"delta":{"reasoning_content":"先分析"}}]}\n\n',
+          ))
+          controller.enqueue(encoder.encode(
+            'data: {"choices":[{"delta":{"content":"## 结论\\n\\n可以执行。"}}],"usage":{"total_tokens":12}}\n\n',
+          ))
+          controller.enqueue(encoder.encode('data: [DONE]\n\n'))
+          controller.close()
+        },
+      }), {
+        status: 200,
+        headers: { 'Content-Type': 'text/event-stream' },
+      })
+    },
     runtime: testRuntime(),
   })
-  server.listen(0, '127.0.0.1')
-  await once(server, 'listening')
-  context.after(() => server.close())
 
-  const address = server.address()
-  const response = await fetch(`http://127.0.0.1:${address.port}/api/ai/chat`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      model: 'deepseek-v4-pro',
-      messages: [{ role: 'user', content: '请分析' }],
-      thinking: true,
-      reasoningEffort: 'max',
-    }),
-  })
-  const stream = await response.text()
+  for (const model of ['deepseek-v4-flash', 'glm-5.2']) {
+    const response = await fetch(`${baseUrl}/api/ai/chat`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model,
+        messages: [{ role: 'user', content: '请分析' }],
+        thinking: true,
+        reasoningEffort: 'max',
+      }),
+    })
+    const stream = await response.text()
+    assert.equal(response.status, 200)
+    assert.match(stream, /event: reasoning/)
+    assert.match(stream, /先分析/)
+    assert.match(stream, /event: content/)
+    assert.match(stream, /## 结论/)
+    assert.match(stream, /event: done/)
+  }
 
-  assert.equal(response.status, 200)
-  assert.match(stream, /event: reasoning/)
-  assert.match(stream, /先分析/)
-  assert.match(stream, /event: content/)
-  assert.match(stream, /## 结论/)
-  assert.match(stream, /event: done/)
-  assert.equal(upstreamUrl, 'https://api.deepseek.com/chat/completions')
-  assert.equal(upstreamBody.model, 'deepseek-v4-pro')
-  assert.equal(upstreamBody.thinking.type, 'enabled')
-  assert.equal(upstreamBody.reasoning_effort, 'max')
-  assert.equal(upstreamBody.messages[0].role, 'system')
-  assert.equal(upstreamBody.messages[1].content, '请分析')
+  assert.equal(requests.length, 2)
+  for (const [index, model] of ['deepseek-v4-flash', 'glm-5.2'].entries()) {
+    const request = requests[index]
+    assert.equal(request.url, 'https://opencode.ai/zen/go/v1/chat/completions')
+    assert.equal(request.options.headers.Authorization, 'Bearer opencode-test-key')
+    assert.equal(request.body.model, model)
+    assert.equal(request.body.reasoning_effort, 'max')
+    assert.equal(request.body.messages[0].role, 'system')
+    assert.equal(request.body.messages[1].content, '请分析')
+  }
 })
 
-test('streams normalized Ollama thinking and content for a cloud model', async (context) => {
-  let upstreamUrl
-  let upstreamOptions
+test('streams GPT-5.6 Luna through the OpenCode Go Responses endpoint', async (context) => {
+  let upstream
   const encoder = new TextEncoder()
-  const fetchImpl = async (url, options) => {
-    upstreamUrl = url
-    upstreamOptions = options
-
-    return new Response(new ReadableStream({
-      start(controller) {
-        controller.enqueue(encoder.encode(
-          '{"message":{"thinking":"先理解问题"},"done":false}\n',
-        ))
-        controller.enqueue(encoder.encode(
-          '{"message":{"content":"## 建议\\n"},"done":false}\n',
-        ))
-        controller.enqueue(encoder.encode(
-          '{"message":{"content":"开始执行。"},"done":true,"prompt_eval_count":8,"eval_count":5}\n',
-        ))
-        controller.close()
-      },
-    }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/x-ndjson' },
-    })
-  }
-
-  const server = await createVisionAiServer({
+  const baseUrl = await startServer(context, {
     env: {
-      OLLAMA_API_KEY: 'ollama-test-key',
+      OPENCODE_GO_API_KEY: 'opencode-test-key',
       AI_RATE_LIMIT_PER_MINUTE: '100',
     },
-    fetchImpl,
+    fetchImpl: async (url, options) => {
+      upstream = { url, options, body: JSON.parse(options.body) }
+      return new Response(new ReadableStream({
+        start(controller) {
+          controller.enqueue(encoder.encode(
+            'data: {"type":"response.reasoning_summary_text.delta","delta":"先理解问题"}\n\n',
+          ))
+          controller.enqueue(encoder.encode(
+            'data: {"type":"response.output_text.delta","delta":"## 建议\\n开始执行。"}\n\n',
+          ))
+          controller.enqueue(encoder.encode(
+            'data: {"type":"response.completed","response":{"usage":{"total_tokens":13}}}\n\n',
+          ))
+          controller.close()
+        },
+      }), {
+        status: 200,
+        headers: { 'Content-Type': 'text/event-stream' },
+      })
+    },
     runtime: testRuntime(),
   })
-  server.listen(0, '127.0.0.1')
-  await once(server, 'listening')
-  context.after(() => server.close())
 
-  const address = server.address()
-  const response = await fetch(`http://127.0.0.1:${address.port}/api/ai/chat`, {
+  const response = await fetch(`${baseUrl}/api/ai/chat`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      model: 'glm-5.2',
+      model: 'gpt-5.6-luna',
       messages: [{ role: 'user', content: '制定计划' }],
       thinking: true,
       reasoningEffort: 'high',
     }),
   })
   const stream = await response.text()
-  const upstreamBody = JSON.parse(upstreamOptions.body)
 
   assert.equal(response.status, 200)
-  assert.equal(upstreamUrl, 'https://ollama.com/api/chat')
-  assert.equal(upstreamOptions.headers.Authorization, 'Bearer ollama-test-key')
-  assert.equal(upstreamBody.model, 'glm-5.2')
-  assert.equal(upstreamBody.think, true)
-  assert.equal(upstreamBody.messages[0].role, 'system')
   assert.match(stream, /event: reasoning/)
   assert.match(stream, /先理解问题/)
   assert.match(stream, /event: content/)
   assert.match(stream, /## 建议/)
   assert.match(stream, /event: done/)
+  assert.equal(upstream.url, 'https://opencode.ai/zen/go/v1/responses')
+  assert.equal(upstream.options.headers.Authorization, 'Bearer opencode-test-key')
+  assert.equal(upstream.body.model, 'gpt-5.6-luna')
+  assert.equal(upstream.body.reasoning.effort, 'high')
+  assert.equal(upstream.body.reasoning.summary, 'auto')
+  assert.equal(upstream.body.instructions.includes('小 VI 智能助理'), true)
+  assert.equal(upstream.body.input[0].content, '制定计划')
 })
 
 test('rejects models outside the server allowlist', async (context) => {
   let upstreamCalled = false
-  const server = await createVisionAiServer({
+  const baseUrl = await startServer(context, {
     env: {
-      DEEPSEEK_API_KEY: 'test-key',
+      OPENCODE_GO_API_KEY: 'opencode-test-key',
       AI_RATE_LIMIT_PER_MINUTE: '100',
     },
     fetchImpl: async () => {
@@ -167,12 +163,8 @@ test('rejects models outside the server allowlist', async (context) => {
     },
     runtime: testRuntime(),
   })
-  server.listen(0, '127.0.0.1')
-  await once(server, 'listening')
-  context.after(() => server.close())
 
-  const address = server.address()
-  const response = await fetch(`http://127.0.0.1:${address.port}/api/ai/chat`, {
+  const response = await fetch(`${baseUrl}/api/ai/chat`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -187,89 +179,44 @@ test('rejects models outside the server allowlist', async (context) => {
   assert.equal(upstreamCalled, false)
 })
 
-test('lists model availability without exposing credentials', async (context) => {
-  const server = await createVisionAiServer({
+test('lists only the three OpenCode Go models without exposing its credential', async (context) => {
+  const baseUrl = await startServer(context, {
     env: {
-      DEEPSEEK_API_KEY: 'deepseek-secret',
-      OLLAMA_API_KEY: 'ollama-secret',
-      AI_DEFAULT_MODEL: 'kimi-k2.7-code',
+      OPENCODE_GO_API_KEY: 'opencode-secret',
+      AI_DEFAULT_MODEL: 'gpt-5.6-luna',
     },
     runtime: testRuntime(),
   })
-  server.listen(0, '127.0.0.1')
-  await once(server, 'listening')
-  context.after(() => server.close())
 
-  const address = server.address()
-  const response = await fetch(`http://127.0.0.1:${address.port}/api/ai/models`)
+  const response = await fetch(`${baseUrl}/api/ai/models`)
   const payload = await response.json()
 
   assert.equal(response.status, 200)
-  assert.equal(payload.defaultModel, 'kimi-k2.7-code')
+  assert.equal(payload.defaultModel, 'gpt-5.6-luna')
   assert.deepEqual(
-    payload.models.map((model) => [model.id, model.available]),
+    payload.models.map((model) => [model.id, model.provider, model.available]),
     [
-      ['deepseek-v4-flash', true],
-      ['deepseek-v4-pro', true],
-      ['glm-5.2', true],
-      ['kimi-k2.7-code', true],
+      ['gpt-5.6-luna', 'opencode-go', true],
+      ['deepseek-v4-flash', 'opencode-go', true],
+      ['glm-5.2', 'opencode-go', true],
     ],
   )
   assert.doesNotMatch(JSON.stringify(payload), /secret/)
 })
 
-test('can disable an account-gated model without removing it from the catalog', async (context) => {
-  const server = await createVisionAiServer({
-    env: {
-      OLLAMA_API_KEY: 'ollama-secret',
-      OLLAMA_KIMI_ENABLED: 'false',
-      AI_DEFAULT_MODEL: 'kimi-k2.7-code',
-    },
-    runtime: testRuntime(),
-  })
-  server.listen(0, '127.0.0.1')
-  await once(server, 'listening')
-  context.after(() => server.close())
-
-  const address = server.address()
-  const catalogResponse = await fetch(`http://127.0.0.1:${address.port}/api/ai/models`)
-  const catalog = await catalogResponse.json()
-  const kimi = catalog.models.find((model) => model.id === 'kimi-k2.7-code')
-
-  assert.equal(catalog.defaultModel, 'glm-5.2')
-  assert.equal(kimi.available, false)
-
-  const chatResponse = await fetch(`http://127.0.0.1:${address.port}/api/ai/chat`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      model: 'kimi-k2.7-code',
-      messages: [{ role: 'user', content: '你好' }],
-      thinking: false,
-    }),
-  })
-
-  assert.equal(chatResponse.status, 503)
-  assert.deepEqual(await chatResponse.json(), { error: 'Kimi K2.7 Code 当前未启用。' })
-})
-
-test('reports whether the server key is configured', async (context) => {
-  const server = await createVisionAiServer({
+test('reports whether the OpenCode Go key is configured', async (context) => {
+  const baseUrl = await startServer(context, {
     env: {},
     runtime: testRuntime(),
   })
-  server.listen(0, '127.0.0.1')
-  await once(server, 'listening')
-  context.after(() => server.close())
 
-  const address = server.address()
-  const response = await fetch(`http://127.0.0.1:${address.port}/api/health`)
+  const response = await fetch(`${baseUrl}/api/health`)
 
   assert.deepEqual(await response.json(), {
     status: 'ok',
     auth: 'enabled',
     database: 'connected',
-    defaultModel: 'deepseek-v4-flash',
+    defaultModel: 'gpt-5.6-luna',
     configured: false,
     models: [],
   })

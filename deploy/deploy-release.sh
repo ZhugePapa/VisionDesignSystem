@@ -45,6 +45,27 @@ ensure_environment_value() {
   fi
 }
 
+set_environment_value() {
+  local key="$1"
+  local value="$2"
+
+  if grep -q "^${key}=" "${environment_file}" 2>/dev/null; then
+    sed -i.bak "s|^${key}=.*$|${key}=${value}|" "${environment_file}"
+    rm -f "${environment_file}.bak"
+  else
+    printf '%s=%s\n' "${key}" "${value}" >> "${environment_file}"
+  fi
+}
+
+remove_environment_value() {
+  local key="$1"
+
+  if grep -q "^${key}=" "${environment_file}" 2>/dev/null; then
+    sed -i.bak "/^${key}=/d" "${environment_file}"
+    rm -f "${environment_file}.bak"
+  fi
+}
+
 prepare_persistent_runtime() {
   local auth_secret=""
   local database_path=""
@@ -67,6 +88,25 @@ prepare_persistent_runtime() {
   ensure_environment_value VISION_BUILTIN_ACCOUNT_PASSWORD vision123456
   ensure_environment_value VISION_AI_DATABASE_PATH "${app_dir}/data/vision-ai.sqlite"
   ensure_environment_value VISION_AI_UPLOAD_DIR "${app_dir}/data/uploads"
+  ensure_environment_value OPENCODE_GO_API_KEY ""
+  ensure_environment_value OPENCODE_GO_BASE_URL https://opencode.ai/zen/go/v1
+
+  if [[ -z "$(environment_value OPENCODE_GO_API_KEY)" ]]; then
+    echo 'OPENCODE_GO_API_KEY is required before deploying this release.' >&2
+    false
+  fi
+
+  set_environment_value AI_DEFAULT_MODEL gpt-5.6-luna
+  for legacy_key in \
+    DEEPSEEK_API_KEY \
+    DEEPSEEK_BASE_URL \
+    OLLAMA_API_KEY \
+    OLLAMA_BASE_URL \
+    OLLAMA_GLM_MODEL \
+    OLLAMA_KIMI_MODEL \
+    OLLAMA_KIMI_ENABLED; do
+    remove_environment_value "${legacy_key}"
+  done
 
   database_path="$(environment_value VISION_AI_DATABASE_PATH)"
   database_dir="$(dirname "${database_path}")"
@@ -135,9 +175,8 @@ tar -xzf "${archive_path}" -C "${staging_dir}"
 
 test -f "${staging_dir}/dist/docs/index.html"
 test -f "${staging_dir}/server/app.mjs"
-test -f "${staging_dir}/server/deepseek.mjs"
 test -f "${staging_dir}/server/models.mjs"
-test -f "${staging_dir}/server/ollama.mjs"
+test -f "${staging_dir}/server/opencode-go.mjs"
 test -f "${staging_dir}/node_modules/better-auth/package.json"
 test -f "${staging_dir}/package.json"
 test -f "${staging_dir}/package-lock.json"

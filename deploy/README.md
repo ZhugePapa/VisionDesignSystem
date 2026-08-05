@@ -20,8 +20,9 @@ documentation and API before restarting `vision-ai`.
 
 ## AI model configuration
 
-Provider credentials stay on the ECS host in `/etc/vision-ai.env`. They are not
-stored in the repository or GitHub Actions.
+The OpenCode Go credential stays on the ECS host in `/etc/vision-ai.env`. It is
+not stored in the repository or GitHub Actions. All three public models use the
+same subscription and API key.
 
 Every release also repairs the persistent runtime before restarting the API: it
 creates missing authentication and storage variables without replacing non-empty
@@ -32,14 +33,9 @@ once and retained in `/etc/vision-ai.env`.
 
 | Variable | Purpose | Default |
 | --- | --- | --- |
-| `DEEPSEEK_API_KEY` | DeepSeek V4 Flash and V4 Pro credential | Required for DeepSeek |
-| `DEEPSEEK_BASE_URL` | DeepSeek API origin | `https://api.deepseek.com` |
-| `OLLAMA_API_KEY` | Ollama Cloud credential for GLM-5.2 and Kimi K2.7 Code | Required for Ollama |
-| `OLLAMA_BASE_URL` | Ollama Cloud API origin | `https://ollama.com` |
-| `OLLAMA_GLM_MODEL` | Ollama Cloud upstream model name | `glm-5.2` |
-| `OLLAMA_KIMI_MODEL` | Ollama Cloud upstream model name | `kimi-k2.7-code` |
-| `OLLAMA_KIMI_ENABLED` | Enables Kimi K2.7 Code in the public catalog | `true` |
-| `AI_DEFAULT_MODEL` | Initially selected public model ID | `deepseek-v4-flash` |
+| `OPENCODE_GO_API_KEY` | OpenCode Go subscription API key for all models | Required |
+| `OPENCODE_GO_BASE_URL` | OpenCode Go API base URL | `https://opencode.ai/zen/go/v1` |
+| `AI_DEFAULT_MODEL` | Initially selected public model ID | `gpt-5.6-luna` |
 | `BETTER_AUTH_URL` | Public origin used for signed authentication cookies | `https://vision.leoht.space` |
 | `BETTER_AUTH_SECRET` | High-entropy secret used to sign authentication state | Required |
 | `AI_SEED_PASSWORD` | Initial password shared by the ten built-in accounts | Required |
@@ -47,10 +43,14 @@ once and retained in `/etc/vision-ai.env`.
 | `VISION_AI_DATABASE_PATH` | Persistent SQLite database outside release contents | `/opt/vision-design-system/data/vision-ai.sqlite` |
 | `VISION_AI_UPLOAD_DIR` | Persistent, authenticated attachment storage outside release contents | `/opt/vision-design-system/data/uploads` |
 
-The browser sends only a public model ID. The API resolves that ID through the
-server-side allowlist before choosing a provider, upstream model, and credential.
-Use `GET /api/ai/models` to inspect the public model catalog and availability
-without exposing provider secrets.
+The browser sends only one of `gpt-5.6-luna`, `deepseek-v4-flash`, or `glm-5.2`.
+The API resolves that ID through the server-side allowlist before choosing the
+OpenCode Go Responses or Chat Completions endpoint. Use `GET /api/ai/models` to
+inspect the public catalog and availability without exposing the credential.
+
+The deployment script requires `OPENCODE_GO_API_KEY` before activating an
+OpenCode Go release. During activation it removes legacy `DEEPSEEK_*` and
+`OLLAMA_*` values from `/etc/vision-ai.env`.
 
 ## Built-in AI accounts
 
