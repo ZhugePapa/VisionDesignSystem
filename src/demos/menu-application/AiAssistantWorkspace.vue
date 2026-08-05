@@ -537,7 +537,7 @@ async function createSession(question: string): Promise<AiChatSession> {
   conversationKey.value = session.id
   historyOpen.value = false
   await nextTick()
-  return session
+  return activeSession.value ?? session
 }
 
 function errorMarkdown(message: string): string {
