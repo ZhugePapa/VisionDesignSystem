@@ -3,6 +3,7 @@ import { once } from 'node:events'
 import test from 'node:test'
 
 import { createVisionAiServer } from './app.mjs'
+import { completeOpenCodeGoChat } from './opencode-go.mjs'
 
 function testRuntime(userId = 'test-user') {
   return {
@@ -30,7 +31,7 @@ function startServer(context, options) {
   })
 }
 
-test('streams both OpenCode Go chat-completions models through one credential', async (context) => {
+test('streams all three OpenCode Go chat-completions models through one credential', async (context) => {
   const requests = []
   const encoder = new TextEncoder()
   const baseUrl = await startServer(context, {
@@ -60,7 +61,8 @@ test('streams both OpenCode Go chat-completions models through one credential', 
     runtime: testRuntime(),
   })
 
-  for (const model of ['deepseek-v4-flash', 'glm-5.2']) {
+  const models = ['kimi-k3', 'deepseek-v4-flash', 'glm-5.2']
+  for (const model of models) {
     const response = await fetch(`${baseUrl}/api/ai/chat`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -80,8 +82,8 @@ test('streams both OpenCode Go chat-completions models through one credential', 
     assert.match(stream, /event: done/)
   }
 
-  assert.equal(requests.length, 2)
-  for (const [index, model] of ['deepseek-v4-flash', 'glm-5.2'].entries()) {
+  assert.equal(requests.length, 3)
+  for (const [index, model] of models.entries()) {
     const request = requests[index]
     assert.equal(request.url, 'https://opencode.ai/zen/go/v1/chat/completions')
     assert.equal(request.options.headers.Authorization, 'Bearer opencode-test-key')
@@ -92,62 +94,32 @@ test('streams both OpenCode Go chat-completions models through one credential', 
   }
 })
 
-test('streams GPT-5.6 Luna through the OpenCode Go Responses endpoint', async (context) => {
+test('sends Kimi K3 images through the OpenCode Go Chat Completions endpoint', async () => {
   let upstream
-  const encoder = new TextEncoder()
-  const baseUrl = await startServer(context, {
-    env: {
-      OPENCODE_GO_API_KEY: 'opencode-test-key',
-      AI_RATE_LIMIT_PER_MINUTE: '100',
-    },
+  const result = await completeOpenCodeGoChat({
+    apiKey: 'opencode-test-key',
     fetchImpl: async (url, options) => {
       upstream = { url, options, body: JSON.parse(options.body) }
-      return new Response(new ReadableStream({
-        start(controller) {
-          controller.enqueue(encoder.encode(
-            'data: {"type":"response.reasoning_summary_text.delta","delta":"先理解问题"}\n\n',
-          ))
-          controller.enqueue(encoder.encode(
-            'data: {"type":"response.output_text.delta","delta":"## 建议\\n开始执行。"}\n\n',
-          ))
-          controller.enqueue(encoder.encode(
-            'data: {"type":"response.completed","response":{"usage":{"total_tokens":13}}}\n\n',
-          ))
-          controller.close()
-        },
-      }), {
-        status: 200,
-        headers: { 'Content-Type': 'text/event-stream' },
+      return Response.json({
+        choices: [{ message: { content: '图片中显示登录界面。' } }],
       })
     },
-    runtime: testRuntime(),
+    images: [{ data: 'aW1hZ2U=', mimeType: 'image/png' }],
+    prompt: '描述图片',
   })
 
-  const response = await fetch(`${baseUrl}/api/ai/chat`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      model: 'gpt-5.6-luna',
-      messages: [{ role: 'user', content: '制定计划' }],
-      thinking: true,
-      reasoningEffort: 'high',
-    }),
-  })
-  const stream = await response.text()
-
-  assert.equal(response.status, 200)
-  assert.match(stream, /event: reasoning/)
-  assert.match(stream, /先理解问题/)
-  assert.match(stream, /event: content/)
-  assert.match(stream, /## 建议/)
-  assert.match(stream, /event: done/)
-  assert.equal(upstream.url, 'https://opencode.ai/zen/go/v1/responses')
+  assert.equal(result, '图片中显示登录界面。')
+  assert.equal(upstream.url, 'https://opencode.ai/zen/go/v1/chat/completions')
   assert.equal(upstream.options.headers.Authorization, 'Bearer opencode-test-key')
-  assert.equal(upstream.body.model, 'gpt-5.6-luna')
-  assert.equal(upstream.body.reasoning.effort, 'high')
-  assert.equal(upstream.body.reasoning.summary, 'auto')
-  assert.equal(upstream.body.instructions.includes('小 VI 智能助理'), true)
-  assert.equal(upstream.body.input[0].content, '制定计划')
+  assert.equal(upstream.body.model, 'kimi-k3')
+  assert.equal(upstream.body.stream, false)
+  assert.deepEqual(upstream.body.messages[0].content, [
+    { type: 'text', text: '描述图片' },
+    {
+      type: 'image_url',
+      image_url: { url: 'data:image/png;base64,aW1hZ2U=' },
+    },
+  ])
 })
 
 test('rejects models outside the server allowlist', async (context) => {
@@ -196,7 +168,7 @@ test('lists only the three OpenCode Go models without exposing its credential', 
   assert.deepEqual(
     payload.models.map((model) => [model.id, model.provider, model.available]),
     [
-      ['gpt-5.6-luna', 'opencode-go', true],
+      ['kimi-k3', 'opencode-go', true],
       ['deepseek-v4-flash', 'opencode-go', true],
       ['glm-5.2', 'opencode-go', true],
     ],

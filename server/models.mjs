@@ -6,10 +6,10 @@ const DEFAULT_BASE_URL = 'https://opencode.ai/zen/go/v1'
 
 const modelDefinitions = [
   {
-    id: 'gpt-5.6-luna',
-    label: 'GPT-5.6 Luna',
+    id: 'kimi-k3',
+    label: 'Kimi K3',
     provider: 'opencode-go',
-    apiStyle: 'responses',
+    apiStyle: 'chat-completions',
     supportsImages: true,
   },
   {

@@ -15,11 +15,7 @@ import {
   listAiModels,
   resolveAiModel,
 } from './models.mjs'
-import {
-  completeOpenCodeGoResponse,
-  streamOpenCodeGoChat,
-  streamOpenCodeGoResponses,
-} from './opencode-go.mjs'
+import { completeOpenCodeGoChat, streamOpenCodeGoChat } from './opencode-go.mjs'
 
 const DEFAULT_SYSTEM_PROMPT = `你是 Vision Design System 演示应用中的“小 VI 智能助理”。
 你主要帮助软件研发团队分析项目、需求、代码质量、流水线和交付风险。
@@ -225,12 +221,8 @@ async function streamProvider({
   messages,
   model,
   onEvent,
-  userId,
 }) {
-  const streamModel = model.apiStyle === 'responses'
-    ? streamOpenCodeGoResponses
-    : streamOpenCodeGoChat
-  await streamModel({
+  await streamOpenCodeGoChat({
     apiKey: model.apiKey,
     baseUrl: model.baseUrl,
     fetchImpl,
@@ -241,7 +233,6 @@ async function streamProvider({
     signal: controller.signal,
     systemPrompt: env.AI_SYSTEM_PROMPT || DEFAULT_SYSTEM_PROMPT,
     thinking: body.thinking === true,
-    userId,
     onEvent,
   })
 }
@@ -259,12 +250,12 @@ async function describeImages({
     error.statusCode = 503
     throw error
   }
-  const description = await completeOpenCodeGoResponse({
+  const description = await completeOpenCodeGoChat({
     apiKey,
     baseUrl: env.OPENCODE_GO_BASE_URL,
     fetchImpl,
     images: imagePayload(files),
-    model: 'gpt-5.6-luna',
+    model: 'kimi-k3',
     prompt: [
       '请分析这些图片，为另一个纯文本模型生成可靠的上下文。',
       '逐张给出：文件名、完整可见文字（OCR）、界面或场景结构、关键细节；不要推测不可见信息。',
@@ -611,7 +602,6 @@ export async function createVisionAiServer({
             maxTokens,
             messages,
             model,
-            userId,
             onEvent: (event, payload) => {
               if (event === 'reasoning' && typeof payload?.content === 'string') {
                 reasoning += payload.content
@@ -680,7 +670,6 @@ export async function createVisionAiServer({
             maxTokens,
             messages: body.messages,
             model,
-            userId,
             onEvent: (event, payload) => sse(res, event, payload),
           })
         } catch (error) {

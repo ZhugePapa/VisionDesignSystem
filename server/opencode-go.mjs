@@ -34,19 +34,19 @@ function reasoningText(delta) {
     .join('')
 }
 
-function responseInput(messages) {
-  return messages.map((message) => ({
+function chatMessage(message) {
+  return {
     role: message.role,
     content: message.images?.length
       ? [
-          { type: 'input_text', text: message.content },
+          { type: 'text', text: message.content },
           ...message.images.map((image) => ({
-            type: 'input_image',
-            image_url: `data:${image.mimeType};base64,${image.data}`,
+            type: 'image_url',
+            image_url: { url: `data:${image.mimeType};base64,${image.data}` },
           })),
         ]
       : message.content,
-  }))
+  }
 }
 
 async function readSse(response, handlePayload) {
@@ -100,7 +100,7 @@ export async function streamOpenCodeGoChat({
       model,
       messages: [
         { role: 'system', content: systemPrompt },
-        ...messages.map(({ role, content }) => ({ role, content })),
+        ...messages.map(chatMessage),
       ],
       stream: true,
       max_tokens: maxTokens,
@@ -141,107 +141,17 @@ export async function streamOpenCodeGoChat({
   if (!doneSent) onEvent('done', { usage })
 }
 
-export async function streamOpenCodeGoResponses({
-  apiKey,
-  baseUrl = 'https://opencode.ai/zen/go/v1',
-  fetchImpl = fetch,
-  maxTokens = 4096,
-  messages,
-  model,
-  reasoningEffort = 'high',
-  signal,
-  systemPrompt,
-  thinking = false,
-  userId,
-  onEvent,
-}) {
-  const response = await fetchImpl(`${baseUrl.replace(/\/$/, '')}/responses`, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      model,
-      instructions: systemPrompt,
-      input: responseInput(messages),
-      stream: true,
-      store: false,
-      max_output_tokens: maxTokens,
-      reasoning: {
-        effort: thinking ? reasoningEffort : 'none',
-        ...(thinking ? { summary: 'auto' } : {}),
-      },
-      ...(userId ? { user: userId } : {}),
-    }),
-    signal,
-  })
-
-  if (!response.ok) throw new Error(await upstreamError(response))
-
-  let doneSent = false
-  let usage
-  await readSse(response, (data) => {
-    if (data === '[DONE]') {
-      if (!doneSent) onEvent('done', { usage })
-      doneSent = true
-      return
-    }
-
-    let payload
-    try {
-      payload = JSON.parse(data)
-    } catch {
-      return
-    }
-    if (payload.type === 'error' || payload.type === 'response.failed') {
-      throw new Error(
-        payload.error?.message
-        || payload.response?.error?.message
-        || 'OpenCode Go Responses stream returned an error',
-      )
-    }
-
-    if (
-      payload.type === 'response.reasoning_summary_text.delta'
-      || payload.type === 'response.reasoning_text.delta'
-    ) {
-      if (payload.delta) onEvent('reasoning', { content: payload.delta })
-    }
-    if (payload.type === 'response.output_text.delta' && payload.delta) {
-      onEvent('content', { content: payload.delta })
-    }
-    if (payload.type === 'response.completed') {
-      usage = payload.response?.usage ?? usage
-      if (!doneSent) onEvent('done', { usage })
-      doneSent = true
-    }
-  })
-
-  if (!doneSent) onEvent('done', { usage })
-}
-
-function completedResponseText(payload) {
-  if (typeof payload?.output_text === 'string') return payload.output_text.trim()
-  return (payload?.output ?? [])
-    .flatMap((item) => item?.content ?? [])
-    .filter((part) => part?.type === 'output_text')
-    .map((part) => part.text || '')
-    .join('')
-    .trim()
-}
-
-export async function completeOpenCodeGoResponse({
+export async function completeOpenCodeGoChat({
   apiKey,
   baseUrl = 'https://opencode.ai/zen/go/v1',
   fetchImpl = fetch,
   images = [],
   maxTokens = 2048,
-  model = 'gpt-5.6-luna',
+  model = 'kimi-k3',
   prompt,
   signal,
 }) {
-  const response = await fetchImpl(`${baseUrl.replace(/\/$/, '')}/responses`, {
+  const response = await fetchImpl(`${baseUrl.replace(/\/$/, '')}/chat/completions`, {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${apiKey}`,
@@ -249,23 +159,23 @@ export async function completeOpenCodeGoResponse({
     },
     body: JSON.stringify({
       model,
-      input: [{
+      messages: [{
         role: 'user',
         content: [
-          { type: 'input_text', text: prompt },
+          { type: 'text', text: prompt },
           ...images.map((image) => ({
-            type: 'input_image',
-            image_url: `data:${image.mimeType};base64,${image.data}`,
+            type: 'image_url',
+            image_url: { url: `data:${image.mimeType};base64,${image.data}` },
           })),
         ],
       }],
-      store: false,
-      max_output_tokens: maxTokens,
-      reasoning: { effort: 'none' },
+      stream: false,
+      max_tokens: maxTokens,
     }),
     signal,
   })
 
   if (!response.ok) throw new Error(await upstreamError(response))
-  return completedResponseText(await response.json())
+  const payload = await response.json()
+  return contentText(payload?.choices?.[0]?.message?.content).trim()
 }

@@ -43,9 +43,9 @@ once and retained in `/etc/vision-ai.env`.
 | `VISION_AI_DATABASE_PATH` | Persistent SQLite database outside release contents | `/opt/vision-design-system/data/vision-ai.sqlite` |
 | `VISION_AI_UPLOAD_DIR` | Persistent, authenticated attachment storage outside release contents | `/opt/vision-design-system/data/uploads` |
 
-The browser sends only one of `gpt-5.6-luna`, `deepseek-v4-flash`, or `glm-5.2`.
+The browser sends only one of `kimi-k3`, `deepseek-v4-flash`, or `glm-5.2`.
 The API resolves that ID through the server-side allowlist before choosing the
-OpenCode Go Responses or Chat Completions endpoint. Use `GET /api/ai/models` to
+OpenCode Go Chat Completions endpoint. Use `GET /api/ai/models` to
 inspect the public catalog and availability without exposing the credential.
 
 The deployment script requires `OPENCODE_GO_API_KEY` before activating an
