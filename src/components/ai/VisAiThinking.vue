@@ -11,6 +11,7 @@ const props = withDefaults(defineProps<VisAiThinkingProps>(), {
   expanded: undefined,
   defaultExpanded: false,
   state: 'default',
+  loading: true,
   label: '正在思考...',
   content: '这里是思考的内容',
 })
@@ -55,7 +56,11 @@ watch(
       :aria-expanded="isExpanded"
       @click="toggleExpanded"
     >
-      <VisLoadingText :label="label" />
+      <VisLoadingText v-if="loading" :label="label" />
+      <span v-else class="vis-ai-thinking__status">
+        <Icon name="atom-02" :size="16" decorative />
+        <span>{{ label }}</span>
+      </span>
       <Icon
         class="vis-ai-thinking__chevron"
         :name="isExpanded ? 'chevron-down' : 'chevron-right'"
@@ -95,6 +100,17 @@ watch(
   border-radius: var(--radius-sm);
   outline: 2px solid var(--color-effect-focus-ring-brand);
   outline-offset: 2px;
+}
+
+.vis-ai-thinking__status {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-4);
+  color: var(--color-text-secondary);
+}
+
+.vis-ai-thinking__status > :first-child {
+  color: var(--color-fg-secondary);
 }
 
 .vis-ai-thinking__chevron {

@@ -43,6 +43,7 @@ export interface VisAiThinkingProps {
   expanded?: boolean
   defaultExpanded?: boolean
   state?: VisAiThinkingState
+  loading?: boolean
   label?: string
   content?: string
 }
@@ -126,6 +127,7 @@ export interface VisAiSenderModel {
   label: string
   iconName?: IconName
   disabled?: boolean
+  supportsThinking?: boolean
 }
 
 export interface VisAiSenderSkill {

@@ -10,6 +10,7 @@ const modelDefinitions = [
     label: 'Kimi K3',
     provider: 'opencode-go',
     apiStyle: 'chat-completions',
+    supportsThinking: true,
     supportsImages: true,
   },
   {
@@ -17,12 +18,14 @@ const modelDefinitions = [
     label: 'DeepSeek V4 Flash',
     provider: 'opencode-go',
     apiStyle: 'chat-completions',
+    supportsThinking: true,
   },
   {
     id: 'glm-5.2',
     label: 'GLM-5.2',
     provider: 'opencode-go',
     apiStyle: 'chat-completions',
+    supportsThinking: true,
   },
 ]
 
@@ -32,7 +35,7 @@ function publicModel(definition, env) {
     label: definition.label,
     provider: definition.provider,
     available: Boolean(env[API_KEY_ENV]),
-    supportsThinking: true,
+    supportsThinking: definition.supportsThinking === true,
     supportsImages: definition.supportsImages === true,
   }
 }

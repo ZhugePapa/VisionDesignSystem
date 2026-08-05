@@ -79,9 +79,9 @@ const senderValue = ref('')
 const deepThinking = ref(false)
 const selectedModel = ref<VisAiKey>('')
 const senderModels = ref<VisAiSenderModel[]>([
-  { key: 'kimi-k3', label: 'Kimi K3', iconName: 'cube-01' },
-  { key: 'deepseek-v4-flash', label: 'DeepSeek V4 Flash', iconName: 'cube-01' },
-  { key: 'glm-5.2', label: 'GLM-5.2', iconName: 'cube-01' },
+  { key: 'kimi-k3', label: 'Kimi K3', iconName: 'cube-01', supportsThinking: true },
+  { key: 'deepseek-v4-flash', label: 'DeepSeek V4 Flash', iconName: 'cube-01', supportsThinking: true },
+  { key: 'glm-5.2', label: 'GLM-5.2', iconName: 'cube-01', supportsThinking: true },
 ])
 const selectedSpeed = ref<VisAiSenderSpeed>('high')
 const selectedSkill = ref<VisAiKey | ''>('')
@@ -109,7 +109,6 @@ let activeController: AbortController | undefined
 let dragPointerId: number | undefined
 let dragOffsetX = 0
 let dragOffsetY = 0
-let fileDragDepth = 0
 let restoringDraft = false
 const uploadControllers = new Map<string, AbortController>()
 const retryFiles = new Map<string, File>()
@@ -251,10 +250,25 @@ function abortUploads(): void {
 
 function resetConversation(): void {
   abortActiveRequest()
-  saveDraft()
+  const previousConversationKey = conversationKey.value
+  saveDraft(previousConversationKey)
+  if (!previousConversationKey) {
+    abortUploads()
+    attachments.value.forEach((item) => {
+      if (item.fileId) void deleteVisionAiFile(item.fileId)
+    })
+  }
+  const newDraftKey = draftStorageKey('')
+  if (newDraftKey) window.localStorage.removeItem(newDraftKey)
   responding.value = false
   conversationKey.value = ''
-  restoreDraft('')
+  senderValue.value = ''
+  attachments.value = []
+  selectedSkill.value = ''
+  deepThinking.value = false
+  uploadError.value = ''
+  historyOpen.value = false
+  modeMenuOpen.value = false
 }
 
 function sessionFromConversation(conversation: VisionAiConversation): AiChatSession {
@@ -289,6 +303,7 @@ async function loadAvailableModels(): Promise<void> {
       label: model.label,
       iconName: 'cube-01',
       disabled: !model.available,
+      supportsThinking: model.supportsThinking,
     }))
 
     const selected = senderModels.value.find((model) => model.key === selectedModel.value)
@@ -482,24 +497,31 @@ function containsFiles(event: DragEvent): boolean {
 
 function startFileDrag(event: DragEvent): void {
   if (!containsFiles(event) || !authUser.value) return
-  fileDragDepth += 1
   isFileDragActive.value = true
 }
 
 function continueFileDrag(event: DragEvent): void {
   if (!containsFiles(event)) return
+  isFileDragActive.value = true
   if (event.dataTransfer) event.dataTransfer.dropEffect = 'copy'
 }
 
 function leaveFileDrag(event: DragEvent): void {
   if (!containsFiles(event)) return
-  fileDragDepth = Math.max(0, fileDragDepth - 1)
-  if (fileDragDepth === 0) isFileDragActive.value = false
+  const nextTarget = event.relatedTarget
+  if (
+    nextTarget instanceof Node
+    && assistantRef.value?.contains(nextTarget)
+  ) return
+  clearFileDrag()
+}
+
+function clearFileDrag(): void {
+  isFileDragActive.value = false
 }
 
 function dropFiles(event: DragEvent): void {
-  fileDragDepth = 0
-  isFileDragActive.value = false
+  clearFileDrag()
   if (event.dataTransfer?.files.length) uploadFiles(event.dataTransfer.files)
 }
 
@@ -513,12 +535,44 @@ async function createSession(question: string): Promise<AiChatSession> {
 
   sessions.value = [session, ...sessions.value]
   conversationKey.value = session.id
+  historyOpen.value = false
+  await nextTick()
   return session
 }
 
 function errorMarkdown(message: string): string {
   const normalizedMessage = message.replace(/\s+/g, ' ').trim()
   return `> **AI 服务暂时不可用**\n>\n> ${normalizedMessage || '请稍后重试。'}`
+}
+
+function answerVariantTotal(turn: AiChatTurn): number {
+  return Math.max(1, (turn.answerVariants?.length ?? 0) + 1)
+}
+
+function answerVariantCurrent(turn: AiChatTurn): number {
+  const total = answerVariantTotal(turn)
+  return Math.min(total, Math.max(1, (turn.answerIndex ?? total - 1) + 1))
+}
+
+function displayedAnswer(turn: AiChatTurn): string {
+  const index = answerVariantCurrent(turn) - 1
+  return index < (turn.answerVariants?.length ?? 0)
+    ? turn.answerVariants[index]?.answer ?? ''
+    : turn.answer
+}
+
+function displayedReasoning(turn: AiChatTurn): string {
+  const index = answerVariantCurrent(turn) - 1
+  return index < (turn.answerVariants?.length ?? 0)
+    ? turn.answerVariants[index]?.reasoning ?? ''
+    : turn.reasoning
+}
+
+function selectAnswerVariant(turn: AiChatTurn, current: number): void {
+  turn.answerIndex = Math.min(
+    answerVariantTotal(turn) - 1,
+    Math.max(0, Math.floor(current) - 1),
+  )
 }
 
 async function runTurn(
@@ -534,6 +588,7 @@ async function runTurn(
   responding.value = true
   turn.answer = ''
   turn.reasoning = ''
+  turn.answerIndex = turn.answerVariants?.length ?? 0
   turn.status = 'streaming'
   turn.thinkingExpanded = true
   turn.feedback = null
@@ -587,6 +642,7 @@ async function runTurn(
 
 async function submitQuestion(payload: VisAiSenderSubmitPayload): Promise<void> {
   const question = payload.value.trim() || '请分析这些附件。'
+  const submittedDraftKey = draftStorageKey()
   const attachmentsReady = payload.attachments.every((item) => item.status === 'ready')
   if (
     (!question && !payload.attachments.length)
@@ -615,6 +671,8 @@ async function submitQuestion(payload: VisAiSenderSubmitPayload): Promise<void> 
     thinking: payload.deepThinking,
     thinkingExpanded: true,
     feedback: null,
+    answerVariants: [],
+    answerIndex: 0,
     attachments: payload.attachments.map((item) => ({ ...item })),
     createdAt: timestamp,
     updatedAt: timestamp,
@@ -624,7 +682,9 @@ async function submitQuestion(payload: VisAiSenderSubmitPayload): Promise<void> 
   senderValue.value = ''
   attachments.value = []
   selectedSkill.value = ''
+  if (submittedDraftKey) window.localStorage.removeItem(submittedDraftKey)
   saveDraft()
+  await nextTick()
   await runTurn(session, session.turns.length - 1)
 }
 
@@ -639,6 +699,12 @@ function regenerateTurn(turnId: string): void {
   const turnIndex = session.turns.findIndex((turn) => turn.id === turnId)
   if (turnIndex < 0) return
 
+  const turn = session.turns[turnIndex]
+  turn.answerVariants ??= []
+  if (turn.answer || turn.reasoning) {
+    turn.answerVariants.push({ answer: turn.answer, reasoning: turn.reasoning })
+  }
+  turn.answerIndex = turn.answerVariants.length
   session.turns.splice(turnIndex + 1)
   void runTurn(session, turnIndex, true)
 }
@@ -652,11 +718,12 @@ function thinkingLabel(turn: AiChatTurn): string {
   if (turn.status === 'streaming') return '正在思考...'
   if (turn.status === 'stopped') return '已停止思考'
   if (turn.status === 'error') return '思考中断'
-  return '思考过程'
+  return '已回答'
 }
 
 function thinkingContent(turn: AiChatTurn): string {
-  if (turn.reasoning) return turn.reasoning
+  const reasoning = displayedReasoning(turn)
+  if (reasoning) return reasoning
   return turn.status === 'streaming' ? '模型正在组织回答，请稍候。' : ''
 }
 
@@ -829,6 +896,8 @@ watch(
 
 onMounted(() => {
   window.addEventListener('resize', keepFloatWindowInViewport)
+  window.addEventListener('dragend', clearFileDrag)
+  window.addEventListener('drop', clearFileDrag)
   void initializeAuth()
 })
 
@@ -837,6 +906,8 @@ onBeforeUnmount(() => {
   abortUploads()
   stopFloatDrag()
   window.removeEventListener('resize', keepFloatWindowInViewport)
+  window.removeEventListener('dragend', clearFileDrag)
+  window.removeEventListener('drop', clearFileDrag)
 })
 </script>
 
@@ -1092,14 +1163,15 @@ onBeforeUnmount(() => {
                   <VisAiBubble :content="turn.question" />
                 </div>
                 <VisAiThinking
-                  v-if="turn.reasoning || turn.status === 'streaming'"
+                  v-if="displayedReasoning(turn) || turn.status === 'streaming'"
                   v-model:expanded="turn.thinkingExpanded"
+                  :loading="turn.status === 'streaming'"
                   :label="thinkingLabel(turn)"
                   :content="thinkingContent(turn)"
                 />
-                <div v-if="turn.answer" class="ai-assistant__answer">
+                <div v-if="displayedAnswer(turn)" class="ai-assistant__answer">
                   <VisMarkdown
-                    :content="turn.answer"
+                    :content="displayedAnswer(turn)"
                     :streaming="{
                       hasNextChunk: turn.status === 'streaming',
                       enableAnimation: true,
@@ -1109,10 +1181,12 @@ onBeforeUnmount(() => {
                   <VisAiActions
                     v-if="turn.status !== 'streaming'"
                     v-model:feedback="turn.feedback"
-                    :current="1"
-                    :total="1"
+                    :pagination="answerVariantTotal(turn) > 1"
+                    :current="answerVariantCurrent(turn)"
+                    :total="answerVariantTotal(turn)"
                     :disabled="responding"
-                    @copy="copyAnswer(turn.answer)"
+                    @update:current="selectAnswerVariant(turn, $event)"
+                    @copy="copyAnswer(displayedAnswer(turn))"
                     @refresh="regenerateTurn(turn.id)"
                   />
                 </div>
@@ -1284,14 +1358,15 @@ onBeforeUnmount(() => {
               <VisAiBubble :content="turn.question" />
             </div>
             <VisAiThinking
-              v-if="turn.reasoning || turn.status === 'streaming'"
+              v-if="displayedReasoning(turn) || turn.status === 'streaming'"
               v-model:expanded="turn.thinkingExpanded"
+              :loading="turn.status === 'streaming'"
               :label="thinkingLabel(turn)"
               :content="thinkingContent(turn)"
             />
-            <div v-if="turn.answer" class="ai-assistant__answer">
+            <div v-if="displayedAnswer(turn)" class="ai-assistant__answer">
               <VisMarkdown
-                :content="turn.answer"
+                :content="displayedAnswer(turn)"
                 :streaming="{
                   hasNextChunk: turn.status === 'streaming',
                   enableAnimation: true,
@@ -1301,10 +1376,12 @@ onBeforeUnmount(() => {
               <VisAiActions
                 v-if="turn.status !== 'streaming'"
                 v-model:feedback="turn.feedback"
-                :current="1"
-                :total="1"
+                :pagination="answerVariantTotal(turn) > 1"
+                :current="answerVariantCurrent(turn)"
+                :total="answerVariantTotal(turn)"
                 :disabled="responding"
-                @copy="copyAnswer(turn.answer)"
+                @update:current="selectAnswerVariant(turn, $event)"
+                @copy="copyAnswer(displayedAnswer(turn))"
                 @refresh="regenerateTurn(turn.id)"
               />
             </div>

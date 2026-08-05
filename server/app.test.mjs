@@ -166,11 +166,16 @@ test('lists only the three OpenCode Go models without exposing its credential', 
   assert.equal(response.status, 200)
   assert.equal(payload.defaultModel, 'deepseek-v4-flash')
   assert.deepEqual(
-    payload.models.map((model) => [model.id, model.provider, model.available]),
+    payload.models.map((model) => [
+      model.id,
+      model.provider,
+      model.available,
+      model.supportsThinking,
+    ]),
     [
-      ['kimi-k3', 'opencode-go', true],
-      ['deepseek-v4-flash', 'opencode-go', true],
-      ['glm-5.2', 'opencode-go', true],
+      ['kimi-k3', 'opencode-go', true, true],
+      ['deepseek-v4-flash', 'opencode-go', true, true],
+      ['glm-5.2', 'opencode-go', true, true],
     ],
   )
   assert.doesNotMatch(JSON.stringify(payload), /secret/)

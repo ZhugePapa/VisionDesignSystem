@@ -33,9 +33,9 @@ const props = withDefaults(defineProps<VisAiSenderProps>(), {
   deepThinking: false,
   model: '',
   models: () => [
-    { key: 'kimi-k3', label: 'Kimi K3', iconName: 'cube-01' },
-    { key: 'deepseek-v4-flash', label: 'DeepSeek V4 Flash', iconName: 'cube-01' },
-    { key: 'glm-5.2', label: 'GLM-5.2', iconName: 'cube-01' },
+    { key: 'kimi-k3', label: 'Kimi K3', iconName: 'cube-01', supportsThinking: true },
+    { key: 'deepseek-v4-flash', label: 'DeepSeek V4 Flash', iconName: 'cube-01', supportsThinking: true },
+    { key: 'glm-5.2', label: 'GLM-5.2', iconName: 'cube-01', supportsThinking: true },
   ],
   modelSwitchable: true,
   speed: 'high',
@@ -104,6 +104,7 @@ const speedOptions: Array<{ value: VisAiSenderSpeed; label: string }> = [
 ]
 
 const selectedModel = computed(() => props.models.find((item) => item.key === props.model))
+const supportsDeepThinking = computed(() => selectedModel.value?.supportsThinking !== false)
 const selectedSkill = computed(() => props.skills.find((item) => item.key === props.skill))
 const selectedSpeedLabel = computed(
   () => speedOptions.find((item) => item.value === props.speed)?.label ?? '高',
@@ -129,7 +130,7 @@ function submit(): void {
     model: props.model || undefined,
     speed: props.speed,
     skill: props.skill || undefined,
-    deepThinking: props.deepThinking,
+    deepThinking: supportsDeepThinking.value && props.deepThinking,
     attachments: props.attachments,
   })
 }
@@ -182,6 +183,10 @@ function toggleAttachmentMenu(toggle: () => void, event: MouseEvent): void {
 
 watch(modelMenuOpen, (open) => {
   if (!open) speedMenuOpen.value = false
+})
+
+watch(supportsDeepThinking, (supported) => {
+  if (!supported && props.deepThinking) emit('update:deepThinking', false)
 })
 
 onBeforeUnmount(() => {
@@ -297,6 +302,7 @@ onBeforeUnmount(() => {
         </VisDropdown>
 
         <VisToggleButton
+          v-if="supportsDeepThinking"
           :model-value="deepThinking"
           size="md"
           icon-name="atom-02"

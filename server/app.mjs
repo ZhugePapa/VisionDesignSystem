@@ -514,6 +514,7 @@ export async function createVisionAiServer({
 
         const body = await readJson(req)
         const model = resolveAiModel(body.model, env)
+        body.thinking = model.supportsThinking && body.thinking === true
         const requestedAttachments = validatedAttachments(body.attachments)
         const resolvedAttachments = fileStore
           ? fileStore.resolve(userId, requestedAttachments)
@@ -658,6 +659,7 @@ export async function createVisionAiServer({
         const body = await readJson(req)
         body.messages = validatedMessages(body.messages)
         const model = resolveAiModel(body.model, env)
+        body.thinking = model.supportsThinking && body.thinking === true
         const stream = createStreamController(req, res, timeoutMs)
         openEventStream(res)
 

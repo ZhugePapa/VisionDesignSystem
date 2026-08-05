@@ -14,6 +14,22 @@ function parseAttachments(value) {
   }
 }
 
+function parseAnswerVariants(value) {
+  if (!value) return []
+  try {
+    const parsed = JSON.parse(value)
+    if (!Array.isArray(parsed)) return []
+    return parsed
+      .filter((variant) => variant && typeof variant === 'object')
+      .map((variant) => ({
+        answer: String(variant.answer || ''),
+        reasoning: String(variant.reasoning || ''),
+      }))
+  } catch {
+    return []
+  }
+}
+
 function conversationFromRow(row) {
   return {
     id: row.id,
@@ -25,6 +41,7 @@ function conversationFromRow(row) {
 }
 
 function turnFromRow(row) {
+  const answerVariants = parseAnswerVariants(row.answer_versions)
   return {
     id: row.id,
     question: row.question,
@@ -35,6 +52,8 @@ function turnFromRow(row) {
     thinking: Boolean(row.thinking),
     thinkingExpanded: false,
     feedback: null,
+    answerVariants,
+    answerIndex: answerVariants.length,
     attachments: parseAttachments(row.attachments),
     createdAt: row.created_at,
     updatedAt: row.updated_at,
@@ -81,6 +100,14 @@ export class ConversationStore {
       CREATE INDEX IF NOT EXISTS ai_turn_conversation_position_idx
         ON ai_turn(conversation_id, position);
     `)
+
+    const turnColumns = this.database.prepare('PRAGMA table_info(ai_turn)').all()
+    if (!turnColumns.some((column) => column.name === 'answer_versions')) {
+      this.database.exec(`
+        ALTER TABLE ai_turn
+        ADD COLUMN answer_versions TEXT NOT NULL DEFAULT '[]'
+      `)
+    }
   }
 
   listConversations(userId) {
@@ -173,7 +200,7 @@ export class ConversationStore {
     return this.database.prepare(`
       SELECT
         id, question, answer, reasoning, model, status, thinking,
-        attachments, created_at, updated_at
+        attachments, answer_versions, created_at, updated_at
       FROM ai_turn
       WHERE conversation_id = ?
       ORDER BY position ASC
@@ -200,6 +227,8 @@ export class ConversationStore {
       thinking: input.thinking,
       thinkingExpanded: true,
       feedback: null,
+      answerVariants: [],
+      answerIndex: 0,
       attachments: input.attachments,
       createdAt: timestamp,
       updatedAt: timestamp,
@@ -241,6 +270,11 @@ export class ConversationStore {
 
     if (!row) return null
 
+    const answerVariants = parseAnswerVariants(row.answer_versions)
+    if (row.answer.trim() || row.reasoning.trim()) {
+      answerVariants.push({ answer: row.answer, reasoning: row.reasoning })
+    }
+
     this.database.exec('BEGIN')
     try {
       this.database.prepare(`
@@ -249,9 +283,9 @@ export class ConversationStore {
       `).run(conversationId, row.position)
       this.database.prepare(`
         UPDATE ai_turn
-        SET answer = '', reasoning = '', status = 'streaming', updated_at = ?
+        SET answer = '', reasoning = '', answer_versions = ?, status = 'streaming', updated_at = ?
         WHERE id = ?
-      `).run(now(), turnId)
+      `).run(JSON.stringify(answerVariants), now(), turnId)
       this.database.exec('COMMIT')
     } catch (error) {
       this.database.exec('ROLLBACK')
@@ -263,6 +297,7 @@ export class ConversationStore {
       ...row,
       answer: '',
       reasoning: '',
+      answer_versions: JSON.stringify(answerVariants),
       status: 'streaming',
       updated_at: now(),
     })

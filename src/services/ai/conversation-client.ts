@@ -18,6 +18,11 @@ export interface VisionAiConversation {
   updatedAt: string
 }
 
+export interface VisionAiAnswerVariant {
+  answer: string
+  reasoning: string
+}
+
 export interface VisionAiTurn {
   id: string
   question: string
@@ -28,6 +33,8 @@ export interface VisionAiTurn {
   thinking: boolean
   thinkingExpanded: boolean
   feedback: VisAiActionFeedback
+  answerVariants: VisionAiAnswerVariant[]
+  answerIndex: number
   attachments: VisAiAttachmentItem[]
   createdAt: string
   updatedAt: string
@@ -234,4 +241,3 @@ export async function streamVisionAiConversation(
     if (done) break
   }
 }
-
