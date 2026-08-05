@@ -3,6 +3,7 @@ import { join } from 'node:path'
 import { pathToFileURL } from 'node:url'
 
 import { createAuthService } from './auth.mjs'
+import { AiArtifactStore } from './artifacts.mjs'
 import { ConversationStore } from './conversations.mjs'
 import {
   AiFileStore,
@@ -17,10 +18,20 @@ import {
 } from './models.mjs'
 import { completeOpenCodeGoChat, streamOpenCodeGoChat } from './opencode-go.mjs'
 
-const DEFAULT_SYSTEM_PROMPT = `你是 Vision Design System 演示应用中的“小 VI 智能助理”。
-你主要帮助软件研发团队分析项目、需求、代码质量、流水线和交付风险。
-请使用简体中文回答，优先给出清晰、可执行的结论。
-回答使用 Markdown；不要编造当前项目中没有提供的数据，信息不足时明确说明。`
+const DEFAULT_SYSTEM_PROMPT = `你是“小 VI 智能助理”，一个通用 AI 对话助手。
+请根据用户使用的语言回答；未指定时使用简体中文。
+回答应准确、清晰、直接，并在有帮助时使用 Markdown。
+不知道或信息不足时请明确说明，不要编造事实、数据或工具执行结果。
+只有在系统实际提供相应工具时，才能声称已经生成图片或文件；工具不可用时请说明限制，并提供可执行的替代方案。
+当系统提供 create_markdown_file 工具且用户明确要求创建、生成、导出或保存 Markdown 文件时，必须调用该工具，并把完整 Markdown 正文放入 content 参数；不要把工具参数当作普通回答输出。`
+
+const TIMEOUT_ANSWER = `> **回答超时**
+>
+> 本次请求超过了服务器等待时间。请重试；如果开启了深度思考，也可以关闭后再试。`
+
+const EMPTY_ANSWER = `> **未能生成最终回答**
+>
+> 模型已经结束推理，但没有返回正文。请重试，或关闭深度思考后再试。`
 
 const MAX_BODY_BYTES = 256 * 1024
 const MAX_MESSAGES = 24
@@ -28,6 +39,33 @@ const MAX_MESSAGE_CHARS = 12_000
 const MAX_CONTEXT_MESSAGE_CHARS = 120_000
 const MAX_TOTAL_CHARS = 300_000
 const MAX_ATTACHMENTS = 12
+
+const MARKDOWN_ARTIFACT_TOOL = {
+  type: 'function',
+  function: {
+    name: 'create_markdown_file',
+    description: '创建一个可保存、预览和下载的 Markdown 文件。仅在用户明确要求生成或导出 Markdown 文件时调用。',
+    parameters: {
+      type: 'object',
+      additionalProperties: false,
+      properties: {
+        filename: {
+          type: 'string',
+          description: '文件名，必须以 .md 结尾。',
+        },
+        content: {
+          type: 'string',
+          description: '完整的 Markdown 文件正文，不要使用包裹全文的代码围栏。',
+        },
+        description: {
+          type: 'string',
+          description: '不超过 80 个字的文件内容摘要。',
+        },
+      },
+      required: ['filename', 'content'],
+    },
+  },
+}
 
 function positiveInteger(value, fallback) {
   const parsed = Number.parseInt(String(value ?? ''), 10)
@@ -184,6 +222,35 @@ function fileRouteId(pathname, suffix = '') {
   return match ? decodeURIComponent(match[1]) : null
 }
 
+function artifactRouteId(pathname, suffix = '') {
+  const escapedSuffix = suffix.replaceAll('/', '\\/')
+  const match = pathname.match(new RegExp(
+    `^\\/api\\/ai\\/artifacts\\/([^/]+)${escapedSuffix}$`,
+  ))
+  return match ? decodeURIComponent(match[1]) : null
+}
+
+function wantsMarkdownArtifact(messages) {
+  const prompt = [...messages].reverse().find((message) => message.role === 'user')?.content || ''
+  return /(?:生成|创建|制作|导出|保存|整理成|写成|撰写|编写|写一个|做一个|做个)[\s\S]{0,40}(?:markdown|md\s*文件|\.md\b)|(?:markdown|md\s*文件|\.md\b)[\s\S]{0,40}(?:生成|创建|制作|导出|保存|撰写|编写)|(?:create|generate|export|save|write)[\s\S]{0,40}(?:markdown|\.md\b)/i.test(prompt)
+}
+
+function parseMarkdownToolCall(call) {
+  if (call?.type !== 'function' || call?.function?.name !== 'create_markdown_file') {
+    throw new Error('模型返回了不支持的工具调用。')
+  }
+  let input
+  try {
+    input = JSON.parse(call.function.arguments || '{}')
+  } catch {
+    throw new Error('模型返回的 Markdown 文件参数不完整，请重试。')
+  }
+  if (typeof input.filename !== 'string' || typeof input.content !== 'string') {
+    throw new Error('模型没有返回有效的 Markdown 文件名或正文，请重试。')
+  }
+  return input
+}
+
 function originAllowed(req, allowedOrigin) {
   const origin = req.headers.origin?.replace(/\/$/, '')
   return !allowedOrigin || !origin || origin === allowedOrigin
@@ -191,13 +258,20 @@ function originAllowed(req, allowedOrigin) {
 
 function createStreamController(req, res, timeoutMs) {
   const controller = new AbortController()
-  const timeout = setTimeout(() => controller.abort(), timeoutMs)
-  req.once('aborted', () => controller.abort())
+  let terminationReason = null
+  const abort = (reason) => {
+    if (controller.signal.aborted) return
+    terminationReason = reason
+    controller.abort(reason)
+  }
+  const timeout = setTimeout(() => abort('timeout'), timeoutMs)
+  req.once('aborted', () => abort('client'))
   res.once('close', () => {
-    if (!res.writableEnded) controller.abort()
+    if (!res.writableEnded) abort('client')
   })
   return {
     controller,
+    terminationReason: () => terminationReason,
     dispose: () => clearTimeout(timeout),
   }
 }
@@ -221,6 +295,8 @@ async function streamProvider({
   messages,
   model,
   onEvent,
+  toolChoice,
+  tools,
 }) {
   await streamOpenCodeGoChat({
     apiKey: model.apiKey,
@@ -232,7 +308,11 @@ async function streamProvider({
     reasoningEffort: body.reasoningEffort === 'max' ? 'max' : 'high',
     signal: controller.signal,
     systemPrompt: env.AI_SYSTEM_PROMPT || DEFAULT_SYSTEM_PROMPT,
-    thinking: body.thinking === true,
+    // Several OpenCode Go providers reject tool_choice while reasoning mode is active.
+    // Artifact generation prioritizes the deterministic tool call over hidden reasoning.
+    thinking: body.thinking === true && !(Array.isArray(tools) && tools.length),
+    toolChoice,
+    tools,
     onEvent,
   })
 }
@@ -324,9 +404,11 @@ async function createRuntime(env) {
   const authService = await createAuthService(env)
   const conversationStore = new ConversationStore(authService.database)
   const fileStore = new AiFileStore(authService.database, env)
+  const artifactStore = new AiArtifactStore(authService.database, env)
   conversationStore.migrate()
   fileStore.migrate()
-  return { authService, conversationStore, fileStore }
+  artifactStore.migrate()
+  return { authService, conversationStore, fileStore, artifactStore }
 }
 
 export async function createVisionAiServer({
@@ -335,7 +417,7 @@ export async function createVisionAiServer({
   runtime,
 } = {}) {
   const services = runtime ?? await createRuntime(env)
-  const { authService, conversationStore, fileStore } = services
+  const { authService, conversationStore, fileStore, artifactStore } = services
   const allowedOrigin = env.AI_ALLOWED_ORIGIN?.replace(/\/$/, '')
   const maxTokens = positiveInteger(env.AI_MAX_TOKENS, 4096)
   const timeoutMs = positiveInteger(env.AI_REQUEST_TIMEOUT_MS, 10 * 60_000)
@@ -452,6 +534,35 @@ export async function createVisionAiServer({
         return
       }
 
+      const artifactContentId = artifactRouteId(url.pathname, '/content')
+      if (req.method === 'GET' && artifactContentId) {
+        const payload = artifactStore?.content(userId, artifactContentId)
+        if (!payload) {
+          json(res, 404, { error: '文件不存在。' })
+          return
+        }
+        json(res, 200, payload)
+        return
+      }
+
+      const artifactDownloadId = artifactRouteId(url.pathname, '/download')
+      if (req.method === 'GET' && artifactDownloadId) {
+        const payload = artifactStore?.download(userId, artifactDownloadId)
+        if (!payload) {
+          json(res, 404, { error: '文件不存在。' })
+          return
+        }
+        res.writeHead(200, {
+          'Cache-Control': 'private, max-age=3600',
+          'Content-Disposition': `attachment; filename*=UTF-8''${encodeURIComponent(payload.artifact.name)}`,
+          'Content-Length': payload.artifact.size,
+          'Content-Type': 'text/markdown; charset=utf-8',
+          'X-Content-Type-Options': 'nosniff',
+        })
+        payload.stream.pipe(res)
+        return
+      }
+
       if (req.method === 'POST' && url.pathname === '/api/ai/conversations') {
         const body = await readJson(req)
         const conversation = conversationStore.createConversation(
@@ -472,7 +583,16 @@ export async function createVisionAiServer({
           json(res, 404, { error: '会话不存在。' })
           return
         }
-        json(res, 200, { turns })
+        json(res, 200, {
+          turns: turns.map((turn) => ({
+            ...turn,
+            artifacts: artifactStore?.listForTurn(
+              userId,
+              messagesConversationId,
+              turn.id,
+            ) ?? [],
+          })),
+        })
         return
       }
 
@@ -493,6 +613,7 @@ export async function createVisionAiServer({
       }
 
       if (conversationId && req.method === 'DELETE') {
+        artifactStore?.deleteForConversation(userId, conversationId)
         if (!conversationStore.deleteConversation(userId, conversationId)) {
           json(res, 404, { error: '会话不存在。' })
           return
@@ -535,6 +656,11 @@ export async function createVisionAiServer({
         let turn
 
         if (typeof body.regenerateTurnId === 'string' && body.regenerateTurnId) {
+          artifactStore?.deleteAfterTurn(
+            userId,
+            messagesConversationId,
+            body.regenerateTurnId,
+          )
           turn = conversationStore.prepareRegeneration(
             userId,
             messagesConversationId,
@@ -587,6 +713,9 @@ export async function createVisionAiServer({
         const stream = createStreamController(req, res, timeoutMs)
         let answer = ''
         let reasoning = ''
+        let toolCalls = []
+        const markdownRequested = Boolean(artifactStore && wantsMarkdownArtifact(messages))
+        const markdownToolChoice = model.id === 'deepseek-v4-flash' ? 'auto' : 'required'
 
         openEventStream(res)
         sse(res, 'start', {
@@ -603,6 +732,8 @@ export async function createVisionAiServer({
             maxTokens,
             messages,
             model,
+            tools: markdownRequested ? [MARKDOWN_ARTIFACT_TOOL] : undefined,
+            toolChoice: markdownRequested ? markdownToolChoice : undefined,
             onEvent: (event, payload) => {
               if (event === 'reasoning' && typeof payload?.content === 'string') {
                 reasoning += payload.content
@@ -610,10 +741,45 @@ export async function createVisionAiServer({
               if (event === 'content' && typeof payload?.content === 'string') {
                 answer += payload.content
               }
-              sse(res, event, payload)
+              if (event === 'tool_calls' && Array.isArray(payload?.toolCalls)) {
+                toolCalls = payload.toolCalls
+              } else if (event !== 'done') {
+                sse(res, event, payload)
+              }
             },
           })
 
+          const createdArtifacts = []
+          if (markdownRequested && !toolCalls.length) {
+            throw new Error('模型没有执行 Markdown 文件工具，请重试或切换至 Kimi K3。')
+          }
+          for (const call of toolCalls) {
+            const input = parseMarkdownToolCall(call)
+            const artifact = artifactStore.createMarkdown(userId, {
+              conversationId: messagesConversationId,
+              turnId: turn.id,
+              answerVersion: turn.answerVariants?.length ?? 0,
+              name: input.filename,
+              content: input.content,
+              description: input.description,
+            })
+            createdArtifacts.push(artifact)
+            sse(res, 'artifact', { artifact })
+          }
+
+          if (createdArtifacts.length && !answer.trim()) {
+            answer = createdArtifacts.length === 1
+              ? `已为你生成 Markdown 文件：**${createdArtifacts[0].name}**。`
+              : `已为你生成 ${createdArtifacts.length} 个 Markdown 文件。`
+            sse(res, 'content', { content: answer })
+          }
+
+          if (!answer.trim()) {
+            answer = EMPTY_ANSWER
+            sse(res, 'incomplete', { content: answer })
+          } else {
+            sse(res, 'done', {})
+          }
           conversationStore.updateTurn(
             userId,
             messagesConversationId,
@@ -621,11 +787,14 @@ export async function createVisionAiServer({
             {
               answer,
               reasoning,
-              status: 'done',
+              status: answer === EMPTY_ANSWER ? 'error' : 'done',
             },
           )
         } catch (error) {
+          const terminationReason = stream.terminationReason()
+          const timedOut = terminationReason === 'timeout'
           const stopped = stream.controller.signal.aborted
+          if (timedOut) answer = TIMEOUT_ANSWER
           conversationStore.updateTurn(
             userId,
             messagesConversationId,
@@ -633,10 +802,12 @@ export async function createVisionAiServer({
             {
               answer,
               reasoning,
-              status: stopped ? 'stopped' : 'error',
+              status: timedOut ? 'timeout' : stopped ? 'stopped' : 'error',
             },
           )
-          if (!stopped && !res.writableEnded) {
+          if (timedOut && !res.writableEnded) {
+            sse(res, 'timeout', { content: TIMEOUT_ANSWER })
+          } else if (!stopped && !res.writableEnded) {
             sse(res, 'error', {
               message: error instanceof Error ? error.message : 'AI request failed',
             })
@@ -661,6 +832,7 @@ export async function createVisionAiServer({
         const model = resolveAiModel(body.model, env)
         body.thinking = model.supportsThinking && body.thinking === true
         const stream = createStreamController(req, res, timeoutMs)
+        let answer = ''
         openEventStream(res)
 
         try {
@@ -672,10 +844,23 @@ export async function createVisionAiServer({
             maxTokens,
             messages: body.messages,
             model,
-            onEvent: (event, payload) => sse(res, event, payload),
+            onEvent: (event, payload) => {
+              if (event === 'content' && typeof payload?.content === 'string') {
+                answer += payload.content
+              }
+              if (event !== 'done') sse(res, event, payload)
+            },
           })
+          if (!answer.trim()) {
+            sse(res, 'incomplete', { content: EMPTY_ANSWER })
+          } else {
+            sse(res, 'done', {})
+          }
         } catch (error) {
-          if (!stream.controller.signal.aborted) {
+          const terminationReason = stream.terminationReason()
+          if (terminationReason === 'timeout' && !res.writableEnded) {
+            sse(res, 'timeout', { content: TIMEOUT_ANSWER })
+          } else if (!stream.controller.signal.aborted) {
             sse(res, 'error', {
               message: error instanceof Error ? error.message : 'AI request failed',
             })

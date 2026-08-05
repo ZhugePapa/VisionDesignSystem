@@ -88,6 +88,7 @@ prepare_persistent_runtime() {
   ensure_environment_value VISION_BUILTIN_ACCOUNT_PASSWORD vision123456
   ensure_environment_value VISION_AI_DATABASE_PATH "${app_dir}/data/vision-ai.sqlite"
   ensure_environment_value VISION_AI_UPLOAD_DIR "${app_dir}/data/uploads"
+  ensure_environment_value VISION_AI_ARTIFACT_DIR "${app_dir}/data/artifacts"
   ensure_environment_value OPENCODE_GO_API_KEY ""
   ensure_environment_value OPENCODE_GO_BASE_URL https://opencode.ai/zen/go/v1
 
@@ -111,15 +112,17 @@ prepare_persistent_runtime() {
   database_path="$(environment_value VISION_AI_DATABASE_PATH)"
   database_dir="$(dirname "${database_path}")"
   upload_dir="$(environment_value VISION_AI_UPLOAD_DIR)"
+  artifact_dir="$(environment_value VISION_AI_ARTIFACT_DIR)"
 
   install -d -o "${service_user}" -g "${service_group}" -m 0750 \
     "${database_dir}" \
-    "${upload_dir}"
-  chown -R "${service_user}:${service_group}" "${database_dir}" "${upload_dir}"
+    "${upload_dir}" \
+    "${artifact_dir}"
+  chown -R "${service_user}:${service_group}" "${database_dir}" "${upload_dir}" "${artifact_dir}"
 
   printf '%s\n' \
     '[Service]' \
-    "ReadWritePaths=${database_dir} ${upload_dir}" \
+    "ReadWritePaths=${database_dir} ${upload_dir} ${artifact_dir}" \
     > "${systemd_override_dir}/persistence.conf"
   systemctl daemon-reload
 }

@@ -29,17 +29,20 @@ export interface VisionAiModelCatalog {
 export interface VisionAiStreamHandlers {
   onReasoning?: (content: string) => void
   onContent?: (content: string) => void
+  onIncomplete?: (content: string) => void
+  onTimeout?: (content: string) => void
+  onArtifact?: (artifact: import('../../components/ai').VisAiArtifactItem) => void
   onDone?: () => void
 }
 
 function messageFromPayload(payload: unknown, fallback: string): string {
-  if (
-    payload &&
-    typeof payload === 'object' &&
-    'error' in payload &&
-    typeof payload.error === 'string'
-  ) {
-    return payload.error
+  if (payload && typeof payload === 'object') {
+    if ('error' in payload && typeof payload.error === 'string') {
+      return payload.error
+    }
+    if ('message' in payload && typeof payload.message === 'string') {
+      return payload.message
+    }
   }
   return fallback
 }
@@ -128,6 +131,10 @@ export async function streamVisionAiChat(
         handlers.onReasoning?.(contentFromEvent(parsed.data))
       } else if (parsed.event === 'content') {
         handlers.onContent?.(contentFromEvent(parsed.data))
+      } else if (parsed.event === 'incomplete') {
+        handlers.onIncomplete?.(contentFromEvent(parsed.data))
+      } else if (parsed.event === 'timeout') {
+        handlers.onTimeout?.(contentFromEvent(parsed.data))
       } else if (parsed.event === 'done') {
         handlers.onDone?.()
       } else if (parsed.event === 'error') {

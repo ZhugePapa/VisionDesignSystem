@@ -6,6 +6,8 @@ export type VisAiConversationAction = 'share' | 'rename' | 'pin' | 'delete'
 export type VisAiSenderSpeed = 'low' | 'medium' | 'high' | 'ultra'
 
 export type VisAiAttachmentType = 'file' | 'image'
+export type VisAiArtifactType = 'file-markdown'
+export type VisAiArtifactState = 'default' | 'hover'
 export type VisAiSkillColor =
   | 'grey'
   | 'blue'
@@ -84,6 +86,33 @@ export interface VisAiAttachmentItem {
 
 export interface VisAiAttachmentProps extends Omit<VisAiAttachmentItem, 'key'> {
   itemKey?: VisAiKey
+}
+
+export interface VisAiArtifactItem {
+  id: string
+  name: string
+  type: VisAiArtifactType
+  extension: 'md'
+  mimeType: 'text/markdown'
+  size: number
+  sizeLabel: string
+  description?: string
+  answerVersion: number
+  previewUrl: string
+  downloadUrl: string
+  createdAt: string
+}
+
+export interface VisAiArtifactProps {
+  itemKey?: VisAiKey
+  name?: string
+  description?: string
+  meta?: string
+  type?: VisAiArtifactType
+  state?: VisAiArtifactState
+  openLabel?: string
+  disabled?: boolean
+  downloadEnabled?: boolean
 }
 
 export interface VisAiPromptItem {

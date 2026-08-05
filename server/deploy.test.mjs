@@ -66,6 +66,7 @@ test('deployment prepares a writable persistent AI runtime without replacing exi
     'OPENCODE_GO_API_KEY=keep-opencode-key',
     'BETTER_AUTH_SECRET=',
     'VISION_AI_DATABASE_PATH=',
+    'VISION_AI_ARTIFACT_DIR=',
   ].join('\n'))
   writeExecutable(join(commandDirectory, 'systemctl'), `printf '%s\\n' "$*" >> "${systemctlLog}"`)
   writeExecutable(join(commandDirectory, 'nginx'), 'exit 0')
@@ -102,6 +103,7 @@ test('deployment prepares a writable persistent AI runtime without replacing exi
   assert.match(environment, /^VISION_BUILTIN_ACCOUNT_PASSWORD=vision123456$/m)
   assert.match(environment, new RegExp(`^VISION_AI_DATABASE_PATH=${appDirectory}/data/vision-ai\\.sqlite$`, 'm'))
   assert.match(environment, new RegExp(`^VISION_AI_UPLOAD_DIR=${appDirectory}/data/uploads$`, 'm'))
+  assert.match(environment, new RegExp(`^VISION_AI_ARTIFACT_DIR=${appDirectory}/data/artifacts$`, 'm'))
   assert.equal((environment.match(/^BETTER_AUTH_SECRET=/gm) ?? []).length, 1)
   const originalAuthSecret = environment.match(/^BETTER_AUTH_SECRET=(.+)$/m)?.[1]
 
@@ -116,7 +118,7 @@ test('deployment prepares a writable persistent AI runtime without replacing exi
 
   const override = readFileSync(join(overrideDirectory, 'persistence.conf'), 'utf8')
   assert.match(override, /^\[Service\]$/m)
-  assert.match(override, new RegExp(`^ReadWritePaths=${appDirectory}/data ${appDirectory}/data/uploads$`, 'm'))
+  assert.match(override, new RegExp(`^ReadWritePaths=${appDirectory}/data ${appDirectory}/data/uploads ${appDirectory}/data/artifacts$`, 'm'))
 
   const systemctlCalls = readFileSync(systemctlLog, 'utf8')
   assert.match(systemctlCalls, /^daemon-reload$/m)

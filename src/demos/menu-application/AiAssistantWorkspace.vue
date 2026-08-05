@@ -4,6 +4,7 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import aiLogoMarkup from '../../assets/AI-logo-2.svg?raw'
 import {
   VisAiActions,
+  VisAiArtifact,
   VisAiAttachment,
   VisAiBubble,
   VisAiConversation,
@@ -12,6 +13,7 @@ import {
   VisAiThinking,
 } from '../../components/ai'
 import type {
+  VisAiArtifactItem,
   VisAiAttachmentItem,
   VisAiConversationAction,
   VisAiConversationItemData,
@@ -19,6 +21,7 @@ import type {
   VisAiPromptItem,
   VisAiSenderModel,
   VisAiSenderSpeed,
+  VisAiSenderSkill,
   VisAiSenderSubmitPayload,
 } from '../../components/ai'
 import VisButton from '../../components/button/VisButton.vue'
@@ -29,6 +32,10 @@ import {
 import VisInput from '../../components/input/VisInput.vue'
 import { VisMarkdown } from '../../components/markdown'
 import { VisTooltip } from '../../components/tooltip'
+import {
+  downloadVisionAiArtifact,
+  fetchVisionAiArtifactContent,
+} from '../../services/ai/artifact-client'
 import {
   fetchVisionAiModels,
 } from '../../services/ai/chat-client'
@@ -85,6 +92,7 @@ const senderModels = ref<VisAiSenderModel[]>([
 ])
 const selectedSpeed = ref<VisAiSenderSpeed>('high')
 const selectedSkill = ref<VisAiKey | ''>('')
+const senderSkills: VisAiSenderSkill[] = []
 const attachments = ref<VisAiAttachmentItem[]>([])
 const sessions = ref<AiChatSession[]>([])
 const conversationKey = ref<VisAiKey>('')
@@ -105,6 +113,10 @@ const floatPosition = ref<{ x: number; y: number } | null>(null)
 const isDraggingFloat = ref(false)
 const isFileDragActive = ref(false)
 const uploadError = ref('')
+const selectedArtifact = ref<VisAiArtifactItem | null>(null)
+const artifactContent = ref('')
+const artifactLoading = ref(false)
+const artifactError = ref('')
 let activeController: AbortController | undefined
 let dragPointerId: number | undefined
 let dragOffsetX = 0
@@ -123,28 +135,28 @@ const acceptedAttachmentTypes = [
 
 const promptItems: VisAiPromptItem[] = [
   {
-    key: 'project-collaboration',
-    label: '项目协同',
-    iconName: 'layers-three-02',
-    descriptions: ['生成里程碑与任务', '汇总项目进度', '预测项目延期与阻塞'],
+    key: 'writing',
+    label: '写作与整理',
+    iconName: 'edit-05',
+    descriptions: ['总结与提炼内容', '润色或改写文本', '起草提纲与文案'],
   },
   {
-    key: 'requirement-management',
-    label: '需求管理',
-    iconName: 'file-02',
-    descriptions: ['生成用户故事或任务', '完善需求条目的验收项', '识别需求的关联模块'],
+    key: 'learning-analysis',
+    label: '学习与分析',
+    iconName: 'lightbulb-05',
+    descriptions: ['解释复杂概念', '比较方案与取舍', '制定计划与步骤'],
   },
   {
-    key: 'code-quality',
-    label: '代码质量',
-    iconName: 'code-02',
-    descriptions: ['提炼变更摘要', '检查缺陷与安全风险', '分析日志并定位故障'],
+    key: 'creative-visual',
+    label: '创意与视觉',
+    iconName: 'image-03',
+    descriptions: ['构思视觉方案', '优化图片生成提示词', '分析参考图片'],
   },
   {
-    key: 'delivery-security',
-    label: '交付安全',
-    iconName: 'rocket-02',
-    descriptions: ['流水线诊断', '生成发布步骤与回滚方案', '识别安全漏洞'],
+    key: 'files-data',
+    label: '文件与数据',
+    iconName: 'file-05',
+    descriptions: ['阅读并总结附件', '提取结构化信息', '转换内容格式'],
   },
 ]
 
@@ -267,6 +279,7 @@ function resetConversation(): void {
   selectedSkill.value = ''
   deepThinking.value = false
   uploadError.value = ''
+  closeArtifactPreview()
   historyOpen.value = false
   modeMenuOpen.value = false
 }
@@ -366,6 +379,7 @@ async function logout(): Promise<void> {
     senderValue.value = ''
     attachments.value = []
     responding.value = false
+    closeArtifactPreview()
     historyOpen.value = false
     modeMenuOpen.value = false
   }
@@ -545,6 +559,10 @@ function errorMarkdown(message: string): string {
   return `> **AI 服务暂时不可用**\n>\n> ${normalizedMessage || '请稍后重试。'}`
 }
 
+function emptyAnswerMarkdown(): string {
+  return '> **未能生成最终回答**\n>\n> 模型已经结束推理，但没有返回正文。请重试，或关闭深度思考后再试。'
+}
+
 function answerVariantTotal(turn: AiChatTurn): number {
   return Math.max(1, (turn.answerVariants?.length ?? 0) + 1)
 }
@@ -566,6 +584,34 @@ function displayedReasoning(turn: AiChatTurn): string {
   return index < (turn.answerVariants?.length ?? 0)
     ? turn.answerVariants[index]?.reasoning ?? ''
     : turn.reasoning
+}
+
+function displayedArtifacts(turn: AiChatTurn): VisAiArtifactItem[] {
+  const answerVersion = answerVariantCurrent(turn) - 1
+  return (turn.artifacts ?? []).filter(
+    (artifact) => artifact.answerVersion === answerVersion,
+  )
+}
+
+async function openArtifactPreview(artifact: VisAiArtifactItem): Promise<void> {
+  selectedArtifact.value = artifact
+  artifactContent.value = ''
+  artifactError.value = ''
+  artifactLoading.value = true
+  try {
+    artifactContent.value = await fetchVisionAiArtifactContent(artifact)
+  } catch (error) {
+    artifactError.value = error instanceof Error ? error.message : '文件加载失败。'
+  } finally {
+    if (selectedArtifact.value?.id === artifact.id) artifactLoading.value = false
+  }
+}
+
+function closeArtifactPreview(): void {
+  selectedArtifact.value = null
+  artifactContent.value = ''
+  artifactError.value = ''
+  artifactLoading.value = false
 }
 
 function selectAnswerVariant(turn: AiChatTurn, current: number): void {
@@ -592,6 +638,7 @@ async function runTurn(
   turn.status = 'streaming'
   turn.thinkingExpanded = true
   turn.feedback = null
+  turn.artifacts ??= []
 
   try {
     await streamVisionAiConversation(
@@ -614,14 +661,37 @@ async function runTurn(
         onContent: (content) => {
           turn.answer += content
         },
+        onIncomplete: (content) => {
+          turn.answer = content || emptyAnswerMarkdown()
+          turn.status = 'error'
+        },
+        onTimeout: (content) => {
+          turn.answer = content || '> **回答超时**\n>\n> 本次请求超过了服务器等待时间，请重试。'
+          turn.status = 'timeout'
+        },
+        onArtifact: (artifact) => {
+          turn.artifacts.push(artifact)
+        },
         onDone: () => {
-          turn.status = 'done'
+          if (turn.answer.trim()) {
+            turn.status = 'done'
+          } else {
+            turn.answer = emptyAnswerMarkdown()
+            turn.status = 'error'
+          }
         },
       },
       controller.signal,
     )
 
-    if (turn.status === 'streaming') turn.status = 'done'
+    if (turn.status === 'streaming') {
+      if (turn.answer.trim()) {
+        turn.status = 'done'
+      } else {
+        turn.answer = emptyAnswerMarkdown()
+        turn.status = 'error'
+      }
+    }
   } catch (error) {
     if (controller.signal.aborted) {
       turn.status = 'stopped'
@@ -674,6 +744,7 @@ async function submitQuestion(payload: VisAiSenderSubmitPayload): Promise<void> 
     answerVariants: [],
     answerIndex: 0,
     attachments: payload.attachments.map((item) => ({ ...item })),
+    artifacts: [],
     createdAt: timestamp,
     updatedAt: timestamp,
   }
@@ -717,6 +788,7 @@ async function copyAnswer(answer: string): Promise<void> {
 function thinkingLabel(turn: AiChatTurn): string {
   if (turn.status === 'streaming') return '正在思考...'
   if (turn.status === 'stopped') return '已停止思考'
+  if (turn.status === 'timeout') return '回答超时'
   if (turn.status === 'error') return '思考中断'
   return '已回答'
 }
@@ -724,11 +796,14 @@ function thinkingLabel(turn: AiChatTurn): string {
 function thinkingContent(turn: AiChatTurn): string {
   const reasoning = displayedReasoning(turn)
   if (reasoning) return reasoning
-  return turn.status === 'streaming' ? '模型正在组织回答，请稍候。' : ''
+  if (turn.status === 'streaming') return '模型正在组织回答，请稍候。'
+  if (turn.status === 'timeout') return '请求已超过服务器等待时间。'
+  return ''
 }
 
 async function selectConversation(item: VisAiConversationItemData): Promise<void> {
   abortActiveRequest()
+  closeArtifactPreview()
   saveDraft()
   conversationKey.value = item.key
   restoreDraft(item.key)
@@ -772,6 +847,7 @@ async function handleConversationAction(payload: {
     await deleteVisionAiConversation(target.id)
     sessions.value = sessions.value.filter((session) => session.id !== target.id)
     if (conversationKey.value === target.id) {
+      closeArtifactPreview()
       conversationKey.value = sessions.value[0]?.id ?? ''
       if (sessions.value[0]) await loadConversationTurns(sessions.value[0])
     }
@@ -865,10 +941,11 @@ watch(
 
 watch(
   () => props.mode,
-  () => {
+  (mode) => {
     stopFloatDrag()
     historyOpen.value = false
     modeMenuOpen.value = false
+    if (mode !== 'independent') closeArtifactPreview()
   },
 )
 
@@ -1029,7 +1106,10 @@ onBeforeUnmount(() => {
         @create="resetConversation"
       />
 
-      <div class="ai-assistant__independent-content">
+      <div
+        class="ai-assistant__independent-content"
+        :class="{ 'has-artifact-preview': selectedArtifact }"
+      >
         <div class="ai-assistant__independent-actions">
           <div v-if="modeLocked" class="ai-assistant__locked-session-actions">
             <VisTooltip content="新会话" position="bottom">
@@ -1163,7 +1243,7 @@ onBeforeUnmount(() => {
                   <VisAiBubble :content="turn.question" />
                 </div>
                 <VisAiThinking
-                  v-if="displayedReasoning(turn) || turn.status === 'streaming'"
+                  v-if="displayedReasoning(turn) || turn.status === 'streaming' || turn.status === 'timeout'"
                   v-model:expanded="turn.thinkingExpanded"
                   :loading="turn.status === 'streaming'"
                   :label="thinkingLabel(turn)"
@@ -1178,6 +1258,21 @@ onBeforeUnmount(() => {
                       tail: true,
                     }"
                   />
+                  <div
+                    v-if="displayedArtifacts(turn).length"
+                    class="ai-assistant__artifacts"
+                  >
+                    <VisAiArtifact
+                      v-for="artifact in displayedArtifacts(turn)"
+                      :key="artifact.id"
+                      :item-key="artifact.id"
+                      :name="artifact.name"
+                      :description="artifact.description"
+                      :meta="artifact.sizeLabel"
+                      @open="openArtifactPreview(artifact)"
+                      @download="downloadVisionAiArtifact(artifact)"
+                    />
+                  </div>
                   <VisAiActions
                     v-if="turn.status !== 'streaming'"
                     v-model:feedback="turn.feedback"
@@ -1202,6 +1297,7 @@ onBeforeUnmount(() => {
             v-model:skill="selectedSkill"
             :attachments="attachments"
             :models="senderModels"
+            :skills="senderSkills"
             :loading="responding"
             @submit="submitQuestion"
             @stop="stopResponse"
@@ -1212,6 +1308,44 @@ onBeforeUnmount(() => {
           />
           <p v-if="uploadError" class="ai-assistant__upload-error">{{ uploadError }}</p>
         </div>
+
+        <aside
+          v-if="selectedArtifact"
+          class="ai-assistant__artifact-preview"
+          :aria-label="`预览 ${selectedArtifact.name}`"
+        >
+          <header class="ai-assistant__artifact-preview-header">
+            <span class="ai-assistant__artifact-preview-title">
+              <span class="ai-assistant__artifact-preview-icon" aria-hidden="true">M</span>
+              <strong :title="selectedArtifact.name">{{ selectedArtifact.name }}</strong>
+            </span>
+            <span class="ai-assistant__artifact-preview-actions">
+              <VisButton
+                variant="text"
+                size="md"
+                icon-only
+                icon-name="download-01"
+                label="下载文件"
+                @click="downloadVisionAiArtifact(selectedArtifact)"
+              />
+              <VisButton
+                variant="text"
+                size="md"
+                icon-only
+                icon-name="x-close"
+                label="关闭文件预览"
+                @click="closeArtifactPreview"
+              />
+            </span>
+          </header>
+          <div class="ai-assistant__artifact-preview-body">
+            <div v-if="artifactLoading" class="ai-assistant__artifact-state">正在加载文件…</div>
+            <div v-else-if="artifactError" class="ai-assistant__artifact-state is-error">
+              {{ artifactError }}
+            </div>
+            <VisMarkdown v-else :content="artifactContent" open-links-in-new-tab />
+          </div>
+        </aside>
       </div>
     </template>
 
@@ -1358,7 +1492,7 @@ onBeforeUnmount(() => {
               <VisAiBubble :content="turn.question" />
             </div>
             <VisAiThinking
-              v-if="displayedReasoning(turn) || turn.status === 'streaming'"
+              v-if="displayedReasoning(turn) || turn.status === 'streaming' || turn.status === 'timeout'"
               v-model:expanded="turn.thinkingExpanded"
               :loading="turn.status === 'streaming'"
               :label="thinkingLabel(turn)"
@@ -1373,6 +1507,21 @@ onBeforeUnmount(() => {
                   tail: true,
                 }"
               />
+              <div
+                v-if="displayedArtifacts(turn).length"
+                class="ai-assistant__artifacts"
+              >
+                <VisAiArtifact
+                  v-for="artifact in displayedArtifacts(turn)"
+                  :key="artifact.id"
+                  :item-key="artifact.id"
+                  :name="artifact.name"
+                  :description="artifact.description"
+                  :meta="artifact.sizeLabel"
+                  @open="openArtifactPreview(artifact)"
+                  @download="downloadVisionAiArtifact(artifact)"
+                />
+              </div>
               <VisAiActions
                 v-if="turn.status !== 'streaming'"
                 v-model:feedback="turn.feedback"
@@ -1397,6 +1546,7 @@ onBeforeUnmount(() => {
         v-model:skill="selectedSkill"
         :attachments="attachments"
         :models="senderModels"
+        :skills="senderSkills"
         :loading="responding"
         @submit="submitQuestion"
         @stop="stopResponse"
@@ -1817,6 +1967,13 @@ onBeforeUnmount(() => {
   gap: var(--space-16);
 }
 
+.ai-assistant__artifacts {
+  inline-size: min(100%, 563px);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+}
+
 .ai-assistant__answer :deep(.vis-markdown) {
   color: var(--color-text-primary);
   font-size: var(--font-text-md-size);
@@ -1842,6 +1999,102 @@ onBeforeUnmount(() => {
   flex: 1 1 0;
   display: flex;
   justify-content: center;
+}
+
+.ai-assistant__independent-content.has-artifact-preview {
+  justify-content: flex-start;
+}
+
+.ai-assistant__independent-content.has-artifact-preview .ai-assistant__column {
+  min-inline-size: 0;
+  flex: 1 1 0;
+}
+
+.ai-assistant__artifact-preview {
+  position: relative;
+  z-index: 5;
+  box-sizing: border-box;
+  inline-size: clamp(420px, 42%, 720px);
+  min-inline-size: 0;
+  block-size: 100%;
+  flex: 0 0 auto;
+  border-inline-start: 1px solid var(--color-border-default);
+  display: flex;
+  flex-direction: column;
+  color: var(--color-text-primary);
+  background: var(--color-bg-surface);
+}
+
+.ai-assistant__artifact-preview-header {
+  box-sizing: border-box;
+  min-block-size: var(--space-64);
+  border-block-end: 1px solid var(--color-border-default);
+  padding: var(--space-12) var(--space-16);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-12);
+}
+
+.ai-assistant__artifact-preview-title {
+  min-inline-size: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+}
+
+.ai-assistant__artifact-preview-title strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--font-family-text);
+  font-size: var(--font-text-md-size);
+  font-weight: 500;
+  line-height: var(--font-text-md-line-height);
+}
+
+.ai-assistant__artifact-preview-icon {
+  inline-size: var(--space-24);
+  block-size: var(--space-24);
+  flex: 0 0 auto;
+  border-radius: var(--radius-sm);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-white);
+  background: var(--color-fg-success-primary);
+  font-size: var(--font-text-sm-size);
+  font-weight: 600;
+}
+
+.ai-assistant__artifact-preview-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.ai-assistant__artifact-preview-body {
+  min-block-size: 0;
+  flex: 1 1 0;
+  padding: var(--space-32);
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--ai-scrollbar-thumb) var(--ai-scrollbar-track);
+}
+
+.ai-assistant__artifact-preview-body :deep(.vis-markdown) {
+  color: var(--color-text-primary);
+}
+
+.ai-assistant__artifact-state {
+  padding-block: var(--space-48);
+  color: var(--color-text-tertiary);
+  text-align: center;
+  font-size: var(--font-text-md-size);
+}
+
+.ai-assistant__artifact-state.is-error {
+  color: var(--color-text-danger-primary);
 }
 
 .ai-assistant__independent-actions {
@@ -1908,6 +2161,15 @@ onBeforeUnmount(() => {
 
   .ai-assistant:not(.mode-independent) .ai-assistant__column {
     padding-inline: var(--space-20);
+  }
+
+  .ai-assistant__artifact-preview {
+    position: absolute;
+    inset-block: 0;
+    inset-inline-end: 0;
+    z-index: 6;
+    inline-size: min(100%, 640px);
+    box-shadow: -8px 0 24px var(--color-effect-shadow-grey);
   }
 }
 

@@ -2,6 +2,7 @@ import type { App, Plugin } from 'vue'
 
 import {
   VisAiActions,
+  VisAiArtifact,
   VisAiAttachment,
   VisAiBubble,
   VisAiConversation,
@@ -87,6 +88,7 @@ import './styles/style.css'
 export {
   Icon,
   VisAiActions,
+  VisAiArtifact,
   VisAiAttachment,
   VisAiBubble,
   VisAiConversation,
@@ -175,6 +177,10 @@ export {
 export type {
   VisAiActionFeedback,
   VisAiActionsProps,
+  VisAiArtifactItem,
+  VisAiArtifactProps,
+  VisAiArtifactState,
+  VisAiArtifactType,
   VisAiAttachmentItem,
   VisAiAttachmentProps,
   VisAiAttachmentType,
@@ -458,6 +464,7 @@ export type { VisUploadFileItem, VisUploadFileStatus, VisUploadProps, VisUploadT
 const components = [
   VisConfigProvider,
   VisAiActions,
+  VisAiArtifact,
   VisAiAttachment,
   VisAiBubble,
   VisAiConversation,

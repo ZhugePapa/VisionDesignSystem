@@ -5,6 +5,7 @@ import { RouterLink, useRoute } from 'vue-router'
 import aiDemoImage from './assets/avatars/avatar-06.png'
 import {
   VisAiActions,
+  VisAiArtifact,
   VisAiAttachment,
   VisAiBubble,
   VisAiConversation,
@@ -858,6 +859,7 @@ const sidebarGroups: SidebarGroup[] = [
     title: 'AI components',
     items: [
       { title: 'Actions', subtitle: '操作组', page: 'ai-actions' },
+      { title: 'Artifact', subtitle: '生成产物', page: 'ai-artifact' },
       { title: 'Attachment', subtitle: '附件', page: 'ai-attachment' },
       { title: 'Bubble', subtitle: '消息气泡', page: 'ai-bubble' },
       { title: 'Conversation', subtitle: '会话列表', page: 'ai-conversation' },
@@ -884,6 +886,16 @@ const apiTables: Record<DemoPageId, ApiRow[]> = {
     { visionApi: 'more', elementApi: '', description: '是否显示更多操作。', type: 'boolean', defaultValue: 'true' },
     { visionApi: 'disabled', elementApi: '', description: '禁用全部操作。', type: 'boolean', defaultValue: 'false' },
     { visionApi: 'feedback', elementApi: '', description: '当前赞踩状态，支持 v-model:feedback。', type: "'up' | 'down' | null", defaultValue: 'null' },
+  ],
+  'ai-artifact': [
+    { visionApi: 'itemKey', elementApi: '无直接对应', description: '产物业务标识，会随 open、download 事件返回。', type: 'string | number', defaultValue: 'undefined' },
+    { visionApi: 'name', elementApi: '无直接对应', description: '文件名称。', type: 'string', defaultValue: "'这里是文件名称.md'" },
+    { visionApi: 'description', elementApi: '无直接对应', description: '第二行文件说明。', type: 'string', defaultValue: "'Markdown 文件'" },
+    { visionApi: 'meta', elementApi: '无直接对应', description: '第二行补充信息，适合显示文件大小。', type: 'string', defaultValue: "''" },
+    { visionApi: 'state', elementApi: '无直接对应', description: '控制默认或悬浮预览状态。', type: "'default' | 'hover'", defaultValue: "'default'" },
+    { visionApi: 'openLabel', elementApi: 'VisButton default slot', description: '主操作文案。', type: 'string', defaultValue: "'打开'" },
+    { visionApi: 'disabled', elementApi: 'VisButton disabled', description: '禁用全部操作。', type: 'boolean', defaultValue: 'false' },
+    { visionApi: 'downloadEnabled', elementApi: '无直接对应', description: '是否显示下载分裂按钮。', type: 'boolean', defaultValue: 'true' },
   ],
   'ai-attachment': [
     { visionApi: 'itemKey', elementApi: '无直接对应', description: '附件业务标识，会随 remove、preview 事件返回。', type: 'string | number', defaultValue: 'undefined' },
@@ -1260,7 +1272,7 @@ const apiTables: Record<DemoPageId, ApiRow[]> = {
     {
       visionApi: 'interactive',
       elementApi: 'shadow="hover"',
-      description: '是否响应真实 hover 和 focus-within，并显示品牌描边与品牌阴影。',
+      description: '是否响应真实 hover 和 focus-within，并切换为 surface-subtle 背景。',
       type: 'boolean',
       defaultValue: 'true',
     },
@@ -4248,6 +4260,7 @@ const noElementApiRows = (): ElementApiRow[] => []
 
 const elementApiTables: Record<DemoPageId, ElementApiRow[]> = {
   'ai-actions': noElementApiRows(),
+  'ai-artifact': noElementApiRows(),
   'ai-attachment': noElementApiRows(),
   'ai-bubble': noElementApiRows(),
   'ai-conversation': noElementApiRows(),
@@ -5345,6 +5358,7 @@ const elementApiTables: Record<DemoPageId, ElementApiRow[]> = {
 
 const visionComponentNames: Record<DemoPageId, string> = {
   'ai-actions': 'VisAiActions',
+  'ai-artifact': 'VisAiArtifact',
   'ai-attachment': 'VisAiAttachment',
   'ai-bubble': 'VisAiBubble',
   'ai-conversation': 'VisAiConversation / VisAiConversationItem',
@@ -5492,6 +5506,10 @@ const visionEventTables: Record<DemoPageId, ApiDisplayRow[]> = {
     { api: 'refresh', description: '点击重新生成操作时触发。', type: '() => void' },
     { api: 'share', description: '点击分享操作时触发。', type: '() => void' },
     { api: 'more', description: '点击更多操作时触发。', type: '() => void' },
+  ],
+  'ai-artifact': [
+    { api: 'open', description: '点击打开按钮时触发。', type: '(key?: VisAiKey) => void' },
+    { api: 'download', description: '点击下载分裂按钮时触发。', type: '(key?: VisAiKey) => void' },
   ],
   'ai-attachment': [
     { api: 'remove', description: '点击关闭按钮时触发。', type: '(key?: VisAiKey) => void' },
@@ -6191,6 +6209,7 @@ const visionEventTables: Record<DemoPageId, ApiDisplayRow[]> = {
 
 const elementExtraApiRows: Record<DemoPageId, ElementApiRow[]> = {
   'ai-actions': [],
+  'ai-artifact': [],
   'ai-attachment': [],
   'ai-bubble': [],
   'ai-conversation': [],
@@ -8547,6 +8566,28 @@ function toggleGroup(title: string) {
                     <VisAiActions :pagination="false" :share="false" :more="false" />
                     <VisAiActions disabled />
                   </div>
+                </section>
+              </div>
+
+              <div v-else-if="activePage === 'ai-artifact'" class="ai-component-demo ai-artifact-demo">
+                <section class="ai-component-demo__section">
+                  <h4 class="ld-heading-h4">Default</h4>
+                  <VisAiArtifact
+                    item-key="markdown-default"
+                    name="项目复盘.md"
+                    description="Markdown 文件"
+                    meta="8.6 KB"
+                  />
+                </section>
+                <section class="ai-component-demo__section">
+                  <h4 class="ld-heading-h4">Hover</h4>
+                  <VisAiArtifact
+                    item-key="markdown-hover"
+                    name="项目复盘.md"
+                    description="Markdown 文件"
+                    meta="8.6 KB"
+                    state="hover"
+                  />
                 </section>
               </div>
 

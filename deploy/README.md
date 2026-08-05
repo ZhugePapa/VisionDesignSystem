@@ -42,6 +42,7 @@ once and retained in `/etc/vision-ai.env`.
 | `VISION_BUILTIN_ACCOUNT_PASSWORD` | Stable login password applied once to `vision01`–`vision10` | `vision123456` |
 | `VISION_AI_DATABASE_PATH` | Persistent SQLite database outside release contents | `/opt/vision-design-system/data/vision-ai.sqlite` |
 | `VISION_AI_UPLOAD_DIR` | Persistent, authenticated attachment storage outside release contents | `/opt/vision-design-system/data/uploads` |
+| `VISION_AI_ARTIFACT_DIR` | Persistent, authenticated AI-generated artifact storage | `/opt/vision-design-system/data/artifacts` |
 
 The browser sends only one of `kimi-k3`, `deepseek-v4-flash`, or `glm-5.2`.
 The API resolves that ID through the server-side allowlist before choosing the
@@ -67,4 +68,6 @@ the release archives.
 
 Uploaded files are stored under `VISION_AI_UPLOAD_DIR` and are never served as
 public static assets. File preview and download requests require an authenticated
-session and ownership is checked against the SQLite record.
+session and ownership is checked against the SQLite record. Generated Markdown
+files are stored separately under `VISION_AI_ARTIFACT_DIR`; both preview and
+download also require the owning account.

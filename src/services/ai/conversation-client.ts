@@ -1,5 +1,6 @@
 import type {
   VisAiActionFeedback,
+  VisAiArtifactItem,
   VisAiAttachmentItem,
   VisAiKey,
 } from '../../components/ai'
@@ -8,7 +9,7 @@ import type {
   VisionAiStreamHandlers,
 } from './chat-client'
 
-export type VisionAiTurnStatus = 'streaming' | 'done' | 'stopped' | 'error'
+export type VisionAiTurnStatus = 'streaming' | 'done' | 'stopped' | 'timeout' | 'error'
 
 export interface VisionAiConversation {
   id: string
@@ -36,6 +37,7 @@ export interface VisionAiTurn {
   answerVariants: VisionAiAnswerVariant[]
   answerIndex: number
   attachments: VisAiAttachmentItem[]
+  artifacts: VisAiArtifactItem[]
   createdAt: string
   updatedAt: string
 }
@@ -190,6 +192,21 @@ function startPayload(data: unknown): { conversationId: string; turnId: string }
   return null
 }
 
+function artifactFromEvent(data: unknown): VisAiArtifactItem | null {
+  if (
+    data
+    && typeof data === 'object'
+    && 'artifact' in data
+    && data.artifact
+    && typeof data.artifact === 'object'
+    && 'id' in data.artifact
+    && typeof data.artifact.id === 'string'
+  ) {
+    return data.artifact as VisAiArtifactItem
+  }
+  return null
+}
+
 export async function streamVisionAiConversation(
   conversationId: string,
   request: VisionAiConversationStreamRequest,
@@ -231,6 +248,13 @@ export async function streamVisionAiConversation(
         handlers.onReasoning?.(contentFromEvent(parsed.data))
       } else if (parsed.event === 'content') {
         handlers.onContent?.(contentFromEvent(parsed.data))
+      } else if (parsed.event === 'incomplete') {
+        handlers.onIncomplete?.(contentFromEvent(parsed.data))
+      } else if (parsed.event === 'timeout') {
+        handlers.onTimeout?.(contentFromEvent(parsed.data))
+      } else if (parsed.event === 'artifact') {
+        const artifact = artifactFromEvent(parsed.data)
+        if (artifact) handlers.onArtifact?.(artifact)
       } else if (parsed.event === 'done') {
         handlers.onDone?.()
       } else if (parsed.event === 'error') {

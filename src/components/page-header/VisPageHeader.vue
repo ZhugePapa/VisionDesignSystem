@@ -234,11 +234,11 @@ function handleAction(action: VisPageHeaderAction, event: MouseEvent): void {
   padding: var(--space-20);
   display: flex;
   flex-direction: column;
-  align-items: stretch;
+  align-items: flex-start;
   gap: var(--space-8);
   color: var(--color-text-primary);
   background: var(--color-bg-canvas);
-  font-family: var(--font-family-sans);
+  font-family: var(--font-family-text);
 }
 
 .vis-page-header.has-tabs {
@@ -254,6 +254,7 @@ function handleAction(action: VisPageHeaderAction, event: MouseEvent): void {
 }
 
 .vis-page-header__content {
+  inline-size: 100%;
   min-inline-size: 0;
   display: flex;
   align-items: center;
@@ -282,10 +283,12 @@ function handleAction(action: VisPageHeaderAction, event: MouseEvent): void {
   display: flex;
   flex: 1 1 0;
   flex-direction: column;
+  align-items: flex-start;
   gap: 0;
 }
 
 .vis-page-header__main {
+  inline-size: 100%;
   min-inline-size: 0;
   block-size: var(--space-32);
   display: flex;
@@ -332,6 +335,7 @@ function handleAction(action: VisPageHeaderAction, event: MouseEvent): void {
 }
 
 .vis-page-header__description {
+  inline-size: 100%;
   block-size: var(--font-text-md-line-height);
   max-inline-size: 100%;
   margin: 0;
@@ -346,6 +350,7 @@ function handleAction(action: VisPageHeaderAction, event: MouseEvent): void {
 }
 
 .vis-page-header__tabs {
+  inline-size: 100%;
   min-inline-size: 0;
   display: flex;
 }

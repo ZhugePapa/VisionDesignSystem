@@ -46,6 +46,7 @@ export const demoPages = [
   { id: 'menu', title: 'Menu', subtitle: '业务菜单', section: 'application' },
   { id: 'page-header', title: 'PageHeader', subtitle: '页头', section: 'application' },
   { id: 'ai-actions', title: 'Actions', subtitle: '操作组', section: 'ai' },
+  { id: 'ai-artifact', title: 'Artifact', subtitle: '生成产物', section: 'ai' },
   { id: 'ai-attachment', title: 'Attachment', subtitle: '附件', section: 'ai' },
   { id: 'ai-bubble', title: 'Bubble', subtitle: '消息气泡', section: 'ai' },
   { id: 'ai-conversation', title: 'Conversation', subtitle: '会话列表', section: 'ai' },

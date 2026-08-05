@@ -55,7 +55,7 @@ const emit = defineEmits<{
 .vis-card {
   --el-card-border-color: var(--color-border-default);
   --el-card-border-radius: var(--radius-sm);
-  --el-card-padding: var(--space-20);
+  --el-card-padding: 0px;
   --el-card-bg-color: var(--color-bg-surface);
 
   position: relative;
@@ -68,15 +68,12 @@ const emit = defineEmits<{
   background: var(--el-card-bg-color);
   box-shadow: none;
   transition:
-    border-color 150ms ease,
-    box-shadow 150ms ease;
+    background-color 150ms ease;
 }
 
 .vis-card.is-interactive:is(:hover, :focus-within),
 .vis-card.state-hover {
-  --el-card-border-color: var(--color-border-brand);
-
-  box-shadow: var(--shadow-brand-sm);
+  --el-card-bg-color: var(--color-bg-surface-subtle);
 }
 
 .vis-card :deep(.vis-card__body) {
@@ -89,8 +86,8 @@ const emit = defineEmits<{
 .vis-card__action {
   position: absolute;
   z-index: 1;
-  inset-block-start: calc(var(--space-20) - 2px);
-  inset-inline-end: var(--space-20);
+  inset-block-start: calc(var(--space-16) - 1px);
+  inset-inline-end: calc(var(--space-16) - 1px);
   opacity: 0;
   visibility: hidden;
   transition:
