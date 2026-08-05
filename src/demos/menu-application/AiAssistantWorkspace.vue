@@ -1643,6 +1643,11 @@ onBeforeUnmount(() => {
 }
 
 .ai-assistant.mode-independent {
+  --ai-scrollbar-track: transparent;
+  --ai-scrollbar-thumb: var(--primitive-grey-200);
+  --ai-scrollbar-thumb-hover: var(--primitive-grey-300);
+  --ai-scrollbar-gutter: var(--space-4);
+
   inline-size: 100%;
   block-size: 100%;
   border-inline-start: 1px solid var(--color-border-default);
@@ -1855,13 +1860,53 @@ onBeforeUnmount(() => {
   gap: var(--space-16);
 }
 
+.mode-independent .ai-assistant__column {
+  inline-size: 100%;
+  padding-inline: 0;
+}
+
+.mode-independent .ai-assistant__welcome,
+.mode-independent .ai-assistant__column > :deep(.vis-ai-sender),
+.mode-independent .ai-assistant__upload-error {
+  inline-size: min(calc(100% - var(--space-40)), 1000px);
+  margin-inline: auto;
+}
+
+.mode-independent .ai-assistant__transcript {
+  padding-inline: max(var(--space-20), calc((100% - 1000px) / 2));
+  scrollbar-width: thin;
+  scrollbar-color: var(--ai-scrollbar-thumb) var(--ai-scrollbar-track);
+}
+
+.mode-independent .ai-assistant__transcript::-webkit-scrollbar {
+  inline-size: 12px;
+  block-size: 8px;
+}
+
+.mode-independent .ai-assistant__transcript::-webkit-scrollbar-track {
+  background: var(--ai-scrollbar-track);
+}
+
+.mode-independent .ai-assistant__transcript::-webkit-scrollbar-thumb {
+  min-block-size: var(--space-16);
+  border-inline-end: var(--ai-scrollbar-gutter) solid transparent;
+  border-radius: var(--radius-full);
+  background: var(--ai-scrollbar-thumb);
+  background-clip: padding-box;
+}
+
+.mode-independent .ai-assistant__transcript::-webkit-scrollbar-thumb:hover {
+  background: var(--ai-scrollbar-thumb-hover);
+  background-clip: padding-box;
+}
+
 @media (max-width: 1100px) {
   .ai-assistant.mode-copilot {
     flex-basis: 420px;
     inline-size: 420px;
   }
 
-  .ai-assistant__column {
+  .ai-assistant:not(.mode-independent) .ai-assistant__column {
     padding-inline: var(--space-20);
   }
 }
