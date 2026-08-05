@@ -93,7 +93,7 @@ test('deployment prepares a writable persistent AI runtime without replacing exi
   assert.doesNotMatch(environment, /^(?:DEEPSEEK|OLLAMA)_[A-Z_]+=/m)
   assert.match(environment, /^OPENCODE_GO_API_KEY=keep-opencode-key$/m)
   assert.match(environment, /^OPENCODE_GO_BASE_URL=https:\/\/opencode\.ai\/zen\/go\/v1$/m)
-  assert.match(environment, /^AI_DEFAULT_MODEL=gpt-5\.6-luna$/m)
+  assert.match(environment, /^AI_DEFAULT_MODEL=deepseek-v4-flash$/m)
   assert.match(environment, /^NODE_ENV=production$/m)
   assert.match(environment, /^AI_ALLOWED_ORIGIN=https:\/\/example\.test$/m)
   assert.match(environment, /^BETTER_AUTH_URL=https:\/\/example\.test$/m)

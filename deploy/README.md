@@ -35,7 +35,7 @@ once and retained in `/etc/vision-ai.env`.
 | --- | --- | --- |
 | `OPENCODE_GO_API_KEY` | OpenCode Go subscription API key for all models | Required |
 | `OPENCODE_GO_BASE_URL` | OpenCode Go API base URL | `https://opencode.ai/zen/go/v1` |
-| `AI_DEFAULT_MODEL` | Initially selected public model ID | `gpt-5.6-luna` |
+| `AI_DEFAULT_MODEL` | Initially selected public model ID | `deepseek-v4-flash` |
 | `BETTER_AUTH_URL` | Public origin used for signed authentication cookies | `https://vision.leoht.space` |
 | `BETTER_AUTH_SECRET` | High-entropy secret used to sign authentication state | Required |
 | `AI_SEED_PASSWORD` | Initial password shared by the ten built-in accounts | Required |

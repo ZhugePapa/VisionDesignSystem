@@ -183,7 +183,7 @@ test('lists only the three OpenCode Go models without exposing its credential', 
   const baseUrl = await startServer(context, {
     env: {
       OPENCODE_GO_API_KEY: 'opencode-secret',
-      AI_DEFAULT_MODEL: 'gpt-5.6-luna',
+      AI_DEFAULT_MODEL: 'deepseek-v4-flash',
     },
     runtime: testRuntime(),
   })
@@ -192,7 +192,7 @@ test('lists only the three OpenCode Go models without exposing its credential', 
   const payload = await response.json()
 
   assert.equal(response.status, 200)
-  assert.equal(payload.defaultModel, 'gpt-5.6-luna')
+  assert.equal(payload.defaultModel, 'deepseek-v4-flash')
   assert.deepEqual(
     payload.models.map((model) => [model.id, model.provider, model.available]),
     [
@@ -216,7 +216,7 @@ test('reports whether the OpenCode Go key is configured', async (context) => {
     status: 'ok',
     auth: 'enabled',
     database: 'connected',
-    defaultModel: 'gpt-5.6-luna',
+    defaultModel: 'deepseek-v4-flash',
     configured: false,
     models: [],
   })

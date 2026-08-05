@@ -96,7 +96,7 @@ prepare_persistent_runtime() {
     false
   fi
 
-  set_environment_value AI_DEFAULT_MODEL gpt-5.6-luna
+  set_environment_value AI_DEFAULT_MODEL deepseek-v4-flash
   for legacy_key in \
     DEEPSEEK_API_KEY \
     DEEPSEEK_BASE_URL \

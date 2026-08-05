@@ -1,4 +1,4 @@
-export const DEFAULT_MODEL_ID = 'gpt-5.6-luna'
+export const DEFAULT_MODEL_ID = 'deepseek-v4-flash'
 
 const API_KEY_ENV = 'OPENCODE_GO_API_KEY'
 const BASE_URL_ENV = 'OPENCODE_GO_BASE_URL'
