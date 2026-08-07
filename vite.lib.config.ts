@@ -25,6 +25,9 @@ export default defineConfig({
           new URL('./src/components/breadcrumb/index.ts', import.meta.url),
         ),
         'components/button/index': fileURLToPath(new URL('./src/components/button/index.ts', import.meta.url)),
+        'components/button-split/index': fileURLToPath(
+          new URL('./src/components/button-split/index.ts', import.meta.url),
+        ),
         'components/card/index': fileURLToPath(new URL('./src/components/card/index.ts', import.meta.url)),
         'components/checkbox/index': fileURLToPath(new URL('./src/components/checkbox/index.ts', import.meta.url)),
         'components/code-block/index': fileURLToPath(new URL('./src/components/code-block/index.ts', import.meta.url)),

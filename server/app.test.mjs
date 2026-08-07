@@ -6,7 +6,7 @@ import { join } from 'node:path'
 import { DatabaseSync } from 'node:sqlite'
 import test from 'node:test'
 
-import { createVisionAiServer } from './app.mjs'
+import { createVisionAiServer, wantsMarkdownArtifact } from './app.mjs'
 import { AiArtifactStore } from './artifacts.mjs'
 import { ConversationStore } from './conversations.mjs'
 import { completeOpenCodeGoChat } from './opencode-go.mjs'
@@ -36,6 +36,25 @@ function startServer(context, options) {
     return `http://127.0.0.1:${address.port}`
   })
 }
+
+test('recognizes contextual file requests without treating ordinary output as a file', () => {
+  assert.equal(wantsMarkdownArtifact([
+    { role: 'assistant', content: '# 产品需求文档\n\n正文' },
+    { role: 'user', content: '输出文件给我' },
+  ]), true)
+  assert.equal(wantsMarkdownArtifact([
+    { role: 'user', content: '把上面的内容保存成一份文档' },
+  ]), true)
+  assert.equal(wantsMarkdownArtifact([
+    { role: 'user', content: 'Give me a downloadable document' },
+  ]), true)
+  assert.equal(wantsMarkdownArtifact([
+    { role: 'user', content: '输出分析结果给我' },
+  ]), false)
+  assert.equal(wantsMarkdownArtifact([
+    { role: 'user', content: '分析这个文件' },
+  ]), false)
+})
 
 test('streams all three OpenCode Go chat-completions models through one credential', async (context) => {
   const requests = []
@@ -385,6 +404,7 @@ test('creates, streams, reloads and previews a Markdown artifact in a conversati
   assert.equal(upstreamBody.tool_choice, 'required')
   assert.equal(upstreamBody.tools[0].function.name, 'create_markdown_file')
   assert.equal('reasoning_effort' in upstreamBody, false)
+  assert.match(upstreamBody.messages[0].content, /系统已提供 create_markdown_file 工具/)
   assert.match(stream, /event: artifact/)
   assert.match(stream, /会议纪要\.md/)
   assert.match(stream, /event: content/)
@@ -401,6 +421,24 @@ test('creates, streams, reloads and previews a Markdown artifact in a conversati
     artifact: turns[0].artifacts[0],
     content: '# 会议纪要\n\n- 结论 A',
   })
+
+  const contextualResponse = await fetch(
+    `${baseUrl}/api/ai/conversations/${conversation.id}/messages`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        question: '输出文件给我',
+        model: 'kimi-k3',
+        thinking: true,
+      }),
+    },
+  )
+  const contextualStream = await contextualResponse.text()
+  assert.equal(upstreamBody.tool_choice, 'required')
+  assert.equal(upstreamBody.tools[0].function.name, 'create_markdown_file')
+  assert.match(contextualStream, /event: artifact/)
+  assert.match(contextualStream, /会议纪要\.md/)
 
   const deepseekConversation = conversationStore.createConversation(
     'artifact-user',

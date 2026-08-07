@@ -222,7 +222,7 @@ defineExpose({
 .vis-table {
   --el-table-border-color: var(--color-border-default);
   --el-table-border: 1px solid var(--color-border-default);
-  --el-table-header-bg-color: var(--color-bg-secondary);
+  --el-table-header-bg-color: var(--color-bg-surface-subtle);
   --el-table-tr-bg-color: var(--color-bg-surface);
   --el-table-row-hover-bg-color: var(--color-bg-secondary);
   --el-table-current-row-bg-color: var(--color-fg-brand-subtle);
@@ -309,6 +309,10 @@ defineExpose({
 
 .vis-table :deep(.vis-el-table__header-wrapper th.vis-el-table__cell) {
   color: var(--color-text-secondary);
+  background: var(--color-bg-surface-subtle);
+}
+
+.vis-table :deep(.vis-el-table__header-wrapper th.vis-el-table__cell:hover) {
   background: var(--color-bg-secondary);
 }
 

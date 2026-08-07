@@ -6,9 +6,7 @@ import VisButton from '../../../components/button/VisButton.vue'
 import { VisDivider } from '../../../components/divider'
 import Icon from '../../../components/icons/Icon.vue'
 import type { IconName } from '../../../components/icons/generated/registry.generated'
-import { VisPageHeader } from '../../../components/page-header'
 import { VisTable, type VisTableColumn } from '../../../components/table'
-import type { VisTabsItem } from '../../../components/tabs'
 import { VisTag } from '../../../components/tag'
 
 interface WebhookIntegration {
@@ -39,16 +37,6 @@ interface SettingsGroup {
   label: string
   items: SettingsItem[]
 }
-
-const repositoryTabs: VisTabsItem[] = [
-  { value: 'code', label: '代码', iconName: 'code-02' },
-  { value: 'merge-requests', label: '合并请求', iconName: 'git-merge', count: 4 },
-  { value: 'reviews', label: '评审记录', iconName: 'notification-message' },
-  { value: 'work-items', label: '关联工作项', iconName: 'clipboard-check' },
-  { value: 'archive', label: '入库记录', iconName: 'arrow-square-right' },
-  { value: 'statistics', label: '统计', iconName: 'bar-chart-square-02' },
-  { value: 'settings', label: '设置', iconName: 'settings-01' },
-]
 
 const settingsGroups: SettingsGroup[] = [
   {
@@ -128,31 +116,8 @@ function toggleIntegration(id: string): void {
 </script>
 
 <template>
-  <section class="repository-page" aria-label="Software-Factory 仓库 Webhook 设置">
-    <VisPageHeader
-      class="repository-header"
-      title="Software-Factory"
-      description="Repository ID: 3034893"
-      :breadcrumb="false"
-      icon="code-02"
-      :tabs="repositoryTabs"
-      active-tab="settings"
-      aria-label="Software-Factory 仓库导航"
-    >
-      <template #suffix>
-        <VisButton
-          class="repository-switcher"
-          variant="text"
-          size="sm"
-          icon-only
-          icon-name="chevron-down"
-          label="切换代码仓库"
-        />
-      </template>
-    </VisPageHeader>
-
-    <div class="repository-settings">
-      <aside class="settings-sidebar" aria-label="仓库设置导航">
+  <section class="repository-settings" aria-label="仓库设置">
+    <aside class="settings-sidebar" aria-label="仓库设置导航">
         <h2>仓库设置</h2>
         <nav class="settings-navigation">
           <template v-for="(group, groupIndex) in settingsGroups" :key="group.label">
@@ -258,25 +223,18 @@ function toggleIntegration(id: string): void {
           </article>
         </div>
       </main>
-    </div>
   </section>
 </template>
 
 <style scoped>
-.repository-page {
+.repository-settings {
+  box-sizing: border-box;
   inline-size: 100%;
   block-size: 100%;
+  min-block-size: 0;
   min-inline-size: 0;
   display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  color: var(--color-text-primary);
-  background: var(--color-bg-canvas);
-  font-family: var(--font-family-text);
-}
-
-.repository-header {
-  flex: 0 0 auto;
+  flex: 1 1 0;
   background: var(--color-bg-canvas);
 }
 
@@ -287,17 +245,6 @@ function toggleIntegration(id: string): void {
   font-weight: 600;
   line-height: var(--font-heading-h3-line-height);
   letter-spacing: 0;
-}
-
-.repository-switcher {
-  flex: 0 0 auto;
-}
-
-.repository-settings {
-  min-block-size: 0;
-  display: flex;
-  flex: 1 1 0;
-  background: var(--color-bg-canvas);
 }
 
 .settings-sidebar {
@@ -544,13 +491,8 @@ function toggleIntegration(id: string): void {
 }
 
 @media (max-width: 1024px) {
-  .repository-header,
   .repository-settings {
     min-inline-size: 960px;
-  }
-
-  .repository-page {
-    overflow: auto;
   }
 }
 </style>

@@ -11,6 +11,8 @@ import {
   type VNodeChild,
 } from 'vue'
 
+import VisCodeBlock from '../code-block/VisCodeBlock.vue'
+
 export type VisMarkdownTheme = 'light' | 'dark'
 export type VisMarkdownStreamStatus = 'loading' | 'done'
 export type VisMarkdownIncompleteType =
@@ -362,6 +364,20 @@ export default defineComponent({
         : Array.from(element.childNodes).map(renderNode)
       const mappedComponent = props.components[tagName]
 
+      if (isCodeBlock && !mappedComponent) {
+        const source = String(element.textContent ?? '').replace(/\n$/, '')
+        const language = String(attrs['data-language'] ?? '')
+
+        return h(VisCodeBlock, {
+          key: `${tagName}-${index}`,
+          autoHeight: true,
+          copy: true,
+          language,
+          code: source,
+          class: 'vis-markdown__code-block',
+        })
+      }
+
       if (mappedComponent) {
         return h(mappedComponent, { ...attrs, streamStatus: streamStatus.value }, () => children)
       }
@@ -599,19 +615,19 @@ export default defineComponent({
   background-color: var(--color-bg-tertiary);
 }
 
-.vis-markdown pre,
+.vis-markdown pre:not(.vis-code-block__pre),
 .vis-markdown code {
   overflow-wrap: break-word;
   white-space: pre-wrap;
   word-break: break-word;
 }
 
-.vis-markdown pre {
+.vis-markdown pre:not(.vis-code-block__pre) {
   margin: 0 0 var(--space-12) 0;
   overflow-x: auto;
 }
 
-.vis-markdown pre code {
+.vis-markdown pre:not(.vis-code-block__pre) code {
   background: var(--color-bg-secondary) !important;
   border-radius: var(--radius-sm);
   color: var(--color-text-secondary) !important;
@@ -620,6 +636,11 @@ export default defineComponent({
   line-height: var(--font-code-md-line-height);
   margin: 0;
   padding: var(--space-16);
+}
+
+.vis-markdown .vis-code-block {
+  max-width: none;
+  margin: 0 0 var(--space-12);
 }
 
 .vis-markdown__syntax--comment {

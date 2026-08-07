@@ -3067,7 +3067,7 @@ const apiTables: Record<DemoPageId, ApiRow[]> = {
       visionApi: 'size',
       elementApi: '无直接对应',
       description: '控制高度、字号和图标尺寸。',
-      type: "'md' | 'sm'",
+      type: "'sm' | 'md' | 'lg'",
       defaultValue: "'md'",
     },
     {
@@ -8169,6 +8169,7 @@ function toggleGroup(title: string) {
               <div v-else-if="activePage === 'breadcrumb'" class="breadcrumb-demo">
                 <VisBreadcrumb :items="breadcrumbItems" />
                 <VisBreadcrumb type="link" separator="arrow" size="sm" :items="breadcrumbItems" />
+                <VisBreadcrumb size="lg" :items="breadcrumbItems" />
                 <VisBreadcrumb
                   :items="[
                     { label: '菜单名称' },

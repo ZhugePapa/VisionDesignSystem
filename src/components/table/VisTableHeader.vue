@@ -99,12 +99,16 @@ const emit = defineEmits<{
   display: flex;
   align-items: center;
   gap: var(--space-8);
-  color: var(--color-text-secondary);
-  background: var(--color-bg-secondary);
+  color: var(--color-text-primary);
+  background: var(--color-bg-surface-subtle);
   font-family: var(--font-family-text);
   font-size: var(--font-text-md-size);
-  font-weight: 400;
+  font-weight: 500;
   line-height: var(--font-text-md-line-height);
+}
+
+.vis-table-header:is(:hover, .state-hover) {
+  background: var(--color-bg-secondary);
 }
 
 .vis-table-header.appearance-grid {

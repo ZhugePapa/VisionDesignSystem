@@ -22,8 +22,10 @@ const DEFAULT_SYSTEM_PROMPT = `你是“小 VI 智能助理”，一个通用 AI
 请根据用户使用的语言回答；未指定时使用简体中文。
 回答应准确、清晰、直接，并在有帮助时使用 Markdown。
 不知道或信息不足时请明确说明，不要编造事实、数据或工具执行结果。
-只有在系统实际提供相应工具时，才能声称已经生成图片或文件；工具不可用时请说明限制，并提供可执行的替代方案。
-当系统提供 create_markdown_file 工具且用户明确要求创建、生成、导出或保存 Markdown 文件时，必须调用该工具，并把完整 Markdown 正文放入 content 参数；不要把工具参数当作普通回答输出。`
+只有在系统实际提供相应工具时，才能声称已经生成图片或文件；工具不可用时请说明限制，并提供可执行的替代方案。`
+
+const MARKDOWN_ARTIFACT_SYSTEM_PROMPT = `当前请求需要生成可下载的 Markdown 文件，系统已提供 create_markdown_file 工具。
+你必须调用该工具，并把完整 Markdown 正文放入 content 参数；不要用正文、代码块、JSON、XML 或伪工具调用来模拟工具执行。`
 
 const TIMEOUT_ANSWER = `> **回答超时**
 >
@@ -230,9 +232,12 @@ function artifactRouteId(pathname, suffix = '') {
   return match ? decodeURIComponent(match[1]) : null
 }
 
-function wantsMarkdownArtifact(messages) {
+export function wantsMarkdownArtifact(messages) {
   const prompt = [...messages].reverse().find((message) => message.role === 'user')?.content || ''
-  return /(?:生成|创建|制作|导出|保存|整理成|写成|撰写|编写|写一个|做一个|做个)[\s\S]{0,40}(?:markdown|md\s*文件|\.md\b)|(?:markdown|md\s*文件|\.md\b)[\s\S]{0,40}(?:生成|创建|制作|导出|保存|撰写|编写)|(?:create|generate|export|save|write)[\s\S]{0,40}(?:markdown|\.md\b)/i.test(prompt)
+  const explicitMarkdownRequest = /(?:生成|创建|制作|导出|保存|整理成|写成|撰写|编写|写一个|做一个|做个)[\s\S]{0,40}(?:markdown|md\s*文件|\.md\b)|(?:markdown|md\s*文件|\.md\b)[\s\S]{0,40}(?:生成|创建|制作|导出|保存|撰写|编写)|(?:create|generate|export|save|write)[\s\S]{0,40}(?:markdown|\.md\b)/i.test(prompt)
+  const genericFileRequest = /(?:输出|导出|生成|创建|制作|保存|打包|整理)(?:成|为)?(?:一个|一份|这份|这个|该)?(?:可下载的?)?(?:文件|文档)(?:给我)?|(?:把|将)?(?:上面|上述|前面|刚才|这份|这个|它|内容|回答|结果|文档)[\s\S]{0,30}(?:输出|导出|生成|保存)(?:成|为)?[\s\S]{0,12}(?:文件|文档)|给我(?:生成|创建|输出|导出)?(?:一个|一份)?(?:可下载的?)?(?:文件|文档)/i.test(prompt)
+  const englishFileRequest = /(?:create|generate|export|save|download|give me)[\s\S]{0,32}(?:file|document)/i.test(prompt)
+  return explicitMarkdownRequest || genericFileRequest || englishFileRequest
 }
 
 function parseMarkdownToolCall(call) {
@@ -298,6 +303,10 @@ async function streamProvider({
   toolChoice,
   tools,
 }) {
+  const baseSystemPrompt = env.AI_SYSTEM_PROMPT || DEFAULT_SYSTEM_PROMPT
+  const systemPrompt = Array.isArray(tools) && tools.length
+    ? `${baseSystemPrompt}\n\n${MARKDOWN_ARTIFACT_SYSTEM_PROMPT}`
+    : baseSystemPrompt
   await streamOpenCodeGoChat({
     apiKey: model.apiKey,
     baseUrl: model.baseUrl,
@@ -307,7 +316,7 @@ async function streamProvider({
     model: model.upstreamModel,
     reasoningEffort: body.reasoningEffort === 'max' ? 'max' : 'high',
     signal: controller.signal,
-    systemPrompt: env.AI_SYSTEM_PROMPT || DEFAULT_SYSTEM_PROMPT,
+    systemPrompt,
     // Several OpenCode Go providers reject tool_choice while reasoning mode is active.
     // Artifact generation prioritizes the deterministic tool call over hidden reasoning.
     thinking: body.thinking === true && !(Array.isArray(tools) && tools.length),

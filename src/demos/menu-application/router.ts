@@ -10,13 +10,13 @@ const projectRoutes: RouteRecordRaw[] = getProjectPageItems().map((item) => ({
     item.key === 'overview'
       ? () => import('./views/ProjectOverviewView.vue')
       : item.key === 'repositories'
-        ? () => import('./views/RepositoryWebhooksView.vue')
+        ? () => import('./views/RepositoryHomeView.vue')
         : item.key === 'applications'
           ? () => import('./views/ApplicationListView.vue')
       : () => import('./views/ProjectSectionView.vue'),
   meta: {
     menuKey: item.key,
-    title: item.key === 'repositories' ? 'Webhook 设置' : item.label,
+    title: item.key === 'repositories' ? '代码仓库' : item.label,
     description: item.description,
     layout:
       item.key === 'repositories'
@@ -26,6 +26,16 @@ const projectRoutes: RouteRecordRaw[] = getProjectPageItems().map((item) => ({
           : undefined,
   },
 }))
+
+const repositoryDetailRoute: RouteRecordRaw = {
+  path: 'code/repositories/:repositoryId',
+  name: 'repository-detail',
+  component: () => import('./views/RepositoryDetailView.vue'),
+  meta: {
+    menuKey: 'repositories',
+    layout: 'repository-detail',
+  },
+}
 
 const applicationDetailRoute: RouteRecordRaw = {
   path: 'deployments/applications/:applicationId',
@@ -73,7 +83,7 @@ export const menuApplicationRouter = createRouter({
       path: '/projects/:projectKey',
       component: ProjectLayout,
       redirect: (to) => ({ name: 'project-overview', params: { projectKey: to.params.projectKey } }),
-      children: [...projectRoutes, applicationDetailRoute],
+      children: [...projectRoutes, applicationDetailRoute, repositoryDetailRoute],
     },
     {
       path: '/:pathMatch(.*)*',

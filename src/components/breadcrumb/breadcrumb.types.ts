@@ -1,7 +1,7 @@
 import type { IconName } from '../icons/generated/registry.generated'
 
 export type VisBreadcrumbType = 'button' | 'link'
-export type VisBreadcrumbSize = 'md' | 'sm'
+export type VisBreadcrumbSize = 'sm' | 'md' | 'lg'
 export type VisBreadcrumbSeparator = 'slash' | 'arrow'
 
 export interface VisBreadcrumbItem {

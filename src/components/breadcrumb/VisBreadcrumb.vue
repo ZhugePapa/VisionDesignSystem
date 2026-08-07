@@ -81,6 +81,7 @@ function handleItemClick(item: VisBreadcrumbItem, index: number, event: Event): 
   --vis-breadcrumb-font-size: var(--font-text-md-size);
   --vis-breadcrumb-line-height: var(--font-text-md-line-height);
   --vis-breadcrumb-label-padding: var(--space-4);
+  --vis-breadcrumb-label-gap: var(--space-4);
   --vis-breadcrumb-icon-size: 16px;
 
   max-inline-size: 100%;
@@ -96,9 +97,22 @@ function handleItemClick(item: VisBreadcrumbItem, index: number, event: Event): 
   --vis-breadcrumb-icon-size: 14px;
 }
 
+.vis-breadcrumb.size-lg {
+  --vis-breadcrumb-height: 28px;
+  --vis-breadcrumb-font-size: var(--font-text-lg-size);
+  --vis-breadcrumb-line-height: var(--font-text-lg-line-height);
+  --vis-breadcrumb-label-padding: var(--space-6);
+  --vis-breadcrumb-label-gap: var(--space-6);
+  --vis-breadcrumb-icon-size: 16px;
+}
+
 .vis-breadcrumb.type-link {
   --vis-breadcrumb-height: var(--vis-breadcrumb-line-height);
   --vis-breadcrumb-label-padding: 0px;
+}
+
+.vis-breadcrumb.type-link.size-lg {
+  --vis-breadcrumb-label-gap: var(--space-4);
 }
 
 .vis-breadcrumb__list {
@@ -127,7 +141,7 @@ function handleItemClick(item: VisBreadcrumbItem, index: number, event: Event): 
   padding: 0 var(--vis-breadcrumb-label-padding);
   display: inline-flex;
   align-items: center;
-  gap: var(--space-4);
+  gap: var(--vis-breadcrumb-label-gap);
   appearance: none;
   background: transparent;
   color: var(--color-text-tertiary);

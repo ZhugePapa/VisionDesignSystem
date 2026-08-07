@@ -10,6 +10,7 @@ const props = withDefaults(
   defineProps<{
     type?: VisCodeBlockType
     collapsed?: boolean
+    autoHeight?: boolean
     heading?: boolean
     copy?: boolean
     language?: string
@@ -18,6 +19,7 @@ const props = withDefaults(
   {
     type: 'default',
     collapsed: false,
+    autoHeight: false,
     heading: false,
     copy: true,
     language: 'Javascript',
@@ -42,6 +44,7 @@ const isShowMore = computed(() => props.type === 'show_more')
 const isCollapsedVariant = computed(() => isShowMore.value && isCollapsed.value)
 
 const containerHeight = computed<string>(() => {
+  if (props.autoHeight) return 'auto'
   if (!isShowMore.value) return '264px'
   if (!isCollapsed.value) return '854px'
   return '400px'

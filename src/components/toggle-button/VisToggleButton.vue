@@ -160,7 +160,7 @@ watch(
 }
 
 .vis-toggle-button:is(.is-active, .state-active):not(.is-disabled) {
-  --vis-toggle-button-bg: var(--color-bg-quaternary);
+  --vis-toggle-button-bg: var(--color-bg-tertiary);
   --vis-toggle-button-fg: var(--color-text-primary);
   --vis-toggle-button-icon-fg: var(--color-fg-primary);
 }

@@ -40,6 +40,10 @@
       "types": "./dist/types/components/button/index.d.ts",
       "import": "./dist/lib/components/button/index.js"
     },
+    "./components/button-split": {
+      "types": "./dist/types/components/button-split/index.d.ts",
+      "import": "./dist/lib/components/button-split/index.js"
+    },
     "./components/card": {
       "types": "./dist/types/components/card/index.d.ts",
       "import": "./dist/lib/components/card/index.js"

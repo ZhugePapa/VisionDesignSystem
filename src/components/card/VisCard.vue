@@ -68,12 +68,14 @@ const emit = defineEmits<{
   background: var(--el-card-bg-color);
   box-shadow: none;
   transition:
-    background-color 150ms ease;
+    background-color 150ms ease,
+    box-shadow 150ms ease;
 }
 
 .vis-card.is-interactive:is(:hover, :focus-within),
 .vis-card.state-hover {
-  --el-card-bg-color: var(--color-bg-surface-subtle);
+  --el-card-bg-color: var(--color-bg-surface);
+  box-shadow: var(--shadow-default-sm);
 }
 
 .vis-card :deep(.vis-card__body) {

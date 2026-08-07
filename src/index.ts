@@ -20,6 +20,7 @@ import { VisAvatar, VisAvatarGroup, VisAvatarLabel } from './components/avatar'
 import VisBadge from './components/badge/VisBadge.vue'
 import VisBreadcrumb from './components/breadcrumb/VisBreadcrumb.vue'
 import VisButton from './components/button/VisButton.vue'
+import VisButtonSplit from './components/button-split/VisButtonSplit.vue'
 import VisCard from './components/card/VisCard.vue'
 import VisCheckbox from './components/checkbox/VisCheckbox.vue'
 import VisCheckboxGroup from './components/checkbox/VisCheckboxGroup.vue'
@@ -107,6 +108,7 @@ export {
   VisBadge,
   VisBreadcrumb,
   VisButton,
+  VisButtonSplit,
   VisCard,
   VisCheckbox,
   VisCheckboxGroup,
@@ -248,6 +250,11 @@ export type {
   VisButtonState,
   VisButtonVariant,
 } from './components/button/button.types'
+export type {
+  VisButtonSplitColor,
+  VisButtonSplitProps,
+  VisButtonSplitSize,
+} from './components/button-split/button-split.types'
 export type { VisCardProps, VisCardState } from './components/card/card.types'
 export type {
   VisCheckboxGroupAlign,
@@ -483,6 +490,7 @@ const components = [
   VisBadge,
   VisBreadcrumb,
   VisButton,
+  VisButtonSplit,
   VisCard,
   VisCheckbox,
   VisCheckboxGroup,

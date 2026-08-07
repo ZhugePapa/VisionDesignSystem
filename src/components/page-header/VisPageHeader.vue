@@ -235,7 +235,7 @@ function handleAction(action: VisPageHeaderAction, event: MouseEvent): void {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: var(--space-8);
+  gap: var(--space-12);
   color: var(--color-text-primary);
   background: var(--color-bg-canvas);
   font-family: var(--font-family-text);

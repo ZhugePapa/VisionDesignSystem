@@ -156,9 +156,7 @@ onMounted(() => {
             </div>
 
             <RouterView v-slot="{ Component, route: currentRoute }">
-              <Transition name="application-page" mode="out-in">
-                <component :is="Component" :key="currentRoute.fullPath" />
-              </Transition>
+              <component :is="Component" :key="currentRoute.fullPath" />
             </RouterView>
           </main>
         </div>
