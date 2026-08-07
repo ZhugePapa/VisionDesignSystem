@@ -1960,6 +1960,13 @@ onBeforeUnmount(() => {
   gap: var(--space-16);
 }
 
+/* Keep message actions visible while the pointer travels from the bubble to the controls. */
+.ai-assistant__user-message:hover :deep(.vis-ai-bubble__actions),
+.ai-assistant__user-message:focus-within :deep(.vis-ai-bubble__actions) {
+  opacity: 1;
+  pointer-events: auto;
+}
+
 .ai-assistant__answer {
   display: flex;
   flex-direction: column;

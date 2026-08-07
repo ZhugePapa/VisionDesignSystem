@@ -3,7 +3,7 @@ import { computed, onMounted, ref, shallowRef, watch } from 'vue'
 import { useRoute } from 'vue-router'
 
 import { VisAvatar } from '../../../components/avatar'
-import type { VisBreadcrumbItem } from '../../../components/breadcrumb'
+import { VisBreadcrumb, type VisBreadcrumbItem } from '../../../components/breadcrumb'
 import VisButton from '../../../components/button/VisButton.vue'
 import { VisButtonSplit } from '../../../components/button-split'
 import { VisCard } from '../../../components/card'
@@ -194,10 +194,36 @@ const currentFolderPath = computed<DemoRepositoryFile[]>(() => {
   return path
 })
 
+const repositoryPathItems = computed<VisBreadcrumbItem[]>(() => [
+  {
+    label: repository.value?.code ?? 'Plane-control',
+    active: !currentFolder.value && !openedFile.value,
+  },
+  ...currentFolderPath.value.map((folder, index) => ({
+    label: folder.name,
+    active: !openedFile.value && index === currentFolderPath.value.length - 1,
+  })),
+  ...(openedFile.value ? [{ label: openedFile.value.name, active: true }] : []),
+])
+
+function handleRepositoryPathClick(_item: VisBreadcrumbItem, index: number): void {
+  if (index === 0) {
+    navigateToRoot()
+    return
+  }
+
+  const folder = currentFolderPath.value[index - 1]
+  if (folder) navigateToFolder(folder)
+}
+
+function handleRepositoryTabChange(value: string | number): void {
+  if (value === 'code') navigateToRoot()
+}
+
 /* ---------- 文件查看器 ---------- */
 
 const fileTabs = computed<VisTabsItem[]>(() => [
-  { value: 'code', label: '代码', count: openedFile.value ? pseudoFileSize(openedFile.value) : undefined },
+  { value: 'code', label: openedFile.value?.name ?? '代码', count: openedFile.value ? pseudoFileSize(openedFile.value) : undefined },
   { value: 'trace', label: '修改追溯' },
   { value: 'history', label: '文件历史' },
 ])
@@ -231,6 +257,22 @@ function sampleFileContent(file: DemoRepositoryFile): string {
 }
 
 const fileContent = computed(() => (openedFile.value ? sampleFileContent(openedFile.value) : ''))
+
+async function copyFileContent(): Promise<void> {
+  if (!fileContent.value || !navigator.clipboard) return
+  await navigator.clipboard.writeText(fileContent.value).catch(() => undefined)
+}
+
+function downloadFileContent(): void {
+  if (!openedFile.value) return
+  const blob = new Blob([fileContent.value], { type: 'text/plain;charset=utf-8' })
+  const url = URL.createObjectURL(blob)
+  const anchor = document.createElement('a')
+  anchor.href = url
+  anchor.download = openedFile.value.name
+  anchor.click()
+  URL.revokeObjectURL(url)
+}
 
 const readmeContent = computed(() => `# ${repository.value?.name ?? '代码仓库'}
 
@@ -273,6 +315,7 @@ make build
       :breadcrumb-items="breadcrumbItems"
       :tabs="repositoryTabs"
       v-model:active-tab="activeTab"
+      @tab-change="handleRepositoryTabChange"
     >
       <template #icon>
         <VisFeaturedIcon
@@ -400,37 +443,16 @@ make build
             </template>
 
             <div class="repository-detail__meta-path">
-              <button
-                type="button"
-                class="repository-detail__path-item"
-                :class="{ 'is-active': !currentFolder && !openedFile }"
-                @click="navigateToRoot"
-              >
-                {{ repository?.code ?? 'Plane-control' }}
-              </button>
-              <template v-for="(folder, index) in currentFolderPath" :key="`f-${folder.name}`">
-                <span class="repository-detail__path-sep" aria-hidden="true">
-                  <Icon name="slash-divider" :size="12" decorative />
-                </span>
-                <button
-                  type="button"
-                  class="repository-detail__path-item"
-                  :class="{ 'is-active': !openedFile && index === currentFolderPath.length - 1 }"
-                  @click="navigateToFolder(folder)"
-                >
-                  {{ folder.name }}
-                </button>
-              </template>
-              <template v-if="openedFile">
-                <span class="repository-detail__path-sep" aria-hidden="true">
-                  <Icon name="slash-divider" :size="12" decorative />
-                </span>
-                <span class="repository-detail__path-item is-active">{{ openedFile.name }}</span>
-              </template>
+              <VisBreadcrumb
+                :items="repositoryPathItems"
+                size="lg"
+                aria-label="仓库路径"
+                @click="handleRepositoryPathClick"
+              />
               <VisButton
                 class="repository-detail__path-copy"
                 variant="text"
-                size="sm"
+                size="md"
                 icon-only
                 icon-name="copy-04"
                 label="复制路径"
@@ -469,14 +491,33 @@ make build
 
           <template v-if="openedFile">
             <div class="repository-detail__file-viewer">
-              <VisTabs
-                class="repository-detail__file-tabs"
-                :items="fileTabs"
-                :model-value="fileTab"
-                align="horizontal"
-                aria-label="文件查看标签页"
-                @update:model-value="fileTab = $event"
-              />
+              <div class="repository-detail__file-viewer-header">
+                <div class="repository-detail__file-tabs-frame">
+                  <VisTabs
+                    class="repository-detail__file-tabs"
+                    :items="fileTabs"
+                    :model-value="fileTab"
+                    align="horizontal"
+                    aria-label="文件查看标签页"
+                    @update:model-value="fileTab = $event"
+                  >
+                    <template #label="{ item }">
+                      <span v-if="item.value === 'code'" class="repository-detail__file-tab-label">
+                        <VisFileIcon :type="treeIconType(openedFile ?? {})" :size="16" decorative />
+                        <span>{{ item.label }}</span>
+                      </span>
+                      <span v-else>{{ item.label }}</span>
+                    </template>
+                  </VisTabs>
+                </div>
+                <span class="repository-detail__file-viewer-spacer" aria-hidden="true" />
+                <div class="repository-detail__file-actions">
+                  <VisButton variant="text" size="sm" icon-only icon-name="copy-04" label="复制文件内容" @click="copyFileContent" />
+                  <VisButton variant="text" size="sm" icon-only icon-name="edit-03" label="编辑文件" />
+                  <VisButton variant="text" size="sm" icon-only icon-name="download-02" label="下载文件" @click="downloadFileContent" />
+                  <VisButton variant="text" size="sm" icon-only icon-name="dots-horizontal" label="更多文件操作" />
+                </div>
+              </div>
               <div class="repository-detail__file-code">
                 <pre><code>{{ fileContent }}</code></pre>
               </div>
@@ -624,8 +665,8 @@ make build
 }
 
 .repository-detail__tree-chevron {
-  inline-size: var(--space-20);
-  flex: 0 0 var(--space-20);
+  inline-size: var(--space-24);
+  flex: 0 0 var(--space-24);
 }
 
 .repository-detail__tree-icon {
@@ -817,8 +858,56 @@ make build
   flex-shrink: 0;
 }
 
+.repository-detail__file-tabs-frame {
+  box-sizing: border-box;
+  inline-size: 318px;
+  block-size: 48px;
+  flex: 0 0 318px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-end;
+}
+
 .repository-detail__file-tabs {
-  flex-shrink: 0;
+  inline-size: 318px;
+  block-size: 40px;
+  flex: 0 0 40px;
+}
+
+.repository-detail__file-tab-label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-6);
+}
+
+.repository-detail__file-viewer-header {
+  box-sizing: border-box;
+  inline-size: 100%;
+  block-size: 48px;
+  min-inline-size: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  padding-inline: var(--space-12);
+  background: var(--color-bg-surface);
+  border-block-end: 1px solid var(--color-border-default);
+}
+
+.repository-detail__file-viewer-header :deep(.vis-tabs.align-horizontal) {
+  box-shadow: none;
+}
+
+.repository-detail__file-actions {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+}
+
+.repository-detail__file-viewer-spacer {
+  min-inline-size: 0;
+  flex: 1 1 auto;
 }
 
 .repository-detail__file-code {

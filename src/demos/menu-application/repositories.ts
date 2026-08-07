@@ -59,10 +59,47 @@ export const demoRepositories: DemoRepository[] = [
     language: 'C++',
     path: '机载软件中心 / 飞控系统 / 核心算法',
     files: [
-      { name: 'image', type: 'dir', lastCommit: 'initial commit', committer: '张大山', updatedAt: '3 周前' },
-      { name: 'compose', type: 'dir', lastCommit: 'initial commit', committer: '张大山', updatedAt: '3 周前' },
-      { name: 'result', type: 'dir', lastCommit: 'initial commit', committer: '张大山', updatedAt: '3 周前' },
-      { name: 'vote', type: 'dir', lastCommit: 'initial commit', committer: '张大山', updatedAt: '3 周前' },
+      {
+        name: 'image',
+        type: 'dir',
+        lastCommit: 'initial commit',
+        committer: '张大山',
+        updatedAt: '3 周前',
+        children: [
+          { name: 'flight-control.png', type: 'file', extension: 'png', lastCommit: 'initial commit', committer: '张大山', updatedAt: '3 周前' },
+          { name: 'attitude-preview.webp', type: 'file', extension: 'webp', lastCommit: 'initial commit', committer: '张大山', updatedAt: '3 周前' },
+        ],
+      },
+      {
+        name: 'compose',
+        type: 'dir',
+        lastCommit: 'initial commit',
+        committer: '张大山',
+        updatedAt: '3 周前',
+        children: [
+          { name: 'docker-compose.dev.yml', type: 'file', extension: 'yml', lastCommit: 'initial commit', committer: '张大山', updatedAt: '3 周前' },
+        ],
+      },
+      {
+        name: 'result',
+        type: 'dir',
+        lastCommit: 'initial commit',
+        committer: '张大山',
+        updatedAt: '3 周前',
+        children: [
+          { name: 'control-result.json', type: 'file', extension: 'json', lastCommit: 'initial commit', committer: '张大山', updatedAt: '3 周前' },
+        ],
+      },
+      {
+        name: 'vote',
+        type: 'dir',
+        lastCommit: 'initial commit',
+        committer: '张大山',
+        updatedAt: '3 周前',
+        children: [
+          { name: 'vote-config.yaml', type: 'file', extension: 'yaml', lastCommit: 'initial commit', committer: '张大山', updatedAt: '3 周前' },
+        ],
+      },
       {
         name: 'src',
         type: 'dir',

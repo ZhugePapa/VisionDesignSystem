@@ -39,7 +39,12 @@ function isSelected(item: VisTabsItem): boolean {
 }
 
 function selectItem(item: VisTabsItem): void {
-  if (item.disabled || isSelected(item)) return
+  if (item.disabled) return
+
+  if (isSelected(item)) {
+    emit('change', item.value, item)
+    return
+  }
 
   if (props.modelValue === undefined) {
     internalValue.value = item.value

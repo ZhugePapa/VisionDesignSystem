@@ -66,7 +66,30 @@ const KEYWORDS = new Set([
   'false', 'null', 'undefined', 'require', 'module', 'namespace',
 ])
 
-type TokenKind = 'keyword' | 'number' | 'comment' | 'string' | 'operator' | 'plain'
+const CONSTANTS = new Set([
+  'true', 'false', 'null', 'undefined', 'None', 'True', 'False', 'NaN', 'Infinity',
+])
+
+const BUILTINS = new Set([
+  'Array', 'Boolean', 'Date', 'Error', 'JSON', 'Map', 'Math', 'Number', 'Object',
+  'Promise', 'RegExp', 'Set', 'String', 'console', 'document', 'window',
+])
+
+type TokenKind =
+  | 'keyword'
+  | 'number'
+  | 'comment'
+  | 'string'
+  | 'operator'
+  | 'constant'
+  | 'function'
+  | 'property'
+  | 'variable'
+  | 'builtin'
+  | 'tag'
+  | 'attribute'
+  | 'punctuation'
+  | 'plain'
 interface Token { text: string; kind: TokenKind }
 
 const TOKEN_RE =
@@ -74,17 +97,57 @@ const TOKEN_RE =
 
 function tokenizeLine(line: string): Token[] {
   const tokens: Token[] = []
+  let declarationPending = false
   let match: RegExpExecArray | null
   TOKEN_RE.lastIndex = 0
   while ((match = TOKEN_RE.exec(line)) !== null) {
     const [full, comment, str, num, ident, ws, op, other] = match
-    if (comment) tokens.push({ text: comment, kind: 'comment' })
-    else if (str) tokens.push({ text: str, kind: 'string' })
-    else if (num) tokens.push({ text: num, kind: 'number' })
-    else if (ident) tokens.push({ text: ident, kind: KEYWORDS.has(ident) ? 'keyword' : 'plain' })
-    else if (ws) tokens.push({ text: ws, kind: 'plain' })
-    else if (op) tokens.push({ text: op, kind: 'operator' })
-    else tokens.push({ text: other || full, kind: 'plain' })
+    const index = match.index ?? 0
+    const before = line.slice(0, index)
+    const after = line.slice(index + full.length)
+    const tagStart = before.lastIndexOf('<')
+    const tagEnd = before.lastIndexOf('>')
+    const inTag = tagStart > tagEnd
+    const tagNamePrefix = inTag ? before.slice(tagStart + 1).replace(/^\//, '') : ''
+
+    if (comment) {
+      tokens.push({ text: comment, kind: 'comment' })
+    } else if (str) {
+      tokens.push({ text: str, kind: 'string' })
+    } else if (num) {
+      tokens.push({ text: num, kind: 'number' })
+    } else if (ident) {
+      let kind: TokenKind = 'plain'
+      if (inTag && /^[A-Za-z][\w:-]*$/.test(tagNamePrefix)) {
+        kind = 'tag'
+      } else if (inTag) {
+        kind = 'attribute'
+      } else if (CONSTANTS.has(ident)) {
+        kind = 'constant'
+      } else if (BUILTINS.has(ident)) {
+        kind = 'builtin'
+      } else if (KEYWORDS.has(ident)) {
+        kind = 'keyword'
+        declarationPending = ['const', 'let', 'var', 'function', 'class', 'interface', 'type'].includes(ident)
+      } else if (declarationPending) {
+        kind = 'variable'
+        declarationPending = false
+      } else if (after.trimStart().startsWith('(')) {
+        kind = 'function'
+      } else if (before.trimEnd().endsWith('.') || after.trimStart().startsWith(':')) {
+        kind = 'property'
+      }
+      tokens.push({ text: ident, kind })
+    } else if (ws) {
+      tokens.push({ text: ws, kind: 'plain' })
+    } else if (op) {
+      tokens.push({ text: op, kind: 'operator' })
+    } else {
+      tokens.push({
+        text: other || full,
+        kind: /[{}()[\],.;:]/.test(other || full) ? 'punctuation' : 'plain',
+      })
+    }
   }
   return tokens
 }
@@ -251,12 +314,21 @@ defineOptions({ name: 'VisCodeBlock' })
 }
 
 /* ---------- Syntax highlight tokens ---------- */
-.tok-keyword { color: var(--color-fg-warning-primary); }
-.tok-number  { color: var(--color-fg-brand-primary); }
-.tok-comment { color: var(--color-text-disabled); }
-.tok-operator { color: var(--color-fg-warning-primary); }
-.tok-string  { color: var(--color-text-secondary); }
-.tok-plain   { color: var(--color-text-secondary); }
+/* Horizon-inspired semantic roles mapped to the local utility palette. */
+.tok-keyword { color: var(--utility-violet-400); }
+.tok-number { color: var(--utility-orange-400); }
+.tok-comment { color: var(--color-text-tertiary); font-style: italic; }
+.tok-operator { color: var(--color-text-tertiary); }
+.tok-string { color: var(--utility-orange-300); }
+.tok-constant { color: var(--utility-orange-400); }
+.tok-function { color: var(--utility-aqua-500); }
+.tok-property { color: var(--utility-red-400); }
+.tok-variable { color: var(--utility-red-400); }
+.tok-builtin { color: var(--utility-aqua-500); }
+.tok-tag { color: var(--utility-red-400); }
+.tok-attribute { color: var(--utility-orange-400); }
+.tok-punctuation { color: var(--color-text-secondary); }
+.tok-plain { color: var(--color-text-secondary); }
 
 /* ---------- Copy button ---------- */
 .vis-code-block__copy {

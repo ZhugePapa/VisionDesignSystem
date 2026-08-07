@@ -78,7 +78,12 @@ const emit = defineEmits<{
   gap: var(--space-12);
   color: var(--color-text-primary);
   background: var(--color-bg-surface);
-  transition: background-color 120ms ease, border-color 120ms ease;
+  box-shadow: none;
+  transition: box-shadow 120ms ease;
+}
+
+.vis-ai-artifact:is(:hover, :focus-within, .state-hover) {
+  box-shadow: var(--shadow-default-sm);
 }
 
 .vis-ai-artifact.is-disabled {
