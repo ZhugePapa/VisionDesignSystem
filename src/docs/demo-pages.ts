@@ -8,6 +8,7 @@ export const demoPages = [
   { id: 'card', title: 'Card', subtitle: '卡片', section: 'shared' },
   { id: 'checkbox', title: 'Checkbox', subtitle: '复选框', section: 'shared' },
   { id: 'code-block', title: 'Code Block', subtitle: '代码块', section: 'shared' },
+  { id: 'code-experience', title: 'Code Experience', subtitle: '代码体验', section: 'code-experience' },
   { id: 'date-picker', title: 'Date Picker', subtitle: '日期选择器', section: 'shared' },
   { id: 'description', title: 'Description', subtitle: '描述列表', section: 'shared' },
   { id: 'divider', title: 'Divider', subtitle: '分割线', section: 'shared' },
@@ -66,7 +67,9 @@ export function getDemoRouteName(page: DemoPageId): string {
 
 export function getDemoRoutePath(page: DemoPage): string {
   const section =
-    page.section === 'application'
+    page.section === 'code-experience'
+      ? 'code-experience'
+      : page.section === 'application'
       ? 'application-components'
       : page.section === 'ai'
         ? 'ai-components'

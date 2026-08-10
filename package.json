@@ -56,6 +56,10 @@
       "types": "./dist/types/components/code-block/index.d.ts",
       "import": "./dist/lib/components/code-block/index.js"
     },
+    "./components/code-experience": {
+      "types": "./dist/types/components/code-experience/index.d.ts",
+      "import": "./dist/lib/components/code-experience/index.js"
+    },
     "./components/config-provider": {
       "types": "./dist/types/components/config-provider/index.d.ts",
       "import": "./dist/lib/components/config-provider/index.js"

@@ -23,6 +23,7 @@ import VisCard from './components/card/VisCard.vue'
 import VisCheckbox from './components/checkbox/VisCheckbox.vue'
 import VisCheckboxGroup from './components/checkbox/VisCheckboxGroup.vue'
 import VisCodeBlock from './components/code-block/VisCodeBlock.vue'
+import { VisCodeBlame, VisCodeLine } from './components/code-experience'
 import VisConfigProvider from './components/config-provider/VisConfigProvider.vue'
 import VisDatePicker from './components/date-picker/VisDatePicker.vue'
 import { VisDescription, VisDescriptionItem } from './components/description'
@@ -73,6 +74,13 @@ import type {
   VisAiSenderSpeed,
 } from './components/ai'
 import type { VisAlertType } from './components/alert/alert.types'
+import type {
+  VisCodeBlameRank,
+  VisCodeLineData,
+  VisCodeLineNumberMode,
+  VisCodeLineState,
+  VisCodeLineType,
+} from './components/code-experience'
 import type { VisTheme } from './components/config-provider/config-provider.types'
 import type { VisDescriptionDirection, VisDescriptionTag } from './components/description/description.types'
 import type { VisDividerType } from './components/divider/divider.types'
@@ -372,6 +380,12 @@ const avatarSize = ref<'xs' | 'sm' | 'md' | 'lg' | 'xl' | 'xxl'>('md')
 const avatarBadge = ref<'none' | 'dot' | 'icon' | 'number' | 'state'>('none')
 const avatarSquare = ref(false)
 const avatarGroupSize = ref<'xs' | 'sm' | 'md' | 'lg' | 'xl' | 'xxl'>('md')
+const codeLineType = ref<VisCodeLineType>('default')
+const codeLineNumber = ref<VisCodeLineNumberMode>('default')
+const codeLineState = ref<VisCodeLineState>('default')
+const codeLineActive = ref(false)
+const codeLineDivider = ref(false)
+const codeBlameRank = ref<VisCodeBlameRank>('default')
 const radioValue = ref<string | number | boolean>('option-1')
 const rateValue = ref(4)
 const rateHalfValue = ref(3.5)
@@ -459,8 +473,13 @@ const accordionItems: VisAccordionItemData[] = [
 const alertTypes: VisAlertType[] = ['info', 'primary', 'success', 'warning', 'danger']
 const avatarTypes = ['image', 'icon', 'text'] as const
 const avatarSizes = ['xs', 'sm', 'md', 'lg', 'xl', 'xxl'] as const
+const avatarLabelSizes = ['xxs', ...avatarSizes] as const
 const avatarBadges = ['none', 'dot', 'number', 'state', 'icon'] as const
 const avatarImageVariants = ['01', '02', '03', '04', '05', '06', '07', '08', '09'] as const
+const codeLineTypes: VisCodeLineType[] = ['default', 'delete', 'add']
+const codeLineNumbers: VisCodeLineNumberMode[] = ['default', 'double', 'none']
+const codeLineStates: VisCodeLineState[] = ['default', 'hover']
+const codeBlameRanks: VisCodeBlameRank[] = ['default', 'rank2', 'rank3', 'rank4', 'rank5', 'rank6']
 const inputNumberPositions: VisInputNumberPosition[] = ['default', 'right']
 const inputNumberStates: VisInputNumberState[] = ['default', 'hover', 'focus', 'danger']
 const inputSearchStates: VisInputSearchBoxState[] = ['default', 'hover', 'focus']
@@ -754,6 +773,29 @@ export default {
   },
 }`
 
+const codeLineDemoContent = 'export MAVEN_PROJECTBASEDIR=${MAVEN_BASEDIR:-"$BASE_DIR"}'
+const codeBlameLines: VisCodeLineData[] = Array.from({ length: 5 }, (_, index) => ({
+  key: index + 1,
+  content: codeLineDemoContent,
+  lineNumber: 1,
+}))
+const codeLineMatrixRows: Array<{
+  label: string
+  state?: VisCodeLineState
+  active?: boolean
+  divider?: boolean
+  number?: VisCodeLineNumberMode
+}> = [
+  { label: 'Default' },
+  { label: 'Hover', state: 'hover' },
+  { label: 'Active', active: true },
+  { label: 'Active + hover', state: 'hover', active: true },
+  { label: 'No number', number: 'none' },
+  { label: 'Double number', number: 'double' },
+  { label: 'Divider', divider: true },
+  { label: 'Double + divider', number: 'double', divider: true },
+]
+
 const markdownContent = `# Markdown 标题
 
 这是一段 **强调文本**，包含 [外部链接](https://example.com)、\`inline code\` 和普通段落。
@@ -846,6 +888,12 @@ const sidebarGroups: SidebarGroup[] = [
       { title: 'Tooltip', subtitle: '文字提示', page: 'tooltip' },
       { title: 'TreeView', subtitle: '树视图', page: 'tree-view' },
       { title: 'Upload', subtitle: '上传', page: 'upload' },
+    ],
+  },
+  {
+    title: 'Code Experience',
+    items: [
+      { title: 'CodeLine & CodeBlame', subtitle: '代码行与追溯', page: 'code-experience' },
     ],
   },
   {
@@ -1065,8 +1113,8 @@ const apiTables: Record<DemoPageId, ApiRow[]> = {
     {
       visionApi: 'size',
       elementApi: 'size',
-      description: '头像尺寸，按 Figma 固定为 20、24、32、40、48、56px。',
-      type: "'xs' | 'sm' | 'md' | 'lg' | 'xl' | 'xxl'",
+      description: '头像与 AvatarLabel 尺寸；xxs 为 AvatarLabel 新增的 16px 头像规格，头像组从 xs 起。',
+      type: "'xxs' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | 'xxl'",
       defaultValue: "'sm'",
     },
     {
@@ -1114,7 +1162,7 @@ const apiTables: Record<DemoPageId, ApiRow[]> = {
     {
       visionApi: 'text',
       elementApi: 'default slot',
-      description: '文本头像内容，xs/sm 显示首字，其余尺寸显示前两个字符。',
+      description: '文本头像内容，xxs/xs/sm 显示首字，其余尺寸显示前两个字符。',
       type: 'string',
       defaultValue: "'诸葛'",
     },
@@ -3850,6 +3898,25 @@ const apiTables: Record<DemoPageId, ApiRow[]> = {
       defaultValue: "''",
     },
   ],
+  'code-experience': [
+    { visionApi: 'CodeLine.type', elementApi: '无直接对应', description: '行级语义状态，映射普通、删除和新增背景。', type: "'default' | 'delete' | 'add'", defaultValue: "'default'" },
+    { visionApi: 'CodeLine.state', elementApi: '无直接对应', description: '锁定默认或悬浮设计状态；真实鼠标悬浮同样生效。', type: "'default' | 'hover'", defaultValue: "'default'" },
+    { visionApi: 'CodeLine.active', elementApi: '无直接对应', description: '标记当前活动行，并使用对应语义的强调背景。', type: 'boolean', defaultValue: 'false' },
+    { visionApi: 'CodeLine.divider', elementApi: '无直接对应', description: '为行号栏添加设计稿中的表面背景和右分隔线。', type: 'boolean', defaultValue: 'false' },
+    { visionApi: 'CodeLine.number', elementApi: '无直接对应', description: '控制单行号、双行号或隐藏行号。', type: "'default' | 'double' | 'none'", defaultValue: "'default'" },
+    { visionApi: 'CodeLine.lineNumber', elementApi: '无直接对应', description: '单行号值；双行号未单独传值时也用作回退。', type: 'string | number', defaultValue: '24' },
+    { visionApi: 'CodeLine.oldLineNumber / newLineNumber', elementApi: '无直接对应', description: 'Diff 双行号模式下的旧、新行号；新增/删除行会自动留空对应侧。', type: 'string | number', defaultValue: 'undefined' },
+    { visionApi: 'CodeLine.content', elementApi: 'default slot', description: '代码文本；也可由默认插槽传入 token 化内容。', type: 'string', defaultValue: '设计稿示例代码' },
+    { visionApi: 'CodeLine.commentable', elementApi: '无直接对应', description: '悬浮时显示 24px 行评论操作。', type: 'boolean', defaultValue: 'true' },
+    { visionApi: 'CodeLine.interactive', elementApi: '无直接对应', description: '控制 hover、active、click 与评论交互；CodeBlame 内置代码行固定关闭。', type: 'boolean', defaultValue: 'true' },
+    { visionApi: 'CodeLine.wrap', elementApi: '无直接对应', description: '是否允许代码软换行；默认保持单行并截断。', type: 'boolean', defaultValue: 'false' },
+    { visionApi: 'CodeBlame.author', elementApi: 'VisAvatarLabel title', description: '提交作者名称。', type: 'string', defaultValue: "'张大山'" },
+    { visionApi: 'CodeBlame.commit', elementApi: '无直接对应', description: '提交摘要。', type: 'string', defaultValue: "'新增部分组件'" },
+    { visionApi: 'CodeBlame.time', elementApi: '无直接对应', description: '相对提交时间文案。', type: 'string', defaultValue: "'2个月前'" },
+    { visionApi: 'CodeBlame.rank', elementApi: '无直接对应', description: '代码年龄等级，对应 Orange 50–500 六档色条。', type: "'default' | 'rank2' | 'rank3' | 'rank4' | 'rank5' | 'rank6'", defaultValue: "'default'" },
+    { visionApi: 'CodeBlame.lines', elementApi: 'default slot', description: '结构化代码行数据；默认插槽可完全替换代码区域。', type: 'VisCodeLineData[]', defaultValue: '5 行设计稿示例' },
+    { visionApi: 'CodeBlame.avatarImageSrc / avatarImageVariant', elementApi: 'VisAvatarLabel', description: '作者头像资源地址或内置头像编号。', type: 'string / VisAvatarImageVariant', defaultValue: "undefined / '09'" },
+  ],
   'scroll-shadow': [
     {
       visionApi: 'variant',
@@ -5128,6 +5195,7 @@ const elementApiTables: Record<DemoPageId, ElementApiRow[]> = {
   ],
   'featured-icon': noElementApiRows(),
   'code-block': noElementApiRows(),
+  'code-experience': noElementApiRows(),
   'scroll-shadow': [
     { category: 'Attribute', api: 'height', description: 'height of scrollbar', type: 'string | number', defaultValue: '-' },
     { category: 'Attribute', api: 'max-height', description: 'max height of scrollbar', type: 'string | number', defaultValue: '-' },
@@ -5399,6 +5467,7 @@ const visionComponentNames: Record<DemoPageId, string> = {
   'featured-icon': 'VisFeaturedIcon',
   form: 'VisForm / VisFormItem',
   'code-block': 'VisCodeBlock',
+  'code-experience': 'VisCodeLine / VisCodeBlame / VisCodeBlameBar',
   'scroll-shadow': 'VisScrollShadow',
   segmented: 'VisSegmented',
   select: 'VisSelect',
@@ -6004,6 +6073,10 @@ const visionEventTables: Record<DemoPageId, ApiDisplayRow[]> = {
     },
   ],
   'code-block': [],
+  'code-experience': [
+    { api: 'CodeLine.click', description: '点击代码行时返回行号、代码内容与原生事件。', type: '(payload: VisCodeLineClickPayload) => void' },
+    { api: 'CodeLine.comment', description: '点击悬浮评论按钮时返回当前代码行上下文。', type: '(payload: VisCodeLineClickPayload) => void' },
+  ],
   'scroll-shadow': [],
   segmented: [
     {
@@ -6394,6 +6467,7 @@ const elementExtraApiRows: Record<DemoPageId, ElementApiRow[]> = {
   ],
   'featured-icon': [],
   'code-block': [],
+  'code-experience': [],
   'scroll-shadow': [
     { category: 'Slot', api: 'default', description: '滚动区域的默认内容', type: 'slot', defaultValue: '-' },
     { category: 'Expose', api: 'handleScroll', description: '处理滚动事件并更新滚动条位置', type: 'Function', defaultValue: '-' },
@@ -7333,7 +7407,7 @@ function toggleGroup(title: string) {
 
                   <div class="avatar-demo__composition-panel">
                     <VisAvatarLabel
-                      v-for="(size, index) in avatarSizes"
+                      v-for="(size, index) in avatarLabelSizes"
                       :key="`label-${size}`"
                       :size="size"
                       :avatar-image-variant="avatarImageVariants[(index + 4) % avatarImageVariants.length]"
@@ -8908,6 +8982,107 @@ function toggleGroup(title: string) {
                 <VisFeaturedIcon size="lg" color="warning" type="solid-square" icon="alert-triangle" />
                 <VisFeaturedIcon size="xl" color="danger" type="light-square" icon="x-close" />
                 <VisFeaturedIcon size="xxl" color="grey" type="modern" icon="settings-01" />
+              </div>
+
+              <div v-else-if="activePage === 'code-experience'" class="code-experience-demo">
+                <section class="code-experience-demo__section" aria-labelledby="code-line-preview-title">
+                  <div class="code-experience-demo__heading">
+                    <div>
+                      <h4 id="code-line-preview-title" class="ld-heading-h4">CodeLine</h4>
+                      <p>代码行基础单元，支持 Diff、行号、分隔线与评论入口。</p>
+                    </div>
+                    <div class="code-experience-demo__controls">
+                      <div class="avatar-demo__control-row" aria-label="CodeLine type">
+                        <button
+                          v-for="type in codeLineTypes"
+                          :key="type"
+                          type="button"
+                          :class="{ active: codeLineType === type }"
+                          @click="codeLineType = type"
+                        >
+                          {{ type }}
+                        </button>
+                      </div>
+                      <div class="avatar-demo__control-row" aria-label="CodeLine number mode">
+                        <button
+                          v-for="mode in codeLineNumbers"
+                          :key="mode"
+                          type="button"
+                          :class="{ active: codeLineNumber === mode }"
+                          @click="codeLineNumber = mode"
+                        >
+                          {{ mode }}
+                        </button>
+                      </div>
+                      <div class="avatar-demo__control-row" aria-label="CodeLine state">
+                        <button
+                          v-for="state in codeLineStates"
+                          :key="state"
+                          type="button"
+                          :class="{ active: codeLineState === state }"
+                          @click="codeLineState = state"
+                        >
+                          {{ state }}
+                        </button>
+                      </div>
+                      <label class="avatar-demo__toggle"><input v-model="codeLineActive" type="checkbox"> Active</label>
+                      <label class="avatar-demo__toggle"><input v-model="codeLineDivider" type="checkbox"> Divider</label>
+                    </div>
+                  </div>
+
+                  <div class="code-experience-demo__focus">
+                    <VisCodeLine
+                      :type="codeLineType"
+                      :number="codeLineNumber"
+                      :state="codeLineState"
+                      :active="codeLineActive"
+                      :divider="codeLineDivider"
+                      :content="codeLineDemoContent"
+                      :line-number="24"
+                    />
+                  </div>
+
+                  <div class="code-experience-demo__matrix">
+                    <section v-for="type in codeLineTypes" :key="type" class="code-experience-demo__column">
+                      <h5>{{ type }}</h5>
+                      <div v-for="row in codeLineMatrixRows" :key="row.label" class="code-experience-demo__row">
+                        <span>{{ row.label }}</span>
+                        <VisCodeLine
+                          :type="type"
+                          :state="row.state"
+                          :active="row.active"
+                          :divider="row.divider"
+                          :number="row.number"
+                          :line-number="24"
+                          :content="codeLineDemoContent"
+                        />
+                      </div>
+                    </section>
+                  </div>
+                </section>
+
+                <section class="code-experience-demo__section" aria-labelledby="code-blame-preview-title">
+                  <div class="code-experience-demo__heading">
+                    <div>
+                      <h4 id="code-blame-preview-title" class="ld-heading-h4">CodeBlame</h4>
+                      <p>提交元信息与连续代码行的组合容器。</p>
+                    </div>
+                    <div class="avatar-demo__control-row" aria-label="CodeBlame rank">
+                      <button
+                        v-for="rank in codeBlameRanks"
+                        :key="rank"
+                        type="button"
+                        :class="{ active: codeBlameRank === rank }"
+                        @click="codeBlameRank = rank"
+                      >
+                        {{ rank }}
+                      </button>
+                    </div>
+                  </div>
+                  <div class="code-experience-demo__blame-wrap">
+                    <VisCodeBlame :rank="codeBlameRank" :lines="codeBlameLines" />
+                  </div>
+                </section>
               </div>
 
               <VisCodeBlock
@@ -10890,5 +11065,98 @@ function toggleGroup(title: string) {
   color: var(--color-text-secondary);
   font-size: var(--font-text-md-size);
   line-height: var(--font-text-md-line-height);
+}
+
+.code-experience-demo {
+  display: grid;
+  gap: var(--space-32);
+  min-inline-size: 0;
+}
+
+.code-experience-demo__section {
+  display: grid;
+  gap: var(--space-20);
+  min-inline-size: 0;
+}
+
+.code-experience-demo__heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-20);
+}
+
+.code-experience-demo__heading h4,
+.code-experience-demo__heading p,
+.code-experience-demo__column h5,
+.code-experience-demo__row > span {
+  margin: 0;
+}
+
+.code-experience-demo__heading p,
+.code-experience-demo__row > span {
+  color: var(--color-text-secondary);
+  font-size: var(--font-text-sm-size);
+  line-height: var(--font-text-sm-line-height);
+}
+
+.code-experience-demo__controls {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--space-8);
+}
+
+.code-experience-demo__focus {
+  inline-size: min(600px, 100%);
+  overflow: hidden;
+  border-radius: var(--radius-sm);
+  box-shadow: inset 0 0 0 1px var(--color-border-default);
+}
+
+.code-experience-demo__matrix {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(480px, 1fr));
+  gap: var(--space-20);
+  padding-block-end: var(--space-8);
+  overflow-x: auto;
+}
+
+.code-experience-demo__column,
+.code-experience-demo__row {
+  display: grid;
+  gap: var(--space-6);
+  min-inline-size: 0;
+}
+
+.code-experience-demo__column {
+  align-content: start;
+  gap: var(--space-12);
+}
+
+.code-experience-demo__column h5 {
+  color: var(--color-text-primary);
+  font-size: var(--font-text-md-size);
+  line-height: var(--font-text-md-line-height);
+  text-transform: capitalize;
+}
+
+.code-experience-demo__blame-wrap {
+  overflow-x: auto;
+  border-block-start: 1px solid var(--color-border-default);
+}
+
+.code-experience-demo__blame-wrap :deep(.vis-code-blame) {
+  inline-size: 1238px;
+}
+
+@media (max-width: 900px) {
+  .code-experience-demo__heading {
+    flex-direction: column;
+  }
+
+  .code-experience-demo__controls {
+    justify-content: flex-start;
+  }
 }
 </style>

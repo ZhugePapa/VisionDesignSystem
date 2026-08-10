@@ -25,6 +25,7 @@ import VisCard from './components/card/VisCard.vue'
 import VisCheckbox from './components/checkbox/VisCheckbox.vue'
 import VisCheckboxGroup from './components/checkbox/VisCheckboxGroup.vue'
 import VisCodeBlock from './components/code-block/VisCodeBlock.vue'
+import { VisCodeBlame, VisCodeBlameBar, VisCodeLine } from './components/code-experience'
 import VisConfigProvider from './components/config-provider/VisConfigProvider.vue'
 import VisDatePicker from './components/date-picker/VisDatePicker.vue'
 import { VisDescription, VisDescriptionItem, VisDescriptionTitle } from './components/description'
@@ -113,6 +114,9 @@ export {
   VisCheckbox,
   VisCheckboxGroup,
   VisCodeBlock,
+  VisCodeBlame,
+  VisCodeBlameBar,
+  VisCodeLine,
   VisConfigProvider,
   VisDatePicker,
   VisDescription,
@@ -265,6 +269,18 @@ export type {
   VisCheckboxValue,
 } from './components/checkbox/checkbox.types'
 export type { VisCodeBlockProps, VisCodeBlockType } from './components/code-block/code-block.types'
+export type {
+  VisCodeBlameBarProps,
+  VisCodeBlameProps,
+  VisCodeBlameRank,
+  VisCodeLineClickPayload,
+  VisCodeLineData,
+  VisCodeLineNumberMode,
+  VisCodeLineNumberValue,
+  VisCodeLineProps,
+  VisCodeLineState,
+  VisCodeLineType,
+} from './components/code-experience'
 export type { VisConfigProviderProps, VisTheme } from './components/config-provider/config-provider.types'
 export type {
   VisDatePickerProps,
@@ -548,6 +564,9 @@ const components = [
   VisTreeView,
   VisUpload,
   VisCodeBlock,
+  VisCodeLine,
+  VisCodeBlame,
+  VisCodeBlameBar,
 ]
 
 const VisionDesignSystem: Plugin = {

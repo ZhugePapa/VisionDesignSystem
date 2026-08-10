@@ -51,6 +51,7 @@ const isStacked = computed(() => props.align === 'vertical' || ['lg', 'xl', 'xxl
   min-inline-size: 0;
 }
 
+.vis-avatar-label.align-horizontal.size-xxs,
 .vis-avatar-label.align-horizontal.size-xs {
   gap: var(--space-6);
 }
@@ -72,6 +73,7 @@ const isStacked = computed(() => props.align === 'vertical' || ['lg', 'xl', 'xxl
   gap: var(--space-12);
 }
 
+.vis-avatar-label.align-vertical.size-xxs,
 .vis-avatar-label.align-vertical.size-xs,
 .vis-avatar-label.align-vertical.size-sm,
 .vis-avatar-label.align-vertical.size-md,
@@ -111,6 +113,11 @@ const isStacked = computed(() => props.align === 'vertical' || ['lg', 'xl', 'xxl
   gap: var(--space-8);
 }
 
+.vis-avatar-label.align-horizontal.size-xxs .vis-avatar-label__content:not(.stacked),
+.vis-avatar-label.align-horizontal.size-xs .vis-avatar-label__content:not(.stacked) {
+  gap: var(--space-6);
+}
+
 .vis-avatar-label.align-vertical .vis-avatar-label__content {
   align-items: center;
   text-align: center;
@@ -133,8 +140,16 @@ const isStacked = computed(() => props.align === 'vertical' || ['lg', 'xl', 'xxl
   flex: 1 1 0;
 }
 
+.vis-avatar-label.size-xxs .vis-avatar-label__title {
+  font-family: var(--font-family-text);
+  font-size: var(--font-text-sm-size);
+  line-height: var(--font-text-sm-line-height);
+  font-weight: 400;
+  color: var(--color-text-primary);
+}
+
 .vis-avatar-label.size-xs .vis-avatar-label__title {
-  font-family: var(--font-family-sans);
+  font-family: var(--font-family-text);
   font-size: var(--font-text-md-size);
   line-height: var(--font-text-md-line-height);
   font-weight: 400;
@@ -142,7 +157,7 @@ const isStacked = computed(() => props.align === 'vertical' || ['lg', 'xl', 'xxl
 }
 
 .vis-avatar-label.size-sm .vis-avatar-label__title {
-  font-family: var(--font-family-sans);
+  font-family: var(--font-family-text);
   font-size: var(--font-text-md-size);
   line-height: var(--font-text-md-line-height);
   font-weight: 500;
@@ -153,7 +168,7 @@ const isStacked = computed(() => props.align === 'vertical' || ['lg', 'xl', 'xxl
 .vis-avatar-label.size-lg .vis-avatar-label__title,
 .vis-avatar-label.size-xl .vis-avatar-label__title,
 .vis-avatar-label.size-xxl .vis-avatar-label__title {
-  font-family: var(--font-family-sans);
+  font-family: var(--font-family-text);
   font-size: var(--font-text-lg-size);
   line-height: var(--font-text-lg-line-height);
   font-weight: 500;
@@ -161,7 +176,7 @@ const isStacked = computed(() => props.align === 'vertical' || ['lg', 'xl', 'xxl
 }
 
 .vis-avatar-label__subtitle {
-  font-family: var(--font-family-sans);
+  font-family: var(--font-family-text);
   font-size: var(--font-text-sm-size);
   line-height: var(--font-text-sm-line-height);
   font-weight: 400;

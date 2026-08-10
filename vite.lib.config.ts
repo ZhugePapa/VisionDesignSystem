@@ -31,6 +31,9 @@ export default defineConfig({
         'components/card/index': fileURLToPath(new URL('./src/components/card/index.ts', import.meta.url)),
         'components/checkbox/index': fileURLToPath(new URL('./src/components/checkbox/index.ts', import.meta.url)),
         'components/code-block/index': fileURLToPath(new URL('./src/components/code-block/index.ts', import.meta.url)),
+        'components/code-experience/index': fileURLToPath(
+          new URL('./src/components/code-experience/index.ts', import.meta.url),
+        ),
         'components/config-provider/index': fileURLToPath(
           new URL('./src/components/config-provider/index.ts', import.meta.url),
         ),

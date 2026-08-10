@@ -49,6 +49,7 @@ const props = withDefaults(defineProps<VisAvatarProps>(), {
 })
 
 const sizeToPxMap: Record<VisAvatarSize, string> = {
+  xxs: 'var(--space-16)',
   xs: 'var(--space-20)',
   sm: 'var(--space-24)',
   md: 'var(--space-32)',
@@ -58,6 +59,7 @@ const sizeToPxMap: Record<VisAvatarSize, string> = {
 }
 
 const iconSizeMap: Record<VisAvatarSize, number> = {
+  xxs: 12,
   xs: 16,
   sm: 16,
   md: 20,
@@ -67,6 +69,7 @@ const iconSizeMap: Record<VisAvatarSize, number> = {
 }
 
 const textTypographyMap: Record<VisAvatarSize, TypographyMetric> = {
+  xxs: { fontSize: 'var(--font-text-sm-size)', lineHeight: 'var(--font-text-sm-line-height)' },
   xs: { fontSize: 'var(--font-text-sm-size)', lineHeight: 'var(--font-text-sm-line-height)' },
   sm: { fontSize: 'var(--font-text-sm-size)', lineHeight: 'var(--font-text-sm-line-height)' },
   md: { fontSize: 'var(--font-text-sm-size)', lineHeight: 'var(--font-text-sm-line-height)' },
@@ -76,6 +79,10 @@ const textTypographyMap: Record<VisAvatarSize, TypographyMetric> = {
 }
 
 const dotBadgeMetricMap: Record<VisAvatarSize, BadgeTypeMetric<DotLikeBadgeMetric>> = {
+  xxs: {
+    image: { top: '-1px', right: '-1px', size: '6px' },
+    other: { top: '-2px', right: '0px', size: '6px' },
+  },
   xs: {
     image: { top: '-1px', right: '-1px', size: '6px' },
     other: { top: '-2px', right: '0px', size: '6px' },
@@ -103,6 +110,10 @@ const dotBadgeMetricMap: Record<VisAvatarSize, BadgeTypeMetric<DotLikeBadgeMetri
 }
 
 const numberBadgeMetricMap: Record<VisAvatarSize, BadgeTypeMetric<NumberBadgeMetric>> = {
+  xxs: {
+    image: { top: '-8px', right: '-8px', size: '16px', paddingInline: '4px' },
+    other: { top: '-9px', right: '-7px', size: '16px', paddingInline: '4px' },
+  },
   xs: {
     image: { top: '-10px', right: '-10px', size: '20px', paddingInline: '6px' },
     other: { top: '-11px', right: '-9px', size: '20px', paddingInline: '6px' },
@@ -130,6 +141,10 @@ const numberBadgeMetricMap: Record<VisAvatarSize, BadgeTypeMetric<NumberBadgeMet
 }
 
 const stateBadgeMetricMap: Record<VisAvatarSize, BadgeTypeMetric<DotLikeBadgeMetric>> = {
+  xxs: {
+    image: { top: '11px', right: '0px', size: '6px' },
+    other: { top: '10px', right: '1px', size: '6px' },
+  },
   xs: {
     image: { top: '14px', right: '0px', size: '6px' },
     other: { top: '13px', right: '1px', size: '6px' },
@@ -233,7 +248,7 @@ const avatarStyle = computed<CSSProperties>(() => {
 const normalizedText = computed(() => props.text.trim() || '诸葛')
 const displayText = computed(() => {
   const chars = Array.from(normalizedText.value)
-  if (props.size === 'xs' || props.size === 'sm') return chars[0] ?? ''
+  if (props.size === 'xxs' || props.size === 'xs' || props.size === 'sm') return chars[0] ?? ''
   return chars.slice(0, 2).join('')
 })
 

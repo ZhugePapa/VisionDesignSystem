@@ -7,6 +7,12 @@ import { VisBreadcrumb, type VisBreadcrumbItem } from '../../../components/bread
 import VisButton from '../../../components/button/VisButton.vue'
 import { VisButtonSplit } from '../../../components/button-split'
 import { VisCard } from '../../../components/card'
+import {
+  VisCodeBlame,
+  VisCodeBlameBar,
+  type VisCodeBlameRank,
+  type VisCodeLineData,
+} from '../../../components/code-experience'
 import { VisDropdown, type VisDropdownEntry } from '../../../components/dropdown'
 import { VisFeaturedIcon } from '../../../components/featured-icon'
 import { VisFileIcon, resolveVisFileIconType, type VisFileIconType } from '../../../components/file-icon'
@@ -22,6 +28,9 @@ import { findRepositoryByKey, type DemoRepositoryFile } from '../repositories'
 import RepositoryWebhooksView from './RepositoryWebhooksView.vue'
 
 const route = useRoute()
+
+const figmaVueIconSrc = 'data:image/svg+xml;base64,PHN2ZyBwcmVzZXJ2ZUFzcGVjdFJhdGlvPSJub25lIiBvdmVyZmxvdz0idmlzaWJsZSIgc3R5bGU9ImRpc3BsYXk6IGJsb2NrOyIgd2lkdGg9IjE0IiBoZWlnaHQ9IjEyIiB2aWV3Qm94PSIwIDAgMTQgMTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxnIGlkPSJ2dWUiPgo8cGF0aCBpZD0idmVjdG9yIiBkPSJNMCAwTDcgMTJMMTQgMEgxMS4yNUw3IDcuMjVMMi43NSAwSDBaIiBmaWxsPSIjNDFCODgzIiBzdHlsZT0iZmlsbDojNDFCODgzO2ZpbGw6Y29sb3IoZGlzcGxheS1wMyAwLjI1NDkgMC43MjE2IDAuNTEzNyk7ZmlsbC1vcGFjaXR5OjE7Ii8+CjxwYXRoIGlkPSJ2ZWN0b3JfMiIgZD0iTTIuNzUgMEw3IDcuMjVMMTEuMjUgMEg4Ljc1TDcuMDMyNjMgMy4wMDYzMUw1LjI1IDBIMi43NVoiIGZpbGw9IiMzNTQ5NUUiIHN0eWxlPSJmaWxsOiMzNTQ5NUU7ZmlsbDpjb2xvcihkaXNwbGF5LXAzIDAuMjA3OCAwLjI4NjMgMC4zNjg2KTtmaWxsLW9wYWNpdHk6MTsiLz4KPC9nPgo8L3N2Zz4K'
+const figmaAvatarImageSrc = 'data:image/png;base64,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'
 
 const repository = computed(() => findRepositoryByKey(String(route.params.repositoryId)))
 
@@ -148,6 +157,7 @@ function openFolder(folder: DemoRepositoryFile): void {
 
 function openFile(file: DemoRepositoryFile): void {
   openedFile.value = file
+  fileTab.value = 'code'
 }
 
 function handleTreeClick(row: TreeRow): void {
@@ -228,7 +238,110 @@ const fileTabs = computed<VisTabsItem[]>(() => [
   { value: 'history', label: '文件历史' },
 ])
 
+interface DemoBlameGroup {
+  id: string
+  time: string
+  rank: VisCodeBlameRank
+  lines: VisCodeLineData[]
+}
+
+function createBlameLines(contents: string[], lineNumbers: number[]): VisCodeLineData[] {
+  return contents.map((content, index) => ({
+    key: `${lineNumbers[index]}-${index}`,
+    content,
+    lineNumber: lineNumbers[index],
+    number: 'default',
+  }))
+}
+
+const appVueBlameGroups: DemoBlameGroup[] = [
+  {
+    id: 'import-vue-types',
+    time: '2个月前',
+    rank: 'rank3',
+    lines: createBlameLines(["import type { App, Plugin } from 'vue'"], [1]),
+  },
+  {
+    id: 'foundation-components',
+    time: '2个月前',
+    rank: 'rank3',
+    lines: createBlameLines(
+      [
+        "import VisAlert from './components/alert/VisAlert.vue'",
+        "import VisAccordion from './components/accordion/VisAccordion.vue'",
+        "import VisAccordionItem from './components/accordion/VisAccordionItem.vue'",
+        "import { VisAvatar, VisAvatarGroup, VisAvatarLabel } from './components/avatar'",
+        "import VisBadge from './components/badge/VisBadge.vue'",
+        "import VisBreadcrumb from './components/breadcrumb/VisBreadcrumb.vue'",
+      ],
+      [2, 3, 4, 5, 6, 7],
+    ),
+  },
+  {
+    id: 'form-components',
+    time: '2个月前',
+    rank: 'rank6',
+    lines: createBlameLines(
+      [
+        "import VisButton from './components/button/VisButton.vue'",
+        "import VisCheckbox from './components/checkbox/VisCheckbox.vue'",
+        "import VisCheckboxGroup from './components/checkbox/VisCheckboxGroup.vue'",
+      ],
+      [8, 9, 10],
+    ),
+  },
+  {
+    id: 'table-components',
+    time: '2个月前',
+    rank: 'default',
+    lines: createBlameLines(
+      [
+        'import {',
+        '  VisTable,',
+        '  VisTableHeader,',
+        '  VisTableItem,',
+        '  VisTableLink,',
+        '  VisTableRow,',
+        '  VisTableSortIcon,',
+        '  VisTableTreePrefix,',
+        '  VisTableTrendIcon,',
+        "} from './components/table'",
+      ],
+      [11, 12, 13, 14, 15, 16, 17, 18, 19, 20],
+    ),
+  },
+  {
+    id: 'tag-component',
+    time: '2个月前',
+    rank: 'rank5',
+    lines: createBlameLines(["import VisTag from './components/tag/VisTag.vue'"], [21]),
+  },
+  {
+    id: 'latest-components',
+    time: '2个月前',
+    rank: 'default',
+    lines: createBlameLines(
+      [
+        "import VisButton from './components/button/VisButton.vue'",
+        "import VisCheckbox from './components/checkbox/VisCheckbox.vue'",
+        "import VisCheckboxGroup from './components/checkbox/VisCheckboxGroup.vue'",
+      ],
+      [22, 1, 1],
+    ),
+  },
+]
+
+const codeBlameLegendRanks: VisCodeBlameRank[] = [
+  'default',
+  'rank2',
+  'rank3',
+  'rank4',
+  'rank5',
+  'rank6',
+]
+
 function pseudoFileSize(file: DemoRepositoryFile): string {
+  if (file.name === 'app.vue') return '6.02kb'
   const size = ((file.name.length * 137 + 311) % 850 + 150) / 100
   return `${size.toFixed(2)}kb`
 }
@@ -257,6 +370,8 @@ function sampleFileContent(file: DemoRepositoryFile): string {
 }
 
 const fileContent = computed(() => (openedFile.value ? sampleFileContent(openedFile.value) : ''))
+const displayedCommitCount = computed(() => (openedFile.value ? 3 : (repository.value?.commits.length ?? 0)))
+const displayedBranchCount = computed(() => (openedFile.value ? 2 : (repository.value?.branches ?? 0)))
 
 async function copyFileContent(): Promise<void> {
   if (!fileContent.value || !navigator.clipboard) return
@@ -380,7 +495,7 @@ make build
             class="repository-detail__tree-item"
             :class="{
               'is-opened': row.file.type === 'dir' && isFolderExpanded(row.path),
-              'is-active': currentFolder === row.file,
+              'is-active': openedFile ? openedFile === row.file : currentFolder === row.file,
             }"
             :style="{ paddingInlineStart: `${4 + row.depth * 20}px` }"
             :title="row.file.name"
@@ -398,10 +513,14 @@ make build
             />
             <span v-else class="repository-detail__tree-chevron" aria-hidden="true" />
             <VisFileIcon
+              v-if="row.file.extension !== 'vue'"
               class="repository-detail__tree-icon"
               :type="treeIconType(row.file)"
               :size="16"
             />
+            <span v-else class="repository-detail__tree-icon repository-detail__vue-icon" aria-hidden="true">
+              <img :src="figmaVueIconSrc" alt="">
+            </span>
             <span class="repository-detail__tree-name">{{ row.file.name }}</span>
           </button>
         </div>
@@ -460,10 +579,10 @@ make build
             </div>
 
             <VisButton variant="text" size="md" prefix icon-name="git-commit">
-              {{ repository?.commits.length ?? 0 }} 提交
+              {{ displayedCommitCount }} 提交
             </VisButton>
             <VisButton variant="text" size="md" prefix icon-name="git-branch-02">
-              {{ repository?.branches ?? 0 }} 分支
+              {{ displayedBranchCount }} 分支
             </VisButton>
             <VisButton variant="text" size="md" prefix icon-name="tag-01">1 标签</VisButton>
             <VisButton variant="secondary" size="md" icon-only icon-name="plus" label="新建" />
@@ -471,13 +590,15 @@ make build
           </div>
 
           <div v-if="repository" class="repository-detail__commit-card">
-            <VisAvatar
-              size="sm"
-              type="image"
-              image-variant="09"
-              :image-alt="repository.latestCommit.author"
-            />
-            <span class="repository-detail__commit-author">{{ repository.latestCommit.author }}</span>
+            <div class="repository-detail__commit-owner">
+              <VisAvatar
+                size="sm"
+                type="image"
+                :image-src="figmaAvatarImageSrc"
+                :image-alt="repository.latestCommit.author"
+              />
+              <span class="repository-detail__commit-author">{{ repository.latestCommit.author }}</span>
+            </div>
             <span class="repository-detail__commit-message">{{ repository.latestCommit.message }}</span>
             <span class="repository-detail__commit-time">{{ repository.latestCommit.time }}</span>
             <span class="repository-detail__commit-spacer" aria-hidden="true" />
@@ -503,7 +624,10 @@ make build
                   >
                     <template #label="{ item }">
                       <span v-if="item.value === 'code'" class="repository-detail__file-tab-label">
-                        <VisFileIcon :type="treeIconType(openedFile ?? {})" :size="16" decorative />
+                        <span v-if="openedFile?.extension === 'vue'" class="repository-detail__vue-icon" aria-hidden="true">
+                          <img :src="figmaVueIconSrc" alt="">
+                        </span>
+                        <VisFileIcon v-else :type="treeIconType(openedFile ?? {})" :size="16" decorative />
                         <span>{{ item.label }}</span>
                       </span>
                       <span v-else>{{ item.label }}</span>
@@ -511,6 +635,22 @@ make build
                   </VisTabs>
                 </div>
                 <span class="repository-detail__file-viewer-spacer" aria-hidden="true" />
+                <div
+                  v-if="fileTab === 'trace'"
+                  class="repository-detail__blame-legend"
+                  aria-label="代码修改时间由旧到新"
+                >
+                  <span>旧</span>
+                  <span class="repository-detail__blame-legend-bars" aria-hidden="true">
+                    <VisCodeBlameBar
+                      v-for="rank in codeBlameLegendRanks"
+                      :key="rank"
+                      class="repository-detail__blame-legend-bar"
+                      :rank="rank"
+                    />
+                  </span>
+                  <span>新</span>
+                </div>
                 <div class="repository-detail__file-actions">
                   <VisButton variant="text" size="sm" icon-only icon-name="copy-04" label="复制文件内容" @click="copyFileContent" />
                   <VisButton variant="text" size="sm" icon-only icon-name="edit-03" label="编辑文件" />
@@ -518,8 +658,28 @@ make build
                   <VisButton variant="text" size="sm" icon-only icon-name="dots-horizontal" label="更多文件操作" />
                 </div>
               </div>
-              <div class="repository-detail__file-code">
+              <div v-if="fileTab === 'code'" class="repository-detail__file-code">
                 <pre><code>{{ fileContent }}</code></pre>
+              </div>
+              <div
+                v-else-if="fileTab === 'trace'"
+                class="repository-detail__file-trace"
+                role="table"
+                aria-label="文件修改追溯"
+              >
+                <VisCodeBlame
+                  v-for="group in appVueBlameGroups"
+                  :key="group.id"
+                  author="张大山"
+                  :avatar-image-src="figmaAvatarImageSrc"
+                  commit="添加新组件"
+                  :time="group.time"
+                  :rank="group.rank"
+                  :lines="group.lines"
+                />
+              </div>
+              <div v-else class="repository-detail__file-history-placeholder">
+                暂无文件历史
               </div>
             </div>
           </template>
@@ -673,6 +833,21 @@ make build
   flex: 0 0 var(--space-16);
 }
 
+.repository-detail__vue-icon {
+  inline-size: var(--space-16);
+  block-size: var(--space-16);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 var(--space-16);
+}
+
+.repository-detail__vue-icon img {
+  inline-size: 14px;
+  block-size: 12px;
+  display: block;
+}
+
 .repository-detail__tree-name {
   min-inline-size: 0;
   flex: 1 1 0;
@@ -689,7 +864,7 @@ make build
   padding: var(--space-20);
   display: flex;
   flex-direction: column;
-  gap: var(--space-16);
+  gap: var(--space-12);
   overflow-y: auto;
   flex: 1 1 0;
   background: var(--color-bg-canvas);
@@ -784,6 +959,14 @@ make build
   white-space: nowrap;
 }
 
+.repository-detail__commit-owner {
+  inline-size: 74px;
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  flex: 0 0 74px;
+}
+
 .repository-detail__commit-message {
   color: var(--color-text-secondary);
   font-size: var(--font-text-md-size);
@@ -850,12 +1033,27 @@ make build
 /* ---------- 文件查看器 ---------- */
 
 .repository-detail__file-viewer {
+  position: relative;
   box-sizing: border-box;
   inline-size: 100%;
-  border: 1px solid var(--color-border-default);
+  min-block-size: 0;
+  border: 0;
   border-radius: var(--radius-md);
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
   overflow: hidden;
-  flex-shrink: 0;
+}
+
+.repository-detail__file-viewer::after {
+  content: '';
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  border: 1px solid var(--color-border-default);
+  border-radius: inherit;
+  box-sizing: border-box;
+  pointer-events: none;
 }
 
 .repository-detail__file-tabs-frame {
@@ -889,7 +1087,7 @@ make build
   display: flex;
   align-items: center;
   gap: var(--space-8);
-  padding-inline: var(--space-12);
+  padding-inline: var(--space-8) var(--space-12);
   background: var(--color-bg-surface);
   border-block-end: 1px solid var(--color-border-default);
 }
@@ -905,6 +1103,33 @@ make build
   gap: var(--space-8);
 }
 
+.repository-detail__blame-legend {
+  block-size: var(--space-24);
+  padding-inline: var(--space-8);
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  color: var(--color-text-secondary);
+  font-family: var(--font-family-text);
+  font-size: var(--font-text-sm-size);
+  font-weight: 400;
+  line-height: var(--font-text-sm-line-height);
+  white-space: nowrap;
+  flex: 0 0 auto;
+}
+
+.repository-detail__blame-legend-bars {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.repository-detail__blame-legend-bar {
+  block-size: 12px;
+  min-block-size: 12px;
+  align-self: auto;
+}
+
 .repository-detail__file-viewer-spacer {
   min-inline-size: 0;
   flex: 1 1 auto;
@@ -914,9 +1139,30 @@ make build
   box-sizing: border-box;
   inline-size: 100%;
   min-block-size: 320px;
+  flex: 1 1 0;
   padding: var(--space-16);
   overflow: auto;
   background: var(--color-bg-surface);
+}
+
+.repository-detail__file-trace {
+  box-sizing: border-box;
+  inline-size: 100%;
+  min-block-size: 0;
+  flex: 1 1 0;
+  overflow: hidden;
+  background: var(--color-bg-surface);
+}
+
+.repository-detail__file-history-placeholder {
+  min-block-size: 0;
+  flex: 1 1 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-tertiary);
+  font-size: var(--font-text-md-size);
+  line-height: var(--font-text-md-line-height);
 }
 
 .repository-detail__file-code pre {
