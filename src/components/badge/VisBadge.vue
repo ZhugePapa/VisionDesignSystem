@@ -1,269 +1,294 @@
 <script setup lang="ts">
 import { computed, type CSSProperties } from 'vue'
+import { ElTag } from 'element-plus'
 
 import Icon from '../icons/Icon.vue'
-import type { IconName } from '../icons/generated/registry.generated'
-import type { VisBadgeColorType, VisBadgeProps, VisBadgeType } from './badge.types'
+import { resolveElementBadgeProps, resolveVisBadgeColor, resolveVisBadgeType } from './badge.adapter'
+import type {
+  VisBadgeColor,
+  VisBadgeProps,
+  VisBadgeSize,
+  VisBadgeVariantType,
+} from './badge.types'
+
+defineOptions({
+  name: 'VisBadge',
+  inheritAttrs: false,
+})
 
 const props = withDefaults(defineProps<VisBadgeProps>(), {
-  colorType: 'danger',
-  type: 'status',
+  color: undefined,
+  colorType: undefined,
+  size: 'sm',
+  type: 'default',
   solid: false,
-  subtle: false,
+  dotOnly: false,
+  iconOnly: false,
   label: undefined,
-  count: undefined,
   iconName: undefined,
+  count: undefined,
+  subtle: false,
+  elProps: undefined,
 })
 
-const visualType = computed(() => (props.type === 'number' ? 'text' : props.type))
-const normalizedColorType = computed<Exclude<VisBadgeColorType, 'info'>>(() =>
-  props.colorType === 'info' ? 'grey' : props.colorType,
-)
-const isSolid = computed(() => props.solid || props.type === 'dot')
-const isSubtle = computed(() => props.subtle && props.type === 'status' && !props.solid)
-
-const defaultStatusLabelMap: Record<VisBadgeColorType, string> = {
-  danger: '错误',
-  warning: '警告',
-  success: '成功',
-  brand: '进行中',
-  grey: '未开始',
-  info: '未开始',
-}
-
-const defaultTextLabelMap: Record<VisBadgeColorType, string> = {
-  danger: 'Hot!',
-  warning: 'Hot!',
-  success: 'New',
-  brand: 'New',
-  grey: 'info',
-  info: 'info',
-}
-
-const defaultIconMap: Record<VisBadgeColorType, IconName> = {
-  danger: 'x-close',
-  warning: 'alert',
-  success: 'check',
-  brand: 'dots-horizontal',
-  grey: 'dots-horizontal',
-  info: 'dots-horizontal',
-}
-
-const contentText = computed(() => {
-  if (props.type === 'status') return props.label ?? defaultStatusLabelMap[props.colorType]
-  if (props.type === 'number') return props.count ?? 1
-  return props.label ?? defaultTextLabelMap[props.colorType]
-})
-
-const isCompactText = computed(() => visualType.value === 'text' && String(contentText.value).trim().length <= 1)
-const resolvedIconName = computed(() => props.iconName ?? defaultIconMap[props.colorType])
-
-const badgeStyleMap: Record<Exclude<VisBadgeColorType, 'info'>, CSSProperties> = {
-  danger: {
-    '--vis-badge-solid-bg': 'var(--color-fg-danger-primary)',
-    '--vis-badge-soft-bg': 'var(--color-fg-danger-secondary)',
-    '--vis-badge-soft-text': 'var(--color-text-danger-primary)',
-    '--vis-badge-soft-dot': 'var(--color-fg-danger-primary)',
-    '--vis-badge-subtle-bg': 'var(--color-bg-surface)',
-    '--vis-badge-subtle-border': 'var(--color-border-default)',
-    '--vis-badge-subtle-text': 'var(--color-text-secondary)',
-    '--vis-badge-subtle-dot': 'var(--color-fg-danger-primary)',
-  },
-  warning: {
-    '--vis-badge-solid-bg': 'var(--color-fg-warning-primary)',
-    '--vis-badge-soft-bg': 'var(--color-fg-warning-secondary)',
-    '--vis-badge-soft-text': 'var(--color-text-warning-primary)',
-    '--vis-badge-soft-dot': 'var(--color-fg-warning-primary)',
-    '--vis-badge-subtle-bg': 'var(--color-bg-surface)',
-    '--vis-badge-subtle-border': 'var(--color-border-default)',
-    '--vis-badge-subtle-text': 'var(--color-text-secondary)',
-    '--vis-badge-subtle-dot': 'var(--color-fg-warning-primary)',
-  },
-  success: {
-    '--vis-badge-solid-bg': 'var(--color-fg-success-primary)',
-    '--vis-badge-soft-bg': 'var(--color-fg-success-secondary)',
-    '--vis-badge-soft-text': 'var(--color-text-success-primary)',
-    '--vis-badge-soft-dot': 'var(--color-fg-success-primary)',
-    '--vis-badge-subtle-bg': 'var(--color-bg-surface)',
-    '--vis-badge-subtle-border': 'var(--color-border-default)',
-    '--vis-badge-subtle-text': 'var(--color-text-secondary)',
-    '--vis-badge-subtle-dot': 'var(--color-fg-success-primary)',
-  },
-  brand: {
-    '--vis-badge-solid-bg': 'var(--color-fg-brand-primary)',
-    '--vis-badge-soft-bg': 'var(--color-fg-brand-secondary)',
-    '--vis-badge-soft-text': 'var(--color-text-brand-primary)',
-    '--vis-badge-soft-dot': 'var(--color-fg-brand-primary)',
-    '--vis-badge-subtle-bg': 'var(--color-bg-surface)',
-    '--vis-badge-subtle-border': 'var(--color-border-default)',
-    '--vis-badge-subtle-text': 'var(--color-text-secondary)',
-    '--vis-badge-subtle-dot': 'var(--color-fg-brand-primary)',
-  },
+const colorStyles: Record<VisBadgeColor, CSSProperties> = {
   grey: {
     '--vis-badge-solid-bg': 'var(--color-fg-tertiary)',
     '--vis-badge-soft-bg': 'var(--color-bg-quaternary)',
-    '--vis-badge-soft-text': 'var(--color-text-secondary)',
-    '--vis-badge-soft-dot': 'var(--color-fg-tertiary)',
-    '--vis-badge-subtle-bg': 'var(--color-bg-surface)',
-    '--vis-badge-subtle-border': 'var(--color-border-default)',
-    '--vis-badge-subtle-text': 'var(--color-text-secondary)',
-    '--vis-badge-subtle-dot': 'var(--color-fg-tertiary)',
+    '--vis-badge-soft-fg': 'var(--color-text-secondary)',
+  },
+  red: {
+    '--vis-badge-solid-bg': 'var(--utility-red-500)',
+    '--vis-badge-soft-bg': 'var(--utility-red-100)',
+    '--vis-badge-soft-fg': 'var(--utility-red-500)',
+  },
+  orange: {
+    '--vis-badge-solid-bg': 'var(--utility-orange-500)',
+    '--vis-badge-soft-bg': 'var(--utility-orange-100)',
+    '--vis-badge-soft-fg': 'var(--utility-orange-500)',
+  },
+  yellow: {
+    '--vis-badge-solid-bg': 'var(--utility-yellow-500)',
+    '--vis-badge-soft-bg': 'var(--utility-yellow-100)',
+    '--vis-badge-soft-fg': 'var(--utility-yellow-500)',
+  },
+  moss: {
+    '--vis-badge-solid-bg': 'var(--utility-moss-500)',
+    '--vis-badge-soft-bg': 'var(--utility-moss-100)',
+    '--vis-badge-soft-fg': 'var(--utility-moss-500)',
+  },
+  green: {
+    '--vis-badge-solid-bg': 'var(--utility-green-500)',
+    '--vis-badge-soft-bg': 'var(--utility-green-100)',
+    '--vis-badge-soft-fg': 'var(--utility-green-500)',
+  },
+  aqua: {
+    '--vis-badge-solid-bg': 'var(--utility-aqua-500)',
+    '--vis-badge-soft-bg': 'var(--utility-aqua-100)',
+    '--vis-badge-soft-fg': 'var(--utility-aqua-500)',
+  },
+  cyan: {
+    '--vis-badge-solid-bg': 'var(--utility-cyan-500)',
+    '--vis-badge-soft-bg': 'var(--utility-cyan-100)',
+    '--vis-badge-soft-fg': 'var(--utility-cyan-500)',
+  },
+  blue: {
+    '--vis-badge-solid-bg': 'var(--utility-blue-500)',
+    '--vis-badge-soft-bg': 'var(--utility-blue-100)',
+    '--vis-badge-soft-fg': 'var(--utility-blue-500)',
+  },
+  purple: {
+    '--vis-badge-solid-bg': 'var(--utility-purple-500)',
+    '--vis-badge-soft-bg': 'var(--utility-purple-100)',
+    '--vis-badge-soft-fg': 'var(--utility-purple-500)',
+  },
+  violet: {
+    '--vis-badge-solid-bg': 'var(--utility-violet-500)',
+    '--vis-badge-soft-bg': 'var(--utility-violet-100)',
+    '--vis-badge-soft-fg': 'var(--utility-violet-500)',
+  },
+  scarlet: {
+    '--vis-badge-solid-bg': 'var(--utility-scarlet-500)',
+    '--vis-badge-soft-bg': 'var(--utility-scarlet-100)',
+    '--vis-badge-soft-fg': 'var(--utility-scarlet-500)',
+  },
+  pink: {
+    '--vis-badge-solid-bg': 'var(--utility-pink-500)',
+    '--vis-badge-soft-bg': 'var(--utility-pink-100)',
+    '--vis-badge-soft-fg': 'var(--utility-pink-500)',
   },
 }
 
+const resolvedColor = computed<VisBadgeColor>(() => resolveVisBadgeColor(props.color, props.colorType))
+
+const resolvedType = computed<VisBadgeVariantType>(() => {
+  if (props.dotOnly) return 'dot'
+  if (props.iconOnly) return 'default'
+  return resolveVisBadgeType(props.type)
+})
+
+const isDotOnly = computed(() => props.dotOnly)
+const isIconOnly = computed(() => props.iconOnly && !isDotOnly.value)
+const resolvedSize = computed<VisBadgeSize>(() => (isDotOnly.value || isIconOnly.value ? 'sm' : props.size))
+const resolvedSolid = computed(() => props.solid || isDotOnly.value)
+const contentText = computed(() => {
+  if (props.type === 'number') return props.count ?? 1
+  return props.label ?? 'Badge'
+})
+const resolvedIconName = computed(() => props.iconName ?? (isIconOnly.value ? 'dots-horizontal' : 'download-03'))
+const iconSize = computed(() => (resolvedSize.value === 'sm' ? 12 : 16))
+const elementBadgeProps = computed(() => resolveElementBadgeProps(props, resolvedSize.value))
+const badgeStyle = computed(() => colorStyles[resolvedColor.value])
 const badgeClass = computed(() => [
-  `type-${props.type}`,
-  `visual-${visualType.value}`,
-  `color-${normalizedColorType.value}`,
+  `size-${resolvedSize.value}`,
+  `type-${resolvedType.value}`,
+  `visual-${isIconOnly.value ? 'icon' : resolvedType.value === 'default' ? 'text' : resolvedType.value}`,
+  `color-${resolvedColor.value}`,
   {
-    'is-compact-text': isCompactText.value,
-    'is-solid': isSolid.value,
-    'is-subtle': isSubtle.value,
-    'is-soft': !isSolid.value && !isSubtle.value,
+    'is-solid': resolvedSolid.value,
+    'is-soft': !resolvedSolid.value,
+    'is-icon-only': isIconOnly.value,
   },
 ])
-
-const badgeStyle = computed(() => badgeStyleMap[normalizedColorType.value])
 </script>
 
 <template>
-  <span class="vis-badge" :class="badgeClass" :style="badgeStyle">
-    <template v-if="type === 'status'">
-      <span class="vis-badge__status-dot" aria-hidden="true" />
-      <span class="vis-badge__status-label">{{ contentText }}</span>
-    </template>
+  <span
+    v-if="isDotOnly"
+    v-bind="$attrs"
+    class="vis-badge vis-badge--dot-only visual-dot"
+    :class="`color-${resolvedColor}`"
+    :style="badgeStyle"
+    :aria-label="label"
+  />
 
-    <template v-else-if="visualType === 'icon'">
-      <span class="vis-badge__icon" aria-hidden="true">
-        <slot name="icon">
-          <Icon :name="resolvedIconName" :size="12" decorative />
-        </slot>
-      </span>
-    </template>
+  <ElTag
+    v-else
+    v-bind="{ ...$attrs, ...elementBadgeProps }"
+    class="vis-badge"
+    :class="badgeClass"
+    :style="badgeStyle"
+  >
+    <span v-if="isIconOnly || resolvedType === 'icon'" class="vis-badge__icon" aria-hidden="true">
+      <slot name="icon">
+        <Icon :name="resolvedIconName" :size="iconSize" decorative />
+      </slot>
+    </span>
 
-    <template v-else-if="visualType === 'text'">
-      <span class="vis-badge__text">{{ contentText }}</span>
-    </template>
-  </span>
+    <span v-if="resolvedType === 'dot'" class="vis-badge__dot" aria-hidden="true" />
+
+    <span v-if="!isIconOnly" class="vis-badge__label vis-badge__text">
+      <slot>{{ contentText }}</slot>
+    </span>
+  </ElTag>
 </template>
 
 <style scoped>
 .vis-badge {
   box-sizing: border-box;
   position: relative;
+  min-inline-size: 18px;
+  border: 0;
+  border-radius: var(--radius-sm);
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border: 0;
-  border-radius: var(--radius-sm);
-  vertical-align: middle;
   overflow: hidden;
-  font-family: var(--font-family-sans);
+  font-family: var(--font-family-text);
+  font-weight: 400;
   letter-spacing: 0;
   white-space: nowrap;
+  vertical-align: middle;
   flex: 0 0 auto;
+  transition: none;
 }
 
-.vis-badge.visual-status {
+.vis-badge.size-sm {
   block-size: var(--space-20);
-  gap: var(--space-6);
-  padding-inline: var(--space-8);
+  font-size: var(--font-text-sm-size);
+  line-height: var(--font-text-sm-line-height);
 }
 
-.vis-badge.visual-text {
-  min-inline-size: 18px;
-  block-size: var(--space-20);
+.vis-badge.size-md {
+  block-size: var(--space-24);
+  font-size: var(--font-text-md-size);
+  line-height: var(--font-text-md-line-height);
+}
+
+.vis-badge.type-default {
   padding-inline: var(--space-6);
 }
 
-.vis-badge.visual-text.is-compact-text {
-  inline-size: 18px;
-  padding-inline: 0;
+.vis-badge:is(.type-icon, .type-dot) {
+  padding-inline: var(--space-8);
 }
 
-.vis-badge.visual-text.is-solid {
-  min-inline-size: var(--space-20);
-}
-
-.vis-badge.visual-text.is-compact-text.is-solid {
-  inline-size: var(--space-20);
-}
-
-.vis-badge.visual-icon {
-  inline-size: var(--space-20);
-  block-size: var(--space-20);
-  border-radius: var(--radius-full);
-  padding: 2px;
-}
-
-.vis-badge.visual-dot {
-  inline-size: var(--space-8);
-  block-size: var(--space-8);
-  border: 1px solid var(--color-border-white);
-  border-radius: var(--radius-full);
-  background: var(--vis-badge-solid-bg);
-}
-
-.vis-badge.is-soft:is(.visual-status, .visual-text, .visual-icon) {
+.vis-badge.is-soft {
   background: var(--vis-badge-soft-bg);
-  color: var(--vis-badge-soft-text);
+  color: var(--vis-badge-soft-fg);
 }
 
-.vis-badge.is-subtle.visual-status {
-  border: 1px solid var(--vis-badge-subtle-border);
-  background: var(--vis-badge-subtle-bg);
-  color: var(--vis-badge-subtle-text);
-}
-
-.vis-badge.is-solid:is(.visual-text, .visual-icon) {
-  border-width: 0;
+.vis-badge.is-solid {
   background: var(--vis-badge-solid-bg);
   color: var(--color-text-white);
 }
 
-.vis-badge.is-solid.visual-status {
-  background: var(--vis-badge-solid-bg);
-  color: var(--color-text-white);
-}
-
-.vis-badge__status-dot {
-  inline-size: 6px;
-  block-size: 6px;
+.vis-badge.is-icon-only {
+  inline-size: var(--space-20);
+  min-inline-size: var(--space-20);
+  padding: 2px;
   border-radius: var(--radius-full);
-  background: var(--vis-badge-soft-dot);
-  flex: 0 0 auto;
 }
 
-.vis-badge.is-solid .vis-badge__status-dot {
-  background: var(--color-fg-white);
+.vis-badge :deep(.el-tag__content),
+.vis-badge :deep([class$='-tag__content']) {
+  min-inline-size: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: inherit;
+  font: inherit;
+  line-height: inherit;
 }
 
-.vis-badge.is-subtle .vis-badge__status-dot {
-  background: var(--vis-badge-subtle-dot);
+.vis-badge.type-icon :deep(.el-tag__content),
+.vis-badge.type-icon :deep([class$='-tag__content']) {
+  gap: var(--space-4);
 }
 
-.vis-badge__status-label {
+.vis-badge.type-dot :deep(.el-tag__content),
+.vis-badge.type-dot :deep([class$='-tag__content']) {
+  gap: var(--space-6);
+}
+
+.vis-badge__label {
+  min-inline-size: var(--space-8);
   color: currentColor;
-  font-size: var(--font-text-sm-size);
-  font-weight: 400;
-  line-height: var(--font-text-sm-line-height);
+  font: inherit;
+  line-height: inherit;
   text-align: center;
-}
-
-.vis-badge__text {
-  color: currentColor;
-  font-size: var(--font-text-sm-size);
-  font-weight: 400;
-  line-height: var(--font-text-sm-line-height);
-  text-align: center;
+  word-break: break-word;
 }
 
 .vis-badge__icon {
-  inline-size: 12px;
-  block-size: 12px;
+  inline-size: var(--vis-badge-icon-size, 12px);
+  block-size: var(--vis-badge-icon-size, 12px);
   display: inline-flex;
   align-items: center;
   justify-content: center;
   color: currentColor;
+  flex: 0 0 auto;
+  overflow: hidden;
+}
+
+.vis-badge.size-sm {
+  --vis-badge-icon-size: 12px;
+}
+
+.vis-badge.size-md {
+  --vis-badge-icon-size: 16px;
+}
+
+.vis-badge__dot {
+  inline-size: var(--space-6);
+  block-size: var(--space-6);
+  border-radius: var(--radius-full);
+  display: block;
+  background: var(--vis-badge-solid-bg);
+  flex: 0 0 auto;
+}
+
+.vis-badge.is-solid .vis-badge__dot {
+  background: var(--color-fg-white);
+}
+
+.vis-badge--dot-only {
+  inline-size: var(--space-8);
+  min-inline-size: var(--space-8);
+  block-size: var(--space-8);
+  border: 1px solid var(--color-border-white);
+  border-radius: var(--radius-full);
+  padding: 0;
+  background: var(--vis-badge-solid-bg);
 }
 </style>

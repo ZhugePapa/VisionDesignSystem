@@ -41,6 +41,8 @@ const MAX_MESSAGE_CHARS = 12_000
 const MAX_CONTEXT_MESSAGE_CHARS = 120_000
 const MAX_TOTAL_CHARS = 300_000
 const MAX_ATTACHMENTS = 12
+const DEFAULT_AI_PRODUCT_ID = 'standalone-chat'
+const AI_PRODUCT_IDS = new Set(['embedded-assistant', DEFAULT_AI_PRODUCT_ID])
 
 const MARKDOWN_ARTIFACT_TOOL = {
   type: 'function',
@@ -92,6 +94,18 @@ function requestIp(req) {
     return forwarded.split(',')[0].trim()
   }
   return req.socket.remoteAddress || 'unknown'
+}
+
+function requestAiProductId(req) {
+  const header = req.headers['x-vision-ai-product']
+  const productId = String(Array.isArray(header) ? header[0] : header || DEFAULT_AI_PRODUCT_ID)
+    .trim()
+    .toLowerCase()
+  if (AI_PRODUCT_IDS.has(productId)) return productId
+
+  const error = new Error('Unknown AI product')
+  error.statusCode = 400
+  throw error
 }
 
 async function readJson(req) {
@@ -467,6 +481,7 @@ export async function createVisionAiServer({
         return
       }
       const userId = String(session.user.id)
+      const productId = requestAiProductId(req)
 
       if (req.method === 'GET' && url.pathname === '/api/ai/models') {
         json(res, 200, {
@@ -478,7 +493,7 @@ export async function createVisionAiServer({
 
       if (req.method === 'GET' && url.pathname === '/api/ai/conversations') {
         json(res, 200, {
-          conversations: conversationStore.listConversations(userId),
+          conversations: conversationStore.listConversations(userId, productId),
         })
         return
       }
@@ -577,6 +592,7 @@ export async function createVisionAiServer({
         const conversation = conversationStore.createConversation(
           userId,
           body.title,
+          productId,
         )
         json(res, 201, { conversation })
         return
@@ -587,7 +603,7 @@ export async function createVisionAiServer({
         req.method === 'GET'
         && messagesConversationId
       ) {
-        const turns = conversationStore.listTurns(userId, messagesConversationId)
+        const turns = conversationStore.listTurns(userId, messagesConversationId, productId)
         if (!turns) {
           json(res, 404, { error: '会话不存在。' })
           return
@@ -612,6 +628,7 @@ export async function createVisionAiServer({
           userId,
           conversationId,
           body,
+          productId,
         )
         if (!conversation) {
           json(res, 404, { error: '会话不存在。' })
@@ -622,11 +639,11 @@ export async function createVisionAiServer({
       }
 
       if (conversationId && req.method === 'DELETE') {
-        artifactStore?.deleteForConversation(userId, conversationId)
-        if (!conversationStore.deleteConversation(userId, conversationId)) {
+        if (!conversationStore.deleteConversation(userId, conversationId, productId)) {
           json(res, 404, { error: '会话不存在。' })
           return
         }
+        artifactStore?.deleteForConversation(userId, conversationId)
         res.writeHead(204, { 'Cache-Control': 'no-store' })
         res.end()
         return
@@ -637,7 +654,7 @@ export async function createVisionAiServer({
         && messagesConversationId
       ) {
         const ip = requestIp(req)
-        if (!isWithinRateLimit(`${userId}:${ip}`)) {
+        if (!isWithinRateLimit(`${productId}:${userId}:${ip}`)) {
           json(res, 429, { error: '请求过于频繁，请稍后再试。' })
           return
         }
@@ -665,23 +682,26 @@ export async function createVisionAiServer({
         let turn
 
         if (typeof body.regenerateTurnId === 'string' && body.regenerateTurnId) {
-          artifactStore?.deleteAfterTurn(
-            userId,
-            messagesConversationId,
-            body.regenerateTurnId,
-          )
           turn = conversationStore.prepareRegeneration(
             userId,
             messagesConversationId,
             body.regenerateTurnId,
+            productId,
           )
+          if (turn) {
+            artifactStore?.deleteAfterTurn(
+              userId,
+              messagesConversationId,
+              body.regenerateTurnId,
+            )
+          }
         } else {
           turn = conversationStore.createTurn(userId, messagesConversationId, {
             question: validatedQuestion(body.question),
             model: model.id,
             thinking: body.thinking === true,
             attachments,
-          })
+          }, productId)
         }
 
         if (!turn) {
@@ -699,6 +719,7 @@ export async function createVisionAiServer({
           userId,
           messagesConversationId,
           turn.id,
+          productId,
         )
         let messages
         try {
@@ -716,6 +737,7 @@ export async function createVisionAiServer({
             messagesConversationId,
             turn.id,
             { status: 'error' },
+            productId,
           )
           throw error
         }
@@ -798,6 +820,7 @@ export async function createVisionAiServer({
               reasoning,
               status: answer === EMPTY_ANSWER ? 'error' : 'done',
             },
+            productId,
           )
         } catch (error) {
           const terminationReason = stream.terminationReason()
@@ -813,6 +836,7 @@ export async function createVisionAiServer({
               reasoning,
               status: timedOut ? 'timeout' : stopped ? 'stopped' : 'error',
             },
+            productId,
           )
           if (timedOut && !res.writableEnded) {
             sse(res, 'timeout', { content: TIMEOUT_ANSWER })
@@ -831,7 +855,7 @@ export async function createVisionAiServer({
       // Retained for component-level integrations that supply their own history.
       if (req.method === 'POST' && url.pathname === '/api/ai/chat') {
         const ip = requestIp(req)
-        if (!isWithinRateLimit(`${userId}:${ip}`)) {
+        if (!isWithinRateLimit(`${productId}:${userId}:${ip}`)) {
           json(res, 429, { error: '请求过于频繁，请稍后再试。' })
           return
         }

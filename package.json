@@ -44,6 +44,10 @@
       "types": "./dist/types/components/button-split/index.d.ts",
       "import": "./dist/lib/components/button-split/index.js"
     },
+    "./components/link": {
+      "types": "./dist/types/components/link/index.d.ts",
+      "import": "./dist/lib/components/link/index.js"
+    },
     "./components/card": {
       "types": "./dist/types/components/card/index.d.ts",
       "import": "./dist/lib/components/card/index.js"
@@ -236,12 +240,16 @@
   },
   "scripts": {
     "dev": "vite --host 127.0.0.1",
+    "dev:embedded-assistant": "vite --host 127.0.0.1 --config vite.embedded-assistant.config.ts",
+    "dev:standalone-chat": "vite --host 127.0.0.1 --config vite.standalone-chat.config.ts",
     "dev:api": "node --watch server/app.mjs",
     "start:api": "node server/app.mjs",
     "test:api": "node --test server/*.test.mjs",
     "typecheck": "vue-tsc --noEmit -p tsconfig.app.json",
     "build": "npm run typecheck && npm run build:docs && npm run build:lib",
     "build:docs": "vite build",
+    "build:embedded-assistant": "vite build --config vite.embedded-assistant.config.ts",
+    "build:standalone-chat": "vite build --config vite.standalone-chat.config.ts",
     "build:types": "vue-tsc -p tsconfig.build.json",
     "build:lib": "npm run build:types && vite build --config vite.lib.config.ts && cp src/styles/tokens.css dist/lib/tokens.css"
   },

@@ -39,7 +39,7 @@ defineOptions({ name: 'VisCodeBlame' })
         <slot name="author">
           <VisAvatarLabel
             class="vis-code-blame__author"
-            size="xxs"
+            size="xs"
             :addition="false"
             :title="author"
             :avatar-image-src="avatarImageSrc"
@@ -89,7 +89,7 @@ defineOptions({ name: 'VisCodeBlame' })
   gap: var(--space-12);
   inline-size: 320px;
   min-inline-size: 0;
-  padding: var(--space-6);
+  padding: 5px;
   overflow: hidden;
   box-sizing: border-box;
 }
@@ -110,14 +110,19 @@ defineOptions({ name: 'VisCodeBlame' })
 .vis-code-blame__commit,
 .vis-code-blame__time {
   font-family: var(--font-family-text), sans-serif;
-  font-size: var(--font-text-sm-size);
+  font-size: var(--font-text-md-size);
   font-weight: 400;
-  line-height: var(--font-text-sm-line-height);
+  line-height: var(--font-text-md-line-height);
 }
 
 .vis-code-blame__commit {
+  display: flex;
   flex: 1 1 0;
+  align-items: center;
+  gap: var(--space-6);
   min-inline-size: 0;
+  block-size: var(--space-20);
+  border-radius: var(--radius-sm);
   overflow: hidden;
   color: var(--color-text-secondary);
   text-overflow: ellipsis;

@@ -126,7 +126,14 @@ function handleAction(event: MouseEvent): void {
         <span class="vis-tabs__label">
           <slot name="label" :item="item">{{ item.label ?? item.value }}</slot>
         </span>
-        <VisBadge v-if="item.count !== undefined" class="vis-tabs__count" type="number" color-type="info" :count="item.count" />
+        <VisBadge
+          v-if="item.count !== undefined"
+          class="vis-tabs__count"
+          color="grey"
+          size="sm"
+          type="default"
+          :label="String(item.count)"
+        />
       </span>
       <span v-if="isSelected(item)" class="vis-tabs__bar" aria-hidden="true" />
     </button>
@@ -308,24 +315,7 @@ function handleAction(event: MouseEvent): void {
 }
 
 .vis-tabs__count :deep(.vis-badge__text) {
-  color: var(--color-text-tertiary);
-  font-weight: 400;
-}
-
-.vis-tabs__item:is(:hover, .state-hover):not(.is-active, :disabled)
-  .vis-tabs__count
-  :deep(.vis-badge__text) {
   color: var(--color-text-secondary);
-  font-weight: 500;
-}
-
-.vis-tabs__item.is-active .vis-tabs__count :deep(.vis-badge__text) {
-  color: var(--color-text-primary);
-  font-weight: 500;
-}
-
-.vis-tabs__item:disabled .vis-tabs__count :deep(.vis-badge__text) {
-  color: var(--color-text-disabled);
   font-weight: 400;
 }
 

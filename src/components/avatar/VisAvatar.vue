@@ -2,7 +2,8 @@
 import { computed, ref, type CSSProperties } from 'vue'
 
 import VisBadge from '../badge/VisBadge.vue'
-import type { VisBadgeColorType, VisBadgeType } from '../badge/badge.types'
+import { resolveVisBadgeColor } from '../badge/badge.adapter'
+import type { VisBadgeColor, VisBadgeVariantType } from '../badge/badge.types'
 import Icon from '../icons/Icon.vue'
 import type { VisAvatarProps, VisAvatarSize } from './avatar.types'
 import { resolveVisAvatarImage } from './defaultImages'
@@ -43,7 +44,8 @@ const props = withDefaults(defineProps<VisAvatarProps>(), {
   icon: 'user-03',
   badgeIcon: 'x-close',
   badgeCount: 1,
-  badgeColorType: 'danger',
+  badgeColor: undefined,
+  badgeColorType: undefined,
   decorative: true,
   groupOutlined: false,
 })
@@ -80,32 +82,32 @@ const textTypographyMap: Record<VisAvatarSize, TypographyMetric> = {
 
 const dotBadgeMetricMap: Record<VisAvatarSize, BadgeTypeMetric<DotLikeBadgeMetric>> = {
   xxs: {
-    image: { top: '-1px', right: '-1px', size: '6px' },
-    other: { top: '-2px', right: '0px', size: '6px' },
+    image: { top: '0px', right: '0px', size: '6px' },
+    other: { top: '-1px', right: '1px', size: '6px' },
   },
   xs: {
-    image: { top: '-1px', right: '-1px', size: '6px' },
-    other: { top: '-2px', right: '0px', size: '6px' },
+    image: { top: '0px', right: '0px', size: '6px' },
+    other: { top: '-1px', right: '1px', size: '6px' },
   },
   sm: {
-    image: { top: '-1px', right: '-1px', size: '8px' },
-    other: { top: '-2px', right: '0px', size: '8px' },
+    image: { top: '0px', right: '0px', size: '6px' },
+    other: { top: '-1px', right: '1px', size: '6px' },
   },
   md: {
-    image: { top: '-1px', right: '-1px', size: '8px' },
-    other: { top: '-2px', right: '0px', size: '8px' },
+    image: { top: '0px', right: '0px', size: '8px' },
+    other: { top: '-1px', right: '1px', size: '8px' },
   },
   lg: {
-    image: { top: '-1px', right: '-1px', size: '10px' },
-    other: { top: '-2px', right: '0px', size: '10px' },
+    image: { top: '0px', right: '0px', size: '10px' },
+    other: { top: '-1px', right: '1px', size: '10px' },
   },
   xl: {
-    image: { top: '-1px', right: '-1px', size: '12px' },
-    other: { top: '-2px', right: '0px', size: '12px' },
+    image: { top: '0px', right: '0px', size: '12px' },
+    other: { top: '-1px', right: '1px', size: '12px' },
   },
   xxl: {
-    image: { top: '-1px', right: '-1px', size: '14px' },
-    other: { top: '-2px', right: '0px', size: '14px' },
+    image: { top: '0px', right: '0px', size: '14px' },
+    other: { top: '-1px', right: '1px', size: '14px' },
   },
 }
 
@@ -142,16 +144,16 @@ const numberBadgeMetricMap: Record<VisAvatarSize, BadgeTypeMetric<NumberBadgeMet
 
 const stateBadgeMetricMap: Record<VisAvatarSize, BadgeTypeMetric<DotLikeBadgeMetric>> = {
   xxs: {
-    image: { top: '11px', right: '0px', size: '6px' },
-    other: { top: '10px', right: '1px', size: '6px' },
+    image: { top: '10px', right: '0px', size: '6px' },
+    other: { top: '9px', right: '1px', size: '6px' },
   },
   xs: {
     image: { top: '14px', right: '0px', size: '6px' },
     other: { top: '13px', right: '1px', size: '6px' },
   },
   sm: {
-    image: { top: '16px', right: '0px', size: '8px' },
-    other: { top: '15px', right: '1px', size: '8px' },
+    image: { top: '18px', right: '0px', size: '6px' },
+    other: { top: '17px', right: '1px', size: '6px' },
   },
   md: {
     image: { top: '24px', right: '0px', size: '8px' },
@@ -175,15 +177,18 @@ const isPointerOver = ref(false)
 const isHoverVisualActive = computed(() => props.state === 'hover' || isPointerOver.value)
 const badgeMetricType = computed<'image' | 'other'>(() => (props.type === 'image' ? 'image' : 'other'))
 
-const resolvedBadgeType = computed<VisBadgeType | null>(() => {
+const resolvedBadgeType = computed<VisBadgeVariantType | null>(() => {
   if (props.badge === 'none') return null
   if (props.badge === 'state') return 'dot'
-  if (props.badge === 'icon') return 'icon'
-  return props.badge
+  if (props.badge === 'dot') return 'dot'
+  return 'default'
 })
 
-const resolvedBadgeClassName = computed(() => (props.badge === 'state' ? 'state' : resolvedBadgeType.value))
-const resolvedBadgeColorType = computed<VisBadgeColorType>(() => (props.badge === 'state' ? 'success' : props.badgeColorType))
+const resolvedBadgeClassName = computed(() => props.badge)
+const resolvedBadgeColor = computed<VisBadgeColor>(() => {
+  if (props.badge === 'state') return 'green'
+  return resolveVisBadgeColor(props.badgeColor, props.badgeColorType, 'red')
+})
 const dotBadgeMetric = computed(() => dotBadgeMetricMap[props.size][badgeMetricType.value])
 const numberBadgeMetric = computed(() => numberBadgeMetricMap[props.size][badgeMetricType.value])
 const stateBadgeMetric = computed(() => stateBadgeMetricMap[props.size][badgeMetricType.value])
@@ -290,9 +295,12 @@ const imageAlt = computed(() => (props.decorative ? '' : props.imageAlt ?? 'avat
       <slot name="badge">
         <VisBadge
           :type="resolvedBadgeType"
-          :color-type="resolvedBadgeColorType"
+          :color="resolvedBadgeColor"
+          size="sm"
           solid
-          :count="badgeCount"
+          :dot-only="badge === 'dot' || badge === 'state'"
+          :icon-only="badge === 'icon'"
+          :label="String(badgeCount)"
           :icon-name="badgeIcon"
           class="vis-avatar__badge-content"
         />
@@ -319,7 +327,7 @@ const imageAlt = computed(() => (props.decorative ? '' : props.imageAlt ?? 'avat
   inline-size: 100%;
   block-size: 100%;
   box-sizing: border-box;
-  border: var(--vis-avatar-body-border-width) solid var(--vis-avatar-body-border-color);
+  border: 0;
   border-radius: inherit;
   overflow: hidden;
   background: transparent;
@@ -329,9 +337,21 @@ const imageAlt = computed(() => (props.decorative ? '' : props.imageAlt ?? 'avat
   justify-content: center;
 }
 
+.vis-avatar__body::before {
+  content: '';
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  box-sizing: border-box;
+  border: var(--vis-avatar-body-border-width) solid var(--vis-avatar-body-border-color);
+  border-radius: inherit;
+  pointer-events: none;
+}
+
 .vis-avatar__body::after {
   content: '';
   position: absolute;
+  z-index: 1;
   inset: 0;
   background: var(--color-component-hover);
   opacity: var(--vis-avatar-overlay-opacity);
@@ -341,9 +361,10 @@ const imageAlt = computed(() => (props.decorative ? '' : props.imageAlt ?? 'avat
 
 .vis-avatar__image {
   position: absolute;
-  inset: calc(0px - var(--vis-avatar-body-border-width));
-  inline-size: calc(100% + var(--vis-avatar-body-border-width) + var(--vis-avatar-body-border-width));
-  block-size: calc(100% + var(--vis-avatar-body-border-width) + var(--vis-avatar-body-border-width));
+  z-index: 0;
+  inset: 0;
+  inline-size: 100%;
+  block-size: 100%;
   border-radius: inherit;
   object-fit: cover;
   display: block;
@@ -390,5 +411,6 @@ const imageAlt = computed(() => (props.decorative ? '' : props.imageAlt ?? 'avat
   min-block-size: var(--vis-avatar-badge-number-size);
   block-size: var(--vis-avatar-badge-number-size);
   padding-inline: var(--vis-avatar-badge-number-padding-inline);
+  border-radius: var(--radius-full);
 }
 </style>

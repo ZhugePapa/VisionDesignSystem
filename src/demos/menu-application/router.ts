@@ -37,6 +37,46 @@ const repositoryDetailRoute: RouteRecordRaw = {
   },
 }
 
+const repositoryCommitsRoute: RouteRecordRaw = {
+  path: 'code/repositories/:repositoryId/commits',
+  name: 'repository-commits',
+  component: () => import('./views/RepositoryCommitsView.vue'),
+  meta: {
+    menuKey: 'repositories',
+    layout: 'repository-detail',
+  },
+}
+
+const repositoryBranchesRoute: RouteRecordRaw = {
+  path: 'code/repositories/:repositoryId/branches',
+  name: 'repository-branches',
+  component: () => import('./views/RepositoryBranchesView.vue'),
+  meta: {
+    menuKey: 'repositories',
+    layout: 'repository-detail',
+  },
+}
+
+const repositoryTagsRoute: RouteRecordRaw = {
+  path: 'code/repositories/:repositoryId/tags',
+  name: 'repository-tags',
+  component: () => import('./views/RepositoryTagsView.vue'),
+  meta: {
+    menuKey: 'repositories',
+    layout: 'repository-detail',
+  },
+}
+
+const repositoryMergeRequestsRoute: RouteRecordRaw = {
+  path: 'code/repositories/:repositoryId/merge-requests',
+  name: 'repository-merge-requests',
+  component: () => import('./views/RepositoryMergeRequestsView.vue'),
+  meta: {
+    menuKey: 'repositories',
+    layout: 'repository-detail',
+  },
+}
+
 const applicationDetailRoute: RouteRecordRaw = {
   path: 'deployments/applications/:applicationId',
   component: () => import('./views/ApplicationDetailLayout.vue'),
@@ -83,7 +123,15 @@ export const menuApplicationRouter = createRouter({
       path: '/projects/:projectKey',
       component: ProjectLayout,
       redirect: (to) => ({ name: 'project-overview', params: { projectKey: to.params.projectKey } }),
-      children: [...projectRoutes, applicationDetailRoute, repositoryDetailRoute],
+      children: [
+        ...projectRoutes,
+        applicationDetailRoute,
+        repositoryDetailRoute,
+        repositoryCommitsRoute,
+        repositoryBranchesRoute,
+        repositoryTagsRoute,
+        repositoryMergeRequestsRoute,
+      ],
     },
     {
       path: '/:pathMatch(.*)*',

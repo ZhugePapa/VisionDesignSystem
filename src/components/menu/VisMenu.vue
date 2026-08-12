@@ -425,7 +425,7 @@ onBeforeUnmount(() => {
   display: flex;
   flex-direction: column;
   color: var(--color-text-primary);
-  background: var(--color-bg-surface-subtle);
+  background: var(--color-bg-primary);
   box-shadow: inset -1px 0 0 var(--color-border-default);
   font-family: var(--font-family-sans);
   overflow: visible;

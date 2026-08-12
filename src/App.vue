@@ -20,6 +20,7 @@ import VisBadge from './components/badge/VisBadge.vue'
 import VisBreadcrumb from './components/breadcrumb/VisBreadcrumb.vue'
 import VisButton from './components/button/VisButton.vue'
 import VisCard from './components/card/VisCard.vue'
+import type { VisCardHoverType, VisCardState } from './components/card/card.types'
 import VisCheckbox from './components/checkbox/VisCheckbox.vue'
 import VisCheckboxGroup from './components/checkbox/VisCheckboxGroup.vue'
 import VisCodeBlock from './components/code-block/VisCodeBlock.vue'
@@ -37,6 +38,7 @@ import VisInput from './components/input/VisInput.vue'
 import VisInputNumber from './components/input-number/VisInputNumber.vue'
 import VisInputSearchBox from './components/input-search-box/VisInputSearchBox.vue'
 import VisInputTextarea from './components/input-textarea/VisInputTextarea.vue'
+import VisLink from './components/link/VisLink.vue'
 import { VisLoading, VisLoadingText } from './components/loading'
 import { VisMarkdown } from './components/markdown'
 import VisMessage from './components/message/VisMessage.vue'
@@ -75,6 +77,11 @@ import type {
 } from './components/ai'
 import type { VisAlertType } from './components/alert/alert.types'
 import type {
+  VisBadgeColor,
+  VisBadgeSize,
+  VisBadgeVariantType,
+} from './components/badge/badge.types'
+import type {
   VisCodeBlameRank,
   VisCodeLineData,
   VisCodeLineNumberMode,
@@ -89,6 +96,7 @@ import type { VisFormRules } from './components/form/form.types'
 import type { VisInputNumberPosition, VisInputNumberState } from './components/input-number/input-number.types'
 import type { VisInputSearchBoxState } from './components/input-search-box/input-search-box.types'
 import type { VisInputTextareaState } from './components/input-textarea/input-textarea.types'
+import type { VisLinkState, VisLinkType } from './components/link/link.types'
 import type { VisMessageType } from './components/message/message.types'
 import type { VisNotificationType } from './components/notification/notification.types'
 import type { VisPaginationSize } from './components/pagination/pagination.types'
@@ -377,7 +385,7 @@ const alertActions = ref(false)
 const alertCloseable = ref(false)
 const avatarType = ref<'image' | 'icon' | 'text'>('image')
 const avatarSize = ref<'xs' | 'sm' | 'md' | 'lg' | 'xl' | 'xxl'>('md')
-const avatarBadge = ref<'none' | 'dot' | 'icon' | 'number' | 'state'>('none')
+const avatarBadge = ref<'none' | 'dot' | 'number' | 'state'>('none')
 const avatarSquare = ref(false)
 const avatarGroupSize = ref<'xs' | 'sm' | 'md' | 'lg' | 'xl' | 'xxl'>('md')
 const codeLineType = ref<VisCodeLineType>('default')
@@ -474,8 +482,76 @@ const alertTypes: VisAlertType[] = ['info', 'primary', 'success', 'warning', 'da
 const avatarTypes = ['image', 'icon', 'text'] as const
 const avatarSizes = ['xs', 'sm', 'md', 'lg', 'xl', 'xxl'] as const
 const avatarLabelSizes = ['xxs', ...avatarSizes] as const
-const avatarBadges = ['none', 'dot', 'number', 'state', 'icon'] as const
+const avatarBadges = ['none', 'number', 'dot', 'state'] as const
 const avatarImageVariants = ['01', '02', '03', '04', '05', '06', '07', '08', '09'] as const
+const badgeColors: VisBadgeColor[] = [
+  'grey',
+  'red',
+  'orange',
+  'yellow',
+  'moss',
+  'green',
+  'aqua',
+  'cyan',
+  'blue',
+  'purple',
+  'violet',
+  'scarlet',
+  'pink',
+]
+const badgeVariants: Array<{
+  key: string
+  label: string
+  props: {
+    size?: VisBadgeSize
+    type?: VisBadgeVariantType
+    solid?: boolean
+    dotOnly?: boolean
+    iconOnly?: boolean
+  }
+}> = [
+  { key: 'soft-default-sm', label: 'Soft default sm', props: {} },
+  { key: 'soft-icon-sm', label: 'Soft icon sm', props: { type: 'icon' } },
+  { key: 'soft-dot-sm', label: 'Soft dot sm', props: { type: 'dot' } },
+  { key: 'soft-default-md', label: 'Soft default md', props: { size: 'md' } },
+  { key: 'soft-icon-md', label: 'Soft icon md', props: { size: 'md', type: 'icon' } },
+  { key: 'soft-dot-md', label: 'Soft dot md', props: { size: 'md', type: 'dot' } },
+  { key: 'soft-icon-only', label: 'Soft icon-only', props: { iconOnly: true } },
+  { key: 'solid-default-sm', label: 'Solid default sm', props: { solid: true } },
+  { key: 'solid-icon-sm', label: 'Solid icon sm', props: { type: 'icon', solid: true } },
+  { key: 'solid-dot-sm', label: 'Solid dot sm', props: { type: 'dot', solid: true } },
+  { key: 'solid-default-md', label: 'Solid default md', props: { size: 'md', solid: true } },
+  { key: 'solid-icon-md', label: 'Solid icon md', props: { size: 'md', type: 'icon', solid: true } },
+  { key: 'solid-dot-md', label: 'Solid dot md', props: { size: 'md', type: 'dot', solid: true } },
+  { key: 'solid-icon-only', label: 'Solid icon-only', props: { solid: true, iconOnly: true } },
+  { key: 'dot-only', label: 'Dot-only', props: { type: 'dot', solid: true, dotOnly: true } },
+]
+const linkTypes: VisLinkType[] = ['default', 'brand', 'subtle']
+const linkVariants: Array<{
+  label: string
+  state: VisLinkState
+  prefix: boolean
+  suffix: boolean
+}> = [
+  { label: 'Default', state: 'default', prefix: false, suffix: false },
+  { label: 'Hover', state: 'hover', prefix: false, suffix: false },
+  { label: 'Prefix', state: 'default', prefix: true, suffix: false },
+  { label: 'Prefix hover', state: 'hover', prefix: true, suffix: false },
+  { label: 'Suffix', state: 'default', prefix: false, suffix: true },
+  { label: 'Suffix hover', state: 'hover', prefix: false, suffix: true },
+  { label: 'Both', state: 'default', prefix: true, suffix: true },
+  { label: 'Both hover', state: 'hover', prefix: true, suffix: true },
+]
+const cardVariants: Array<{
+  label: string
+  state: VisCardState
+  hoverType: VisCardHoverType
+}> = [
+  { label: 'Default / Default', state: 'default', hoverType: 'default' },
+  { label: 'Default / Shadow', state: 'default', hoverType: 'shadow' },
+  { label: 'Hover / Default', state: 'hover', hoverType: 'default' },
+  { label: 'Hover / Shadow', state: 'hover', hoverType: 'shadow' },
+]
 const codeLineTypes: VisCodeLineType[] = ['default', 'delete', 'add']
 const codeLineNumbers: VisCodeLineNumberMode[] = ['default', 'double', 'none']
 const codeLineStates: VisCodeLineState[] = ['default', 'hover']
@@ -515,9 +591,9 @@ const tableItemPreviews: Array<{
   { type: 'rate', props: { rateValue: 3.5 } },
   { type: 'actions' },
   { type: 'number', props: { numberValue: 32, trend: 'up' } },
-  { type: 'badge', value: '进行中', props: { badgeType: 'status', badgeColorType: 'brand' } },
+  { type: 'badge', value: 'Badge', props: { badgeType: 'default', badgeColor: 'aqua', badgeSize: 'md' } },
   { type: 'tag', value: '标签' },
-  { type: 'avatar', props: { avatarTitle: '张大山', avatarAddition: false } },
+  { type: 'avatar', props: { avatarTitle: '张大山', avatarSubtitle: 'zhangdashan', avatarAddition: true } },
 ]
 const tabsAligns: VisTabsAlign[] = ['horizontal', 'right']
 const toggleStates: VisToggleState[] = ['default', 'hover', 'focus', 'loading']
@@ -573,23 +649,24 @@ const tableColumns: VisTableColumn[] = [
     label: '优先级',
     width: 160,
     cellType: 'badge',
-    itemProps: { badgeType: 'text', badgeColorType: 'danger', badgeSolid: true },
+    itemProps: { badgeType: 'default', badgeColor: 'red', badgeSize: 'md', badgeSolid: true },
   },
   {
     key: 'status',
     label: '状态',
     width: 160,
     cellType: 'badge',
-    itemProps: { badgeType: 'status', badgeColorType: 'brand' },
+    itemProps: { badgeType: 'dot', badgeColor: 'aqua', badgeSize: 'md' },
   },
   {
     key: 'owner',
     label: '负责人',
-    width: 160,
+    width: 200,
     cellType: 'avatar',
     itemProps: (row) => ({
       avatarTitle: String(row.owner),
-      avatarAddition: false,
+      avatarSubtitle: row.avatar === '05' ? 'lixiaoming' : 'zhangdashan',
+      avatarAddition: true,
       avatarImageVariant: row.avatar === '05' ? '05' : '09',
     }),
   },
@@ -849,6 +926,7 @@ const sidebarGroups: SidebarGroup[] = [
       { title: 'Badge', subtitle: '徽标', page: 'badge' },
       { title: 'Breadcrumb', subtitle: '面包屑', page: 'breadcrumb' },
       { title: 'Button', subtitle: '按钮', page: 'button' },
+      { title: 'Link', subtitle: '链接', page: 'link' },
       { title: 'Card', subtitle: '卡片', page: 'card' },
       { title: 'Checkbox', subtitle: '复选框', page: 'checkbox' },
       { title: 'CodeBlock', subtitle: '代码块', page: 'code-block' },
@@ -1134,8 +1212,8 @@ const apiTables: Record<DemoPageId, ApiRow[]> = {
     {
       visionApi: 'badge',
       elementApi: '无直接对应',
-      description: '头像角标类型，复用 Vision Badge 视觉并按头像尺寸校准定位。',
-      type: "'none' | 'dot' | 'icon' | 'number' | 'state'",
+      description: 'Figma 头像角标类型：数量、通知点、在线状态；icon 仅作为旧版兼容值保留。',
+      type: "'none' | 'number' | 'dot' | 'state' | 'icon (deprecated)'",
       defaultValue: "'none'",
     },
     {
@@ -1188,11 +1266,11 @@ const apiTables: Record<DemoPageId, ApiRow[]> = {
       defaultValue: '1',
     },
     {
-      visionApi: 'badgeColorType',
+      visionApi: 'badgeColor',
       elementApi: '无直接对应',
-      description: '角标语义色；state 角标固定使用 success。',
-      type: "'danger' | 'warning' | 'success' | 'brand' | 'grey' | 'info'",
-      defaultValue: "'danger'",
+      description: '角标使用 Badge 的 utility color；state 固定使用 green，其他角标默认 red。',
+      type: 'VisBadgeColor',
+      defaultValue: "'red'",
     },
     {
       visionApi: 'decorative',
@@ -1309,6 +1387,71 @@ const apiTables: Record<DemoPageId, ApiRow[]> = {
       defaultValue: "'button'",
     },
   ],
+  link: [
+    {
+      visionApi: 'type',
+      elementApi: 'type',
+      description: '控制默认、品牌和弱化三种文字层级，由 adapter 映射至 Element Link 类型。',
+      type: "'default' | 'brand' | 'subtle'",
+      defaultValue: "'default'",
+    },
+    {
+      visionApi: 'state',
+      elementApi: 'hover pseudo state',
+      description: '用于演示或锁定 hover 状态；真实鼠标悬浮同样生效。',
+      type: "'default' | 'hover'",
+      defaultValue: "'default'",
+    },
+    {
+      visionApi: 'prefix / suffix',
+      elementApi: 'icon / default slot',
+      description: '控制 16px 前后图标，并保持 Figma 定义的 4px 间距。',
+      type: 'boolean',
+      defaultValue: 'false / false',
+    },
+    {
+      visionApi: 'label',
+      elementApi: 'default slot',
+      description: '默认链接文本；default slot 优先。',
+      type: 'string',
+      defaultValue: "'link'",
+    },
+    {
+      visionApi: 'href / target',
+      elementApi: 'href / target',
+      description: '透传原生链接地址和打开目标。',
+      type: 'string',
+      defaultValue: "undefined / '_self'",
+    },
+    {
+      visionApi: 'disabled',
+      elementApi: 'disabled',
+      description: '禁用链接导航与 click 事件，并应用无障碍禁用语义。',
+      type: 'boolean',
+      defaultValue: 'false',
+    },
+    {
+      visionApi: 'iconName / suffixIconName',
+      elementApi: 'icon / icon slot',
+      description: '指定 Vision 图标注册表中的前后图标。',
+      type: 'IconName',
+      defaultValue: "'share-07' / 'chevron-down'",
+    },
+    {
+      visionApi: 'elProps',
+      elementApi: 'LinkProps',
+      description: 'Element Plus 高级属性逃生口；冲突时 Vision 属性优先。',
+      type: 'Partial<LinkProps>',
+      defaultValue: 'undefined',
+    },
+    {
+      visionApi: 'default / prefix / suffix slots',
+      elementApi: 'default / icon slots',
+      description: '自定义文本和前后内容，图标开关仍控制对应插槽是否渲染。',
+      type: 'slot',
+      defaultValue: '-',
+    },
+  ],
   card: [
     {
       visionApi: 'state',
@@ -1318,9 +1461,16 @@ const apiTables: Record<DemoPageId, ApiRow[]> = {
       defaultValue: "'default'",
     },
     {
+      visionApi: 'hoverType',
+      elementApi: 'shadow',
+      description: '控制悬浮反馈：default 使用 secondary 背景，shadow 使用 surface 背景和 Shadow-default/sm。',
+      type: "'default' | 'shadow'",
+      defaultValue: "'default'",
+    },
+    {
       visionApi: 'interactive',
       elementApi: 'shadow="hover"',
-      description: '是否响应真实 hover 和 focus-within，并切换为 surface-subtle 背景。',
+      description: '是否响应真实 hover 和 focus-within，并按 hoverType 显示对应反馈。',
       type: 'boolean',
       defaultValue: 'true',
     },
@@ -2424,60 +2574,74 @@ const apiTables: Record<DemoPageId, ApiRow[]> = {
   ],
   badge: [
     {
-      visionApi: 'colorType',
-      elementApi: '无直接对应',
-      description: '控制徽标语义色；info 会按旧项目兼容为 grey。',
-      type: "'danger' | 'warning' | 'success' | 'brand' | 'grey' | 'info'",
-      defaultValue: "'danger'",
+      visionApi: 'color',
+      elementApi: 'type / color',
+      description: 'Figma 颜色轴，共 13 个 utility 色系；浅色使用 100，实心使用 500。',
+      type: "'grey' | 'red' | 'orange' | 'yellow' | 'moss' | 'green' | 'aqua' | 'cyan' | 'blue' | 'purple' | 'violet' | 'scarlet' | 'pink'",
+      defaultValue: "'grey'",
+    },
+    {
+      visionApi: 'size',
+      elementApi: 'size',
+      description: 'Figma 尺寸轴；sm 为 20px / 12px 文本，md 为 24px / 14px 文本。',
+      type: "'sm' | 'md'",
+      defaultValue: "'sm'",
     },
     {
       visionApi: 'type',
-      elementApi: '无直接对应',
-      description: '控制状态、文本、图标、圆点和数字徽标形态；number 复用文本视觉。',
-      type: "'status' | 'text' | 'icon' | 'dot' | 'number'",
-      defaultValue: "'status'",
+      elementApi: 'default slot',
+      description: 'Figma 内容轴：纯文本、前置图标 + 文本、前置圆点 + 文本。旧 status/text/number 仍兼容。',
+      type: "'default' | 'icon' | 'dot' | 'status' | 'text' | 'number'",
+      defaultValue: "'default'",
     },
     {
       visionApi: 'solid',
-      elementApi: '无直接对应',
-      description: '启用实心样式；dot 类型始终为实心。',
+      elementApi: 'effect',
+      description: '切换 Figma 的 soft / solid 外观。',
       type: 'boolean',
       defaultValue: 'false',
     },
     {
-      visionApi: 'subtle',
+      visionApi: 'dotOnly',
       elementApi: '无直接对应',
-      description: '启用 status 类型的轻量边框样式，solid 为 true 时不生效。',
+      description: '仅渲染 8px 圆点；按 Figma 约束固定为 sm、solid，并带 1px 白色描边。',
+      type: 'boolean',
+      defaultValue: 'false',
+    },
+    {
+      visionApi: 'iconOnly',
+      elementApi: 'round / default slot',
+      description: '仅渲染 20px 圆形图标徽标；按 Figma 约束固定为 sm。',
       type: 'boolean',
       defaultValue: 'false',
     },
     {
       visionApi: 'label',
-      elementApi: '无直接对应',
-      description: '覆盖 status/text 类型默认文案。',
+      elementApi: 'default slot',
+      description: '徽标文本，也可由默认 slot 覆盖。',
       type: 'string',
-      defaultValue: 'undefined',
-    },
-    {
-      visionApi: 'count',
-      elementApi: 'value',
-      description: 'number 类型展示的数字或文本值。',
-      type: 'string | number',
-      defaultValue: '1',
+      defaultValue: "'Badge'",
     },
     {
       visionApi: 'iconName',
-      elementApi: '无直接对应',
-      description: 'icon 类型默认图标名称，也可通过 icon slot 覆盖。',
+      elementApi: 'default slot',
+      description: 'icon 使用 download-03，iconOnly 使用 dots-horizontal；可由 icon slot 覆盖。',
       type: 'IconName',
-      defaultValue: '按 colorType 推导',
+      defaultValue: '按形态推导',
     },
     {
-      visionApi: 'icon slot',
+      visionApi: 'colorType / count / subtle',
       elementApi: '无直接对应',
-      description: '自定义 icon 类型内部内容。',
-      type: 'slot',
-      defaultValue: '-',
+      description: '旧版兼容属性；colorType 会映射到新色轴，count 供 legacy number 使用，subtle 不再产生独立变体。',
+      type: 'legacy',
+      defaultValue: 'deprecated',
+    },
+    {
+      visionApi: 'elProps',
+      elementApi: '全部 ElTag props',
+      description: '向底层 ElTag 透传附加属性；Vision 管理的 size/type/effect/round/closable 优先。',
+      type: 'Partial<TagProps>',
+      defaultValue: 'undefined',
     },
   ],
   loading: [
@@ -4200,6 +4364,20 @@ const apiTables: Record<DemoPageId, ApiRow[]> = {
       defaultValue: 'undefined',
     },
     {
+      visionApi: 'itemProps.badgeColor / badgeSize / badgeType / badgeSolid',
+      elementApi: 'ElTag props',
+      description: 'Badge 类型位于可伸展的 Slot 4 容器内，默认对应 Figma 的 aqua / md / default / soft。',
+      type: 'VisBadgeColor / VisBadgeSize / VisBadgeType / boolean',
+      defaultValue: "'aqua' / 'md' / 'default' / false",
+    },
+    {
+      visionApi: 'itemProps.avatarTitle / avatarSubtitle / avatarAddition',
+      elementApi: 'default slot',
+      description: 'Avatar 类型固定组合 xs AvatarLabel：20px 头像、6px 间距、14px Regular 标题，并可显示 12px 附加信息。',
+      type: 'string / string / boolean',
+      defaultValue: "'张大山' / 'zhangdashan' / true",
+    },
+    {
       visionApi: 'appearance',
       elementApi: 'border',
       description: 'horizontal 仅显示行分割线；grid 同时显示列分割线。',
@@ -4512,6 +4690,15 @@ const elementApiTables: Record<DemoPageId, ElementApiRow[]> = {
       defaultValue: 'button',
     },
   ],
+  link: [
+    { category: 'Attribute', api: 'type', description: '链接类型。', type: "'primary' | 'success' | 'warning' | 'info' | 'danger' | 'default'", defaultValue: '-' },
+    { category: 'Attribute', api: 'underline', description: '下划线出现时机。', type: "boolean | 'always' | 'never' | 'hover'", defaultValue: "'hover'" },
+    { category: 'Attribute', api: 'disabled', description: '是否禁用链接。', type: 'boolean', defaultValue: 'false' },
+    { category: 'Attribute', api: 'href', description: '与原生超链接 href 相同。', type: 'string', defaultValue: "''" },
+    { category: 'Attribute', api: 'target', description: '与原生超链接 target 相同。', type: 'string', defaultValue: "'_self'" },
+    { category: 'Attribute', api: 'icon', description: '链接图标组件。', type: 'string | Component', defaultValue: '-' },
+    { category: 'Event', api: 'click', description: '点击可用链接时触发。', type: '(event: MouseEvent) => void', defaultValue: '-' },
+  ],
   card: [
     { category: 'Attribute', api: 'header', description: '卡片标题，也可以通过 header 插槽传入 DOM。', type: 'string', defaultValue: "''" },
     { category: 'Attribute', api: 'footer', description: '卡片页脚，也可以通过 footer 插槽传入 DOM。', type: 'string', defaultValue: "''" },
@@ -4785,7 +4972,14 @@ const elementApiTables: Record<DemoPageId, ElementApiRow[]> = {
     { category: 'Event', api: 'open-auto-focus', description: 'Drawer 打开且内容获得焦点后触发', type: '() => void', defaultValue: '-' },
     { category: 'Event', api: 'close-auto-focus', description: 'Drawer 关闭且焦点返回后触发', type: '() => void', defaultValue: '-' },
   ],
-  badge: noElementApiRows(),
+  badge: [
+    { category: 'Attribute', api: 'type', description: 'Tag 语义类型；VisBadge 固定由 Vision 色彩系统接管。', type: "'primary' | 'success' | 'info' | 'warning' | 'danger'", defaultValue: "'info'" },
+    { category: 'Attribute', api: 'size', description: '底层 Tag 尺寸；由 VisBadge size 映射。', type: "'large' | 'default' | 'small'", defaultValue: "'default'" },
+    { category: 'Attribute', api: 'effect', description: '底层 Tag 外观；视觉由 VisBadge solid 与 token 接管。', type: "'dark' | 'light' | 'plain'", defaultValue: "'light'" },
+    { category: 'Attribute', api: 'round', description: '是否使用圆形外观；iconOnly 时由 Vision 组件控制。', type: 'boolean', defaultValue: 'false' },
+    { category: 'Attribute', api: 'closable', description: '是否显示关闭按钮；Badge 固定为不可关闭。', type: 'boolean', defaultValue: 'false' },
+    { category: 'Attribute', api: 'disable-transitions', description: '是否禁用 Tag 过渡；Badge 固定禁用以避免布局抖动。', type: 'boolean', defaultValue: 'true' },
+  ],
   loading: noElementApiRows(),
   markdown: noElementApiRows(),
   message: [
@@ -5437,6 +5631,7 @@ const visionComponentNames: Record<DemoPageId, string> = {
   alert: 'VisAlert',
   avatar: 'VisAvatar',
   button: 'VisButton',
+  link: 'VisLink',
   card: 'VisCard',
   input: 'VisInput',
   'input-number': 'VisInputNumber',
@@ -5486,7 +5681,9 @@ const elementComponentNames: Partial<Record<DemoPageId, string>> = {
   accordion: 'ElCollapse',
   alert: 'ElAlert',
   avatar: 'ElAvatar',
+  badge: 'ElTag',
   button: 'ElButton',
+  link: 'ElLink',
   card: 'ElCard',
   input: 'ElInput',
   'input-number': 'ElInputNumber',
@@ -5650,6 +5847,13 @@ const visionEventTables: Record<DemoPageId, ApiDisplayRow[]> = {
     {
       api: 'click',
       description: '点击按钮时触发，透传原生 button click 事件。',
+      type: '(event: MouseEvent) => void',
+    },
+  ],
+  link: [
+    {
+      api: 'click',
+      description: '点击可用链接时触发，透传 Element Link 的 MouseEvent；禁用时不触发。',
       type: '(event: MouseEvent) => void',
     },
   ],
@@ -6310,6 +6514,10 @@ const elementExtraApiRows: Record<DemoPageId, ElementApiRow[]> = {
     { category: 'Expose', api: 'disabled', description: '按钮禁用状态', type: 'object', defaultValue: '-' },
     { category: 'Expose', api: 'shouldAddSpace', description: '是否在两个中文字符之间插入空格', type: 'object', defaultValue: '-' },
   ],
+  link: [
+    { category: 'Slot', api: 'default', description: '自定义链接文本内容。', type: 'slot', defaultValue: '-' },
+    { category: 'Slot', api: 'icon', description: '自定义 Element Link 图标内容。', type: 'slot', defaultValue: '-' },
+  ],
   card: [
     { category: 'Slot', api: 'default', description: '卡片的默认内容。', type: 'slot', defaultValue: '-' },
     { category: 'Slot', api: 'header', description: '卡片标题内容。', type: 'slot', defaultValue: '-' },
@@ -6378,7 +6586,10 @@ const elementExtraApiRows: Record<DemoPageId, ElementApiRow[]> = {
     { category: 'Slot', api: 'footer', description: 'Element Drawer 底部区域内容', type: 'slot', defaultValue: '-' },
     { category: 'Expose', api: 'handleClose', description: '关闭抽屉', type: 'Function', defaultValue: '-' },
   ],
-  badge: [],
+  badge: [
+    { category: 'Slot', api: 'default', description: '自定义 Badge 文本内容。', type: 'slot', defaultValue: '-' },
+    { category: 'Slot', api: 'icon', description: '自定义 icon 或 iconOnly 的图标内容。', type: 'slot', defaultValue: '-' },
+  ],
   loading: [],
   markdown: [
     { category: 'Slot', api: 'default', description: 'Markdown 文本内容；content 未传时作为输入源。', type: 'slot', defaultValue: '-' },
@@ -7012,14 +7223,66 @@ function toggleGroup(title: string) {
                 <VisButton prefix suffix>中号按钮</VisButton>
               </div>
 
+              <div v-else-if="activePage === 'link'" class="link-demo">
+                <section id="link-demo-preview" class="link-demo__section" aria-labelledby="link-figma-title">
+                  <div class="link-demo__heading">
+                    <h4 id="link-figma-title" class="ld-heading-h4">Figma variants</h4>
+                    <p>三种文字层级、两种状态和四种图标组合。</p>
+                  </div>
+
+                  <div class="link-demo__matrix-wrap">
+                    <div class="link-demo__matrix" role="group" aria-label="Link 设计状态矩阵">
+                      <span class="link-demo__corner" aria-hidden="true" />
+                      <span v-for="type in linkTypes" :key="`link-heading-${type}`" class="link-demo__column-label">
+                        {{ type }}
+                      </span>
+
+                      <template v-for="variant in linkVariants" :key="variant.label">
+                        <span class="link-demo__row-label">{{ variant.label }}</span>
+                        <div v-for="type in linkTypes" :key="`${variant.label}-${type}`" class="link-demo__cell">
+                          <VisLink
+                            :type="type"
+                            :state="variant.state"
+                            :prefix="variant.prefix"
+                            :suffix="variant.suffix"
+                            href="#link-demo-preview"
+                          />
+                        </div>
+                      </template>
+                    </div>
+                  </div>
+                </section>
+
+                <section class="link-demo__section" aria-labelledby="link-behavior-title">
+                  <div class="link-demo__heading">
+                    <h4 id="link-behavior-title" class="ld-heading-h4">Element Plus behavior</h4>
+                    <p>保留原生链接、禁用状态和 Vision 自定义插槽。</p>
+                  </div>
+                  <div class="link-demo__row">
+                    <VisLink type="brand" href="#link-demo-preview">页面内链接</VisLink>
+                    <VisLink type="subtle" disabled>禁用链接</VisLink>
+                    <VisLink type="brand" prefix suffix href="#link-demo-preview">
+                      自定义内容
+                      <template #prefix>
+                        <Icon name="link-02" :size="16" decorative />
+                      </template>
+                      <template #suffix>
+                        <Icon name="arrow-up-right" :size="16" decorative />
+                      </template>
+                    </VisLink>
+                  </div>
+                </section>
+              </div>
+
               <div v-else-if="activePage === 'card'" class="card-demo">
-                <div class="card-demo__item">
-                  <span class="card-demo__label">Default</span>
-                  <VisCard class="card-demo__card" aria-label="默认状态卡片" />
-                </div>
-                <div class="card-demo__item">
-                  <span class="card-demo__label">Hover</span>
-                  <VisCard class="card-demo__card" state="hover" aria-label="悬浮状态卡片" />
+                <div v-for="variant in cardVariants" :key="variant.label" class="card-demo__item">
+                  <span class="card-demo__label">{{ variant.label }}</span>
+                  <VisCard
+                    class="card-demo__card"
+                    :state="variant.state"
+                    :hover-type="variant.hoverType"
+                    :aria-label="`${variant.label} 卡片`"
+                  />
                 </div>
               </div>
 
@@ -7419,62 +7682,76 @@ function toggleGroup(title: string) {
               </div>
 
               <div v-else-if="activePage === 'badge'" class="badge-demo">
-                <div class="badge-demo__row">
-                  <VisBadge color-type="danger" />
-                  <VisBadge color-type="warning" />
-                  <VisBadge color-type="success" />
-                  <VisBadge color-type="brand" />
-                  <VisBadge color-type="grey" />
-                </div>
-                <div class="badge-demo__row">
-                  <VisBadge type="text" color-type="danger" label="Hot!" />
-                  <VisBadge type="text" color-type="warning" label="Hot!" />
-                  <VisBadge type="text" color-type="success" label="New" />
-                  <VisBadge type="text" color-type="brand" label="New" />
-                  <VisBadge type="text" color-type="grey" label="info" />
-                </div>
-                <div class="badge-demo__row">
-                  <VisBadge type="icon" color-type="danger" />
-                  <VisBadge type="icon" color-type="warning" />
-                  <VisBadge type="icon" color-type="success" />
-                  <VisBadge type="icon" color-type="brand" />
-                  <VisBadge type="icon" color-type="grey" />
-                </div>
-                <div class="badge-demo__row">
-                  <VisBadge color-type="danger" solid />
-                  <VisBadge color-type="warning" solid />
-                  <VisBadge color-type="success" solid />
-                  <VisBadge color-type="brand" solid />
-                  <VisBadge color-type="grey" solid />
-                </div>
-                <div class="badge-demo__row">
-                  <VisBadge type="text" color-type="danger" solid label="Hot!" />
-                  <VisBadge type="text" color-type="warning" solid label="Hot!" />
-                  <VisBadge type="text" color-type="success" solid label="New" />
-                  <VisBadge type="text" color-type="brand" solid label="New" />
-                  <VisBadge type="text" color-type="grey" solid label="info" />
-                </div>
-                <div class="badge-demo__row">
-                  <VisBadge type="icon" color-type="danger" solid icon-name="x-close" />
-                  <VisBadge type="icon" color-type="warning" solid />
-                  <VisBadge type="icon" color-type="success" solid />
-                  <VisBadge type="icon" color-type="brand" solid />
-                  <VisBadge type="icon" color-type="grey" solid />
-                </div>
-                <div class="badge-demo__row">
-                  <VisBadge color-type="danger" subtle />
-                  <VisBadge color-type="warning" subtle />
-                  <VisBadge color-type="success" subtle />
-                  <VisBadge color-type="brand" subtle />
-                  <VisBadge color-type="grey" subtle />
-                </div>
-                <div class="badge-demo__row">
-                  <VisBadge type="dot" color-type="danger" />
-                  <VisBadge type="dot" color-type="warning" />
-                  <VisBadge type="dot" color-type="success" />
-                  <VisBadge type="dot" color-type="brand" />
-                  <VisBadge type="dot" color-type="grey" />
-                </div>
+                <section class="badge-demo__overview" aria-labelledby="badge-overview-title">
+                  <div class="badge-demo__heading">
+                    <div>
+                      <h4 id="badge-overview-title" class="ld-heading-h4">Figma variant set</h4>
+                      <p>13 colors × 15 valid combinations = 195 variants</p>
+                    </div>
+                    <div class="badge-demo__samples" aria-label="Badge size comparison">
+                      <VisBadge color="blue" size="sm" label="sm · 20px" />
+                      <VisBadge color="blue" size="md" label="md · 24px" solid />
+                    </div>
+                  </div>
+
+                  <div class="badge-demo__legend">
+                    <span><i class="badge-demo__legend-dot is-soft" />Soft = utility 100</span>
+                    <span><i class="badge-demo__legend-dot is-solid" />Solid = utility 500</span>
+                    <span>Radius = 6px / Full</span>
+                  </div>
+                </section>
+
+                <section class="badge-demo__matrix-section" aria-labelledby="badge-matrix-title">
+                  <div class="badge-demo__heading">
+                    <div>
+                      <h4 id="badge-matrix-title" class="ld-heading-h4">Complete matrix</h4>
+                      <p>列顺序与 Figma 组件集一致，横向滚动可查看全部组合。</p>
+                    </div>
+                  </div>
+
+                  <div class="badge-demo__matrix-wrap">
+                    <div class="badge-demo__matrix">
+                      <div class="badge-demo__corner">Color</div>
+                      <div
+                        v-for="variant in badgeVariants"
+                        :key="`heading-${variant.key}`"
+                        class="badge-demo__column-label"
+                      >
+                        {{ variant.label }}
+                      </div>
+
+                      <template v-for="color in badgeColors" :key="color">
+                        <div class="badge-demo__color-label">
+                          <VisBadge :color="color" dot-only />
+                          {{ color }}
+                        </div>
+                        <div
+                          v-for="variant in badgeVariants"
+                          :key="`${color}-${variant.key}`"
+                          class="badge-demo__cell"
+                        >
+                          <VisBadge :color="color" v-bind="variant.props" />
+                        </div>
+                      </template>
+                    </div>
+                  </div>
+                </section>
+
+                <section class="badge-demo__composition" aria-labelledby="badge-composition-title">
+                  <div class="badge-demo__heading">
+                    <div>
+                      <h4 id="badge-composition-title" class="ld-heading-h4">Custom content</h4>
+                      <p>支持默认文本插槽与 icon 插槽，保持 Figma 尺寸和间距规则。</p>
+                    </div>
+                  </div>
+                  <div class="badge-demo__row">
+                    <VisBadge color="green" label="Ready" />
+                    <VisBadge color="orange" type="dot" size="md" label="Pending" />
+                    <VisBadge color="purple" type="icon" size="md" label="Download" />
+                    <VisBadge color="red" icon-only icon-name="x-close" solid />
+                    <VisBadge color="green" dot-only label="Online" />
+                  </div>
+                </section>
               </div>
 
               <div v-else-if="activePage === 'loading'" class="loading-demo">
@@ -9547,6 +9824,11 @@ function toggleGroup(title: string) {
   inline-size: 100%;
 }
 
+.demo-panel:has(.link-demo) {
+  max-inline-size: 760px;
+  inline-size: 100%;
+}
+
 .demo-panel:has(.select-demo) {
   max-inline-size: 1120px;
   min-block-size: 560px;
@@ -9772,11 +10054,83 @@ function toggleGroup(title: string) {
   gap: var(--space-12);
 }
 
+.link-demo {
+  inline-size: 100%;
+  display: grid;
+  gap: var(--space-32);
+}
+
+.link-demo__section {
+  min-inline-size: 0;
+  display: grid;
+  gap: var(--space-16);
+}
+
+.link-demo__heading {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.link-demo__heading h4,
+.link-demo__heading p {
+  margin: 0;
+}
+
+.link-demo__heading p {
+  color: var(--color-text-secondary);
+  font-size: var(--font-text-md-size);
+  line-height: var(--font-text-md-line-height);
+}
+
+.link-demo__matrix-wrap {
+  max-inline-size: 100%;
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-md);
+  overflow-x: auto;
+  background: var(--color-bg-surface);
+}
+
+.link-demo__matrix {
+  box-sizing: border-box;
+  min-inline-size: 480px;
+  padding: var(--space-20);
+  display: grid;
+  grid-template-columns: 112px repeat(3, minmax(72px, 1fr));
+  align-items: center;
+  column-gap: var(--space-24);
+  row-gap: var(--space-12);
+}
+
+.link-demo__column-label,
+.link-demo__row-label {
+  color: var(--color-text-tertiary);
+  font-size: var(--font-text-sm-size);
+  line-height: var(--font-text-sm-line-height);
+}
+
+.link-demo__column-label {
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.link-demo__cell {
+  min-block-size: var(--font-text-md-line-height);
+  display: flex;
+  align-items: center;
+}
+
+.link-demo__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-24);
+}
+
 .card-demo {
   inline-size: 100%;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 400px));
-  gap: var(--space-32);
+  gap: var(--space-20);
 }
 
 .card-demo__item {
@@ -9847,6 +10201,136 @@ function toggleGroup(title: string) {
   inline-size: 100%;
   max-inline-size: 1120px;
   gap: var(--space-24);
+}
+
+.badge-demo {
+  inline-size: 100%;
+  min-inline-size: 0;
+  gap: var(--space-32);
+}
+
+.badge-demo__overview,
+.badge-demo__matrix-section,
+.badge-demo__composition {
+  min-inline-size: 0;
+  display: grid;
+  gap: var(--space-16);
+}
+
+.badge-demo__heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-12);
+}
+
+.badge-demo__heading h4,
+.badge-demo__heading p {
+  margin: 0;
+}
+
+.badge-demo__heading p {
+  margin-block-start: var(--space-4);
+  color: var(--color-text-secondary);
+  font-size: var(--font-text-md-size);
+  line-height: var(--font-text-md-line-height);
+}
+
+.badge-demo__samples,
+.badge-demo__legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-12);
+}
+
+.badge-demo__legend {
+  color: var(--color-text-secondary);
+  font-size: var(--font-text-sm-size);
+  line-height: var(--font-text-sm-line-height);
+}
+
+.badge-demo__legend > span {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-6);
+}
+
+.badge-demo__legend-dot {
+  inline-size: var(--space-8);
+  block-size: var(--space-8);
+  border-radius: var(--radius-full);
+}
+
+.badge-demo__legend-dot.is-soft {
+  background: var(--utility-blue-100);
+}
+
+.badge-demo__legend-dot.is-solid {
+  background: var(--utility-blue-500);
+}
+
+.badge-demo__matrix-wrap {
+  max-inline-size: 100%;
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-md);
+  overflow: auto;
+  background: var(--color-bg-canvas);
+}
+
+.badge-demo__matrix {
+  box-sizing: border-box;
+  min-inline-size: 1780px;
+  padding: var(--space-12) var(--space-16);
+  display: grid;
+  grid-template-columns: 88px repeat(15, minmax(96px, 1fr));
+  align-items: center;
+  column-gap: var(--space-8);
+}
+
+.badge-demo__corner,
+.badge-demo__column-label,
+.badge-demo__color-label {
+  color: var(--color-text-tertiary);
+  font-size: var(--font-text-sm-size);
+  line-height: var(--font-text-sm-line-height);
+}
+
+.badge-demo__corner,
+.badge-demo__column-label {
+  min-block-size: 48px;
+  display: flex;
+  align-items: flex-end;
+  padding-block-end: var(--space-8);
+  border-block-end: 1px solid var(--color-border-default);
+  font-weight: 600;
+}
+
+.badge-demo__column-label {
+  padding-inline: var(--space-4);
+}
+
+.badge-demo__color-label,
+.badge-demo__cell {
+  min-block-size: 44px;
+  border-block-end: 1px solid var(--color-border-default);
+  display: flex;
+  align-items: center;
+}
+
+.badge-demo__color-label {
+  gap: var(--space-8);
+  color: var(--color-text-secondary);
+  font-weight: 600;
+}
+
+.badge-demo__cell {
+  padding-inline: var(--space-4);
+}
+
+.badge-demo__matrix > :nth-last-child(-n + 16) {
+  border-block-end: 0;
 }
 
 .description-demo__controls {

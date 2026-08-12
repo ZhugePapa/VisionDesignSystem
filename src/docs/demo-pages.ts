@@ -5,6 +5,7 @@ export const demoPages = [
   { id: 'badge', title: 'Badge', subtitle: '徽标', section: 'shared' },
   { id: 'breadcrumb', title: 'Breadcrumb', subtitle: '面包屑', section: 'shared' },
   { id: 'button', title: 'Button', subtitle: '按钮', section: 'shared' },
+  { id: 'link', title: 'Link', subtitle: '链接', section: 'shared' },
   { id: 'card', title: 'Card', subtitle: '卡片', section: 'shared' },
   { id: 'checkbox', title: 'Checkbox', subtitle: '复选框', section: 'shared' },
   { id: 'code-block', title: 'Code Block', subtitle: '代码块', section: 'shared' },

@@ -100,7 +100,7 @@ const emit = defineEmits<{
   align-items: center;
   gap: var(--space-8);
   color: var(--color-text-primary);
-  background: var(--color-bg-surface-subtle);
+  background: var(--color-bg-primary);
   font-family: var(--font-family-text);
   font-size: var(--font-text-md-size);
   font-weight: 500;
@@ -149,6 +149,11 @@ const emit = defineEmits<{
 .vis-table-header.align-right,
 .vis-table-header.align-right .vis-table-header__content {
   justify-content: flex-end;
+}
+
+.vis-table-header.align-center,
+.vis-table-header.align-center .vis-table-header__content {
+  justify-content: center;
 }
 
 .vis-table-header__label {

@@ -6,6 +6,7 @@ import type { VisCardProps } from './card.types'
 
 withDefaults(defineProps<VisCardProps>(), {
   state: 'default',
+  hoverType: 'default',
   interactive: true,
   showAction: true,
   actionLabel: '更多操作',
@@ -23,6 +24,7 @@ const emit = defineEmits<{
     class="vis-card"
     :class="[
       `state-${state}`,
+      `hover-${hoverType}`,
       {
         'is-interactive': interactive,
         'has-action': showAction,
@@ -72,8 +74,14 @@ const emit = defineEmits<{
     box-shadow 150ms ease;
 }
 
-.vis-card.is-interactive:is(:hover, :focus-within),
-.vis-card.state-hover {
+.vis-card.hover-default.is-interactive:hover,
+.vis-card.hover-default.state-hover {
+  --el-card-bg-color: var(--color-bg-secondary);
+  box-shadow: none;
+}
+
+.vis-card.hover-shadow.is-interactive:hover,
+.vis-card.hover-shadow.state-hover {
   --el-card-bg-color: var(--color-bg-surface);
   box-shadow: var(--shadow-default-sm);
 }
@@ -91,16 +99,14 @@ const emit = defineEmits<{
   inset-block-start: calc(var(--space-16) - 1px);
   inset-inline-end: calc(var(--space-16) - 1px);
   opacity: 0;
-  visibility: hidden;
-  transition:
-    opacity 120ms ease,
-    visibility 120ms ease;
+  pointer-events: none;
+  transition: opacity 120ms ease;
 }
 
 .vis-card.is-interactive:is(:hover, :focus-within) .vis-card__action,
 .vis-card.state-hover .vis-card__action {
   opacity: 1;
-  visibility: visible;
+  pointer-events: auto;
 }
 
 @media (prefers-reduced-motion: reduce) {

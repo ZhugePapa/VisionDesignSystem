@@ -1,3 +1,5 @@
+import { AI_PRODUCT_HEADERS } from './product'
+
 export type VisionAiMessageRole = 'user' | 'assistant'
 export type VisionAiReasoningEffort = 'high' | 'max'
 
@@ -31,7 +33,7 @@ export interface VisionAiStreamHandlers {
   onContent?: (content: string) => void
   onIncomplete?: (content: string) => void
   onTimeout?: (content: string) => void
-  onArtifact?: (artifact: import('../../components/ai').VisAiArtifactItem) => void
+  onArtifact?: (artifact: import('../../../components/ai').VisAiArtifactItem) => void
   onDone?: () => void
 }
 
@@ -59,7 +61,7 @@ async function responseError(response: Response): Promise<Error> {
 
 export async function fetchVisionAiModels(): Promise<VisionAiModelCatalog> {
   const response = await fetch('/api/ai/models', {
-    headers: { Accept: 'application/json' },
+    headers: { Accept: 'application/json', ...AI_PRODUCT_HEADERS },
   })
 
   if (!response.ok) throw await responseError(response)
@@ -104,7 +106,7 @@ export async function streamVisionAiChat(
 ): Promise<void> {
   const response = await fetch('/api/ai/chat', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...AI_PRODUCT_HEADERS },
     body: JSON.stringify(request),
     signal,
   })

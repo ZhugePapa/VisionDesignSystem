@@ -19,7 +19,7 @@ import {
   projects,
   type ApplicationMenuItem,
 } from './navigation'
-import AiAssistantWorkspace from './AiAssistantWorkspace.vue'
+import { EmbeddedAssistantWorkspace } from '../../products/embedded-assistant'
 
 type AiAssistantMode = 'copilot' | 'independent' | 'float'
 
@@ -161,7 +161,7 @@ onMounted(() => {
           </main>
         </div>
 
-        <AiAssistantWorkspace
+        <EmbeddedAssistantWorkspace
           v-if="aiAssistantMode"
           :mode="aiAssistantMode"
           @update:mode="aiAssistantMode = $event"

@@ -1,10 +1,10 @@
 import type { IconName } from '../icons/generated/registry.generated'
-import type { VisBadgeColorType } from '../badge/badge.types'
+import type { VisBadgeColor, VisBadgeColorType } from '../badge/badge.types'
 
 export type VisAvatarType = 'image' | 'icon' | 'text'
 export type VisAvatarSize = 'xxs' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | 'xxl'
 export type VisAvatarState = 'default' | 'hover'
-export type VisAvatarBadge = 'none' | 'dot' | 'icon' | 'number' | 'state'
+export type VisAvatarBadge = 'none' | 'dot' | 'number' | 'state' | 'icon'
 export type VisAvatarImageVariant = '00' | '01' | '02' | '03' | '04' | '05' | '06' | '07' | '08' | '09'
 export type VisAvatarRealImageVariant = Exclude<VisAvatarImageVariant, '00'>
 export type VisAvatarGroupSize = Exclude<VisAvatarSize, 'xxs'> | 'large'
@@ -24,6 +24,8 @@ export interface VisAvatarProps {
   icon?: IconName
   badgeIcon?: IconName
   badgeCount?: string | number
+  badgeColor?: VisBadgeColor
+  /** @deprecated Use `badgeColor`. */
   badgeColorType?: VisBadgeColorType
   decorative?: boolean
   groupOutlined?: boolean

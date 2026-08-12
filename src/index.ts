@@ -40,6 +40,7 @@ import VisInputNumber from './components/input-number/VisInputNumber.vue'
 import VisInputSearchBox from './components/input-search-box/VisInputSearchBox.vue'
 import VisInputTextarea from './components/input-textarea/VisInputTextarea.vue'
 import { VisLoading, VisLoadingText } from './components/loading'
+import VisLink from './components/link/VisLink.vue'
 import { VisMarkdown } from './components/markdown'
 import VisMessage from './components/message/VisMessage.vue'
 import {
@@ -138,6 +139,7 @@ export {
   VisInputTextarea,
   VisLoading,
   VisLoadingText,
+  VisLink,
   VisMarkdown,
   VisMessage,
   VisMenu,
@@ -240,7 +242,14 @@ export type {
   VisAvatarType,
 } from './components/avatar/avatar.types'
 export { resolveVisAvatarImage, visAvatarImageMap, visAvatarImageVariants } from './components/avatar'
-export type { VisBadgeColorType, VisBadgeProps, VisBadgeType } from './components/badge/badge.types'
+export type {
+  VisBadgeColor,
+  VisBadgeColorType,
+  VisBadgeProps,
+  VisBadgeSize,
+  VisBadgeType,
+  VisBadgeVariantType,
+} from './components/badge/badge.types'
 export type {
   VisBreadcrumbItem,
   VisBreadcrumbProps,
@@ -259,7 +268,7 @@ export type {
   VisButtonSplitProps,
   VisButtonSplitSize,
 } from './components/button-split/button-split.types'
-export type { VisCardProps, VisCardState } from './components/card/card.types'
+export type { VisCardHoverType, VisCardProps, VisCardState } from './components/card/card.types'
 export type {
   VisCheckboxGroupAlign,
   VisCheckboxGroupProps,
@@ -348,6 +357,7 @@ export type {
   VisLoadingSize,
   VisLoadingTextProps,
 } from './components/loading/loading.types'
+export type { VisLinkProps, VisLinkState, VisLinkTarget, VisLinkType } from './components/link/link.types'
 export type {
   VisMarkdownComponentMap,
   VisMarkdownIncompleteType,
@@ -529,6 +539,7 @@ const components = [
   VisInputTextarea,
   VisLoading,
   VisLoadingText,
+  VisLink,
   VisMarkdown,
   VisMessage,
   VisMenu,

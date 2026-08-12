@@ -117,7 +117,7 @@ function itemKey(key: VisAiKey): string {
 }
 
 .vis-ai-prompts__item:hover {
-  background: var(--color-bg-surface-subtle);
+  background: var(--color-bg-primary);
 }
 
 .vis-ai-prompts__item:focus-visible {

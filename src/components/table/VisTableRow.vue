@@ -26,7 +26,7 @@ withDefaults(defineProps<VisTableRowProps>(), {
   display: flex;
   align-items: center;
   color: var(--color-text-secondary);
-  background: var(--color-bg-surface);
+  background: var(--color-bg-canvas);
 }
 
 .vis-table-row:is(:hover, .state-hover) {

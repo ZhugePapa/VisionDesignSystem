@@ -314,21 +314,20 @@ defineOptions({ name: 'VisCodeBlock' })
 }
 
 /* ---------- Syntax highlight tokens ---------- */
-/* Horizon-inspired semantic roles mapped to the local utility palette. */
-.tok-keyword { color: var(--utility-violet-400); }
-.tok-number { color: var(--utility-orange-400); }
-.tok-comment { color: var(--color-text-tertiary); font-style: italic; }
-.tok-operator { color: var(--color-text-tertiary); }
-.tok-string { color: var(--utility-orange-300); }
-.tok-constant { color: var(--utility-orange-400); }
-.tok-function { color: var(--utility-aqua-500); }
-.tok-property { color: var(--utility-red-400); }
-.tok-variable { color: var(--utility-red-400); }
-.tok-builtin { color: var(--utility-aqua-500); }
-.tok-tag { color: var(--utility-red-400); }
-.tok-attribute { color: var(--utility-orange-400); }
-.tok-punctuation { color: var(--color-text-secondary); }
-.tok-plain { color: var(--color-text-secondary); }
+.tok-keyword { color: var(--color-syntax-keyword); }
+.tok-number { color: var(--color-syntax-constant); }
+.tok-comment { color: var(--color-syntax-comment); }
+.tok-operator { color: var(--color-syntax-default); }
+.tok-string { color: var(--color-syntax-string); }
+.tok-constant { color: var(--color-syntax-constant); }
+.tok-function { color: var(--color-syntax-entity); }
+.tok-property { color: var(--color-syntax-variable); }
+.tok-variable { color: var(--color-syntax-variable); }
+.tok-builtin { color: var(--color-syntax-constant); }
+.tok-tag { color: var(--color-syntax-tag); }
+.tok-attribute { color: var(--color-syntax-variable); }
+.tok-punctuation { color: var(--color-syntax-default); }
+.tok-plain { color: var(--color-syntax-default); }
 
 /* ---------- Copy button ---------- */
 .vis-code-block__copy {

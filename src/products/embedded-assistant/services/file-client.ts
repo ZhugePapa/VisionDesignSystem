@@ -1,4 +1,5 @@
-import type { VisAiAttachmentItem } from '../../components/ai'
+import type { VisAiAttachmentItem } from '../../../components/ai'
+import { AI_PRODUCT_HEADERS } from './product'
 
 export interface VisionAiUploadedFile extends VisAiAttachmentItem {
   fileId: string
@@ -32,6 +33,7 @@ export function uploadVisionAiFiles(
     request.open('POST', '/api/ai/files')
     request.responseType = 'json'
     request.setRequestHeader('Accept', 'application/json')
+    request.setRequestHeader('X-Vision-AI-Product', AI_PRODUCT_HEADERS['X-Vision-AI-Product'])
     request.upload.addEventListener('progress', (event) => {
       if (event.lengthComputable) {
         onProgress?.(Math.round((event.loaded / event.total) * 100))
@@ -62,6 +64,7 @@ export function uploadVisionAiFiles(
 export async function deleteVisionAiFile(fileId: string): Promise<void> {
   const response = await fetch(`/api/ai/files/${encodeURIComponent(fileId)}`, {
     method: 'DELETE',
+    headers: AI_PRODUCT_HEADERS,
   })
   if (response.ok || response.status === 404) return
 

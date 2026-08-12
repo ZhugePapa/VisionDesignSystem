@@ -70,6 +70,7 @@ export class ConversationStore {
       CREATE TABLE IF NOT EXISTS ai_conversation (
         id TEXT PRIMARY KEY,
         user_id TEXT NOT NULL,
+        product_id TEXT NOT NULL DEFAULT 'standalone-chat',
         title TEXT NOT NULL,
         pinned INTEGER NOT NULL DEFAULT 0,
         created_at TEXT NOT NULL,
@@ -101,6 +102,18 @@ export class ConversationStore {
         ON ai_turn(conversation_id, position);
     `)
 
+    const conversationColumns = this.database.prepare('PRAGMA table_info(ai_conversation)').all()
+    if (!conversationColumns.some((column) => column.name === 'product_id')) {
+      this.database.exec(`
+        ALTER TABLE ai_conversation
+        ADD COLUMN product_id TEXT NOT NULL DEFAULT 'standalone-chat'
+      `)
+    }
+    this.database.exec(`
+      CREATE INDEX IF NOT EXISTS ai_conversation_product_updated_idx
+      ON ai_conversation(user_id, product_id, updated_at DESC)
+    `)
+
     const turnColumns = this.database.prepare('PRAGMA table_info(ai_turn)').all()
     if (!turnColumns.some((column) => column.name === 'answer_versions')) {
       this.database.exec(`
@@ -110,27 +123,27 @@ export class ConversationStore {
     }
   }
 
-  listConversations(userId) {
+  listConversations(userId, productId = 'standalone-chat') {
     return this.database.prepare(`
       SELECT id, title, pinned, created_at, updated_at
       FROM ai_conversation
-      WHERE user_id = ?
+      WHERE user_id = ? AND product_id = ?
       ORDER BY pinned DESC, updated_at DESC
-    `).all(userId).map(conversationFromRow)
+    `).all(userId, productId).map(conversationFromRow)
   }
 
-  getConversation(userId, conversationId) {
+  getConversation(userId, conversationId, productId = 'standalone-chat') {
     const row = this.database.prepare(`
       SELECT id, title, pinned, created_at, updated_at
       FROM ai_conversation
-      WHERE id = ? AND user_id = ?
+      WHERE id = ? AND user_id = ? AND product_id = ?
       LIMIT 1
-    `).get(conversationId, userId)
+    `).get(conversationId, userId, productId)
 
     return row ? conversationFromRow(row) : null
   }
 
-  createConversation(userId, title) {
+  createConversation(userId, title, productId = 'standalone-chat') {
     const timestamp = now()
     const conversation = {
       id: randomUUID(),
@@ -142,11 +155,12 @@ export class ConversationStore {
 
     this.database.prepare(`
       INSERT INTO ai_conversation (
-        id, user_id, title, pinned, created_at, updated_at
-      ) VALUES (?, ?, ?, 0, ?, ?)
+        id, user_id, product_id, title, pinned, created_at, updated_at
+      ) VALUES (?, ?, ?, ?, 0, ?, ?)
     `).run(
       conversation.id,
       userId,
+      productId,
       conversation.title,
       timestamp,
       timestamp,
@@ -155,8 +169,8 @@ export class ConversationStore {
     return conversation
   }
 
-  updateConversation(userId, conversationId, patch) {
-    const existing = this.getConversation(userId, conversationId)
+  updateConversation(userId, conversationId, patch, productId = 'standalone-chat') {
+    const existing = this.getConversation(userId, conversationId, productId)
     if (!existing) return null
 
     const title = typeof patch.title === 'string'
@@ -168,8 +182,8 @@ export class ConversationStore {
     this.database.prepare(`
       UPDATE ai_conversation
       SET title = ?, pinned = ?, updated_at = ?
-      WHERE id = ? AND user_id = ?
-    `).run(title, pinned ? 1 : 0, updatedAt, conversationId, userId)
+      WHERE id = ? AND user_id = ? AND product_id = ?
+    `).run(title, pinned ? 1 : 0, updatedAt, conversationId, userId, productId)
 
     return {
       ...existing,
@@ -179,23 +193,23 @@ export class ConversationStore {
     }
   }
 
-  touchConversation(userId, conversationId) {
+  touchConversation(userId, conversationId, productId = 'standalone-chat') {
     this.database.prepare(`
       UPDATE ai_conversation
       SET updated_at = ?
-      WHERE id = ? AND user_id = ?
-    `).run(now(), conversationId, userId)
+      WHERE id = ? AND user_id = ? AND product_id = ?
+    `).run(now(), conversationId, userId, productId)
   }
 
-  deleteConversation(userId, conversationId) {
+  deleteConversation(userId, conversationId, productId = 'standalone-chat') {
     return this.database.prepare(`
       DELETE FROM ai_conversation
-      WHERE id = ? AND user_id = ?
-    `).run(conversationId, userId).changes > 0
+      WHERE id = ? AND user_id = ? AND product_id = ?
+    `).run(conversationId, userId, productId).changes > 0
   }
 
-  listTurns(userId, conversationId) {
-    if (!this.getConversation(userId, conversationId)) return null
+  listTurns(userId, conversationId, productId = 'standalone-chat') {
+    if (!this.getConversation(userId, conversationId, productId)) return null
 
     return this.database.prepare(`
       SELECT
@@ -207,8 +221,8 @@ export class ConversationStore {
     `).all(conversationId).map(turnFromRow)
   }
 
-  createTurn(userId, conversationId, input) {
-    const conversation = this.getConversation(userId, conversationId)
+  createTurn(userId, conversationId, input, productId = 'standalone-chat') {
+    const conversation = this.getConversation(userId, conversationId, productId)
     if (!conversation) return null
 
     const position = Number(this.database.prepare(`
@@ -250,12 +264,12 @@ export class ConversationStore {
       timestamp,
       timestamp,
     )
-    this.touchConversation(userId, conversationId)
+    this.touchConversation(userId, conversationId, productId)
 
     return turn
   }
 
-  prepareRegeneration(userId, conversationId, turnId) {
+  prepareRegeneration(userId, conversationId, turnId, productId = 'standalone-chat') {
     const row = this.database.prepare(`
       SELECT turn.*
       FROM ai_turn AS turn
@@ -265,8 +279,9 @@ export class ConversationStore {
         turn.id = ?
         AND turn.conversation_id = ?
         AND conversation.user_id = ?
+        AND conversation.product_id = ?
       LIMIT 1
-    `).get(turnId, conversationId, userId)
+    `).get(turnId, conversationId, userId, productId)
 
     if (!row) return null
 
@@ -292,7 +307,7 @@ export class ConversationStore {
       throw error
     }
 
-    this.touchConversation(userId, conversationId)
+    this.touchConversation(userId, conversationId, productId)
     return turnFromRow({
       ...row,
       answer: '',
@@ -303,8 +318,8 @@ export class ConversationStore {
     })
   }
 
-  updateTurn(userId, conversationId, turnId, patch) {
-    if (!this.getConversation(userId, conversationId)) return false
+  updateTurn(userId, conversationId, turnId, patch, productId = 'standalone-chat') {
+    if (!this.getConversation(userId, conversationId, productId)) return false
 
     const existing = this.database.prepare(`
       SELECT answer, reasoning, status
@@ -326,19 +341,19 @@ export class ConversationStore {
       turnId,
       conversationId,
     )
-    this.touchConversation(userId, conversationId)
+    this.touchConversation(userId, conversationId, productId)
     return true
   }
 
-  messagesThroughTurn(userId, conversationId, turnId) {
+  messagesThroughTurn(userId, conversationId, turnId, productId = 'standalone-chat') {
     const rows = this.database.prepare(`
       SELECT turn.question, turn.answer, turn.attachments, turn.id
       FROM ai_turn AS turn
       INNER JOIN ai_conversation AS conversation
         ON conversation.id = turn.conversation_id
-      WHERE turn.conversation_id = ? AND conversation.user_id = ?
+      WHERE turn.conversation_id = ? AND conversation.user_id = ? AND conversation.product_id = ?
       ORDER BY turn.position ASC
-    `).all(conversationId, userId)
+    `).all(conversationId, userId, productId)
     const messages = []
 
     for (const row of rows) {

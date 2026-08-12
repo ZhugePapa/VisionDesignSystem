@@ -161,10 +161,10 @@
   --primitive-pink-800: #5f264c;
   --primitive-pink-900: #3b1f35;
   --primitive-grey-0: #ffffff;
-  --primitive-grey-12: #fcfcfd;
-  --primitive-grey-25: #f7f8f9;
+  --primitive-grey-12: #fcfcfc;
+  --primitive-grey-25: #f8f9fa;
   --primitive-grey-50: #f1f2f3;
-  --primitive-grey-100: #edeff0;
+  --primitive-grey-100: #e8e9ea;
   --primitive-grey-200: #d3d4d6;
   --primitive-grey-300: #bdbec2;
   --primitive-grey-400: #a7a9ad;
@@ -334,7 +334,7 @@
   --color-fg-primary: var(--primitive-grey-950);
   --color-bg-canvas: var(--primitive-grey-0);
   --color-bg-surface: var(--primitive-grey-0);
-  --color-bg-surface-subtle: var(--primitive-grey-12);
+  --color-bg-primary: var(--primitive-grey-12);
   --color-bg-tertiary: var(--primitive-grey-50);
   --color-fg-secondary: var(--primitive-grey-700);
   --color-bg-secondary: var(--primitive-grey-25);
@@ -481,7 +481,7 @@
   --color-fg-primary: var(--primitive-grey-0);
   --color-bg-canvas: var(--primitive-grey-975);
   --color-bg-surface: var(--primitive-grey-950);
-  --color-bg-surface-subtle: var(--primitive-grey-950);
+  --color-bg-primary: var(--primitive-grey-950);
   --color-bg-tertiary: var(--primitive-grey-900);
   --color-fg-secondary: var(--primitive-grey-400);
   --color-bg-secondary: var(--primitive-grey-925);
@@ -549,6 +549,28 @@
   --color-effect-focus-ring-bg: var(--primitive-grey-975);
   --color-effect-focus-ring-brand: var(--primitive-blue-300);
   --color-effect-focus-ring-danger: var(--primitive-red-300);
+}
+
+/* GitHub/Primer syntax roles derived from the active theme's utility palette. */
+:root,
+:root[data-theme="light"],
+[data-theme="light"],
+:root[data-theme="dark"],
+[data-theme="dark"] {
+  --color-syntax-comment: var(--color-fg-secondary);
+  --color-syntax-keyword: var(--utility-red-500);
+  --color-syntax-keyword: color-mix(in srgb, var(--utility-red-500) 80%, var(--color-text-primary) 20%);
+  --color-syntax-constant: var(--utility-blue-500);
+  --color-syntax-constant: color-mix(in srgb, var(--utility-blue-500) 90%, var(--color-text-primary) 10%);
+  --color-syntax-entity: var(--utility-purple-500);
+  --color-syntax-entity: color-mix(in srgb, var(--utility-purple-500) 85%, var(--color-text-primary) 15%);
+  --color-syntax-string: var(--utility-blue-500);
+  --color-syntax-string: color-mix(in srgb, var(--utility-blue-500) 80%, var(--color-text-primary) 20%);
+  --color-syntax-variable: var(--utility-orange-500);
+  --color-syntax-variable: color-mix(in srgb, var(--utility-orange-500) 65%, var(--color-text-primary) 35%);
+  --color-syntax-tag: var(--utility-green-500);
+  --color-syntax-tag: color-mix(in srgb, var(--utility-green-500) 65%, var(--color-text-primary) 35%);
+  --color-syntax-default: var(--color-text-secondary);
 }
 
 .ld-text-sm-regular,

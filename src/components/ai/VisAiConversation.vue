@@ -140,7 +140,7 @@ function selectConversation(item: VisAiConversationItemData): void {
   display: flex;
   flex-direction: column;
   color: var(--color-text-primary);
-  background: var(--color-bg-surface-subtle);
+  background: var(--color-bg-primary);
   overflow: visible;
   transition: inline-size 160ms ease;
 }

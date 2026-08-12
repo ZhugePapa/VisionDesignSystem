@@ -182,7 +182,7 @@ defineOptions({ name: 'VisCodeLine' })
 }
 
 .vis-code-line.has-divider.type-default .vis-code-line__number {
-  background: var(--color-bg-surface-subtle);
+  background: var(--color-bg-primary);
 }
 
 .vis-code-line.has-divider.type-delete .vis-code-line__number {

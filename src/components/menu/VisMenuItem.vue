@@ -131,7 +131,7 @@ function onKeydown(event: KeyboardEvent): void {
 
 .vis-menu-item:is(:hover, :focus-visible, .is-hover-preview):not(.is-disabled):not(.is-active) {
   color: var(--color-text-primary);
-  background: var(--color-bg-secondary);
+  background: var(--color-bg-tertiary);
 }
 
 .vis-menu-item.is-active:not(.is-disabled) {

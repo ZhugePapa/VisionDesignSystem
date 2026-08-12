@@ -180,7 +180,7 @@ const emit = defineEmits<{
 
 .vis-ai-artifact__open:hover,
 .vis-ai-artifact__download:hover {
-  background: var(--color-bg-surface-subtle);
+  background: var(--color-bg-primary);
 }
 
 .vis-ai-artifact__open:focus-visible,

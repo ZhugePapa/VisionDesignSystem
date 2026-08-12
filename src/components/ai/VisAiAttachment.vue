@@ -137,7 +137,7 @@ function retryAttachment(): void {
 }
 
 .vis-ai-attachment:hover {
-  background: var(--color-bg-surface-subtle);
+  background: var(--color-bg-primary);
 }
 
 .vis-ai-attachment.is-error {

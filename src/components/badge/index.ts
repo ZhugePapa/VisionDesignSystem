@@ -1,5 +1,12 @@
 import VisBadge from './VisBadge.vue'
 
 export { VisBadge }
-export type { VisBadgeColorType, VisBadgeProps, VisBadgeType } from './badge.types'
+export type {
+  VisBadgeColor,
+  VisBadgeColorType,
+  VisBadgeProps,
+  VisBadgeSize,
+  VisBadgeType,
+  VisBadgeVariantType,
+} from './badge.types'
 export default VisBadge

@@ -644,51 +644,51 @@ export default defineComponent({
 }
 
 .vis-markdown__syntax--comment {
-  color: var(--color-text-disabled);
+  color: var(--color-syntax-comment);
 }
 
 .vis-markdown__syntax--punctuation {
-  color: var(--color-text-secondary);
+  color: var(--color-syntax-default);
 }
 
 .vis-markdown__syntax--string {
-  color: var(--utility-green-500);
+  color: var(--color-syntax-string);
 }
 
 .vis-markdown__syntax--number {
-  color: var(--utility-orange-500);
+  color: var(--color-syntax-constant);
 }
 
 .vis-markdown__syntax--keyword {
-  color: var(--utility-blue-500);
+  color: var(--color-syntax-keyword);
 }
 
 .vis-markdown__syntax--constant {
-  color: var(--utility-purple-500);
+  color: var(--color-syntax-constant);
 }
 
 .vis-markdown__syntax--function {
-  color: var(--utility-cyan-500);
+  color: var(--color-syntax-entity);
 }
 
 .vis-markdown__syntax--property {
-  color: var(--utility-aqua-500);
+  color: var(--color-syntax-variable);
 }
 
 .vis-markdown__syntax--operator {
-  color: var(--utility-pink-500);
+  color: var(--color-syntax-default);
 }
 
 .vis-markdown__syntax--tag {
-  color: var(--utility-pink-500);
+  color: var(--color-syntax-tag);
 }
 
 .vis-markdown__syntax--attribute {
-  color: var(--utility-violet-500);
+  color: var(--color-syntax-variable);
 }
 
 .vis-markdown__syntax--builtin {
-  color: var(--utility-moss-500);
+  color: var(--color-syntax-constant);
 }
 
 .vis-markdown code:not(pre code) {

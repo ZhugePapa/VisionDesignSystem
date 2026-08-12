@@ -2,7 +2,7 @@ import type { TableColumnCtx } from 'element-plus'
 import type { VNode } from 'vue'
 
 import type { VisAvatarImageVariant } from '../avatar/avatar.types'
-import type { VisBadgeColorType, VisBadgeType } from '../badge/badge.types'
+import type { VisBadgeColor, VisBadgeColorType, VisBadgeSize, VisBadgeType } from '../badge/badge.types'
 import type { IconName } from '../icons/generated/registry.generated'
 
 export type VisTableAppearance = 'horizontal' | 'grid'
@@ -88,8 +88,15 @@ export interface VisTableItemProps {
   numberValue?: string | number
   trend?: VisTableTrend
   badgeType?: VisBadgeType
+  badgeColor?: VisBadgeColor
+  badgeSize?: VisBadgeSize
+  badgeDotOnly?: boolean
+  badgeIconOnly?: boolean
+  badgeIconName?: IconName
+  /** @deprecated Use `badgeColor`. */
   badgeColorType?: VisBadgeColorType
   badgeSolid?: boolean
+  /** @deprecated Figma Badge no longer has a subtle variant. */
   badgeSubtle?: boolean
   tagLabel?: string
   avatarTitle?: string

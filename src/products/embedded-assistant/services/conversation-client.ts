@@ -3,11 +3,12 @@ import type {
   VisAiArtifactItem,
   VisAiAttachmentItem,
   VisAiKey,
-} from '../../components/ai'
+} from '../../../components/ai'
 import type {
   VisionAiReasoningEffort,
   VisionAiStreamHandlers,
 } from './chat-client'
+import { AI_PRODUCT_HEADERS } from './product'
 
 export type VisionAiTurnStatus = 'streaming' | 'done' | 'stopped' | 'timeout' | 'error'
 
@@ -82,6 +83,7 @@ async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
     ...init,
     headers: {
       Accept: 'application/json',
+      ...AI_PRODUCT_HEADERS,
       ...(init?.body ? { 'Content-Type': 'application/json' } : {}),
       ...init?.headers,
     },
@@ -139,7 +141,7 @@ export async function deleteVisionAiConversation(
 ): Promise<void> {
   const response = await fetch(
     `/api/ai/conversations/${encodeURIComponent(conversationId)}`,
-    { method: 'DELETE' },
+    { method: 'DELETE', headers: AI_PRODUCT_HEADERS },
   )
   if (!response.ok) throw await responseError(response)
 }
@@ -217,7 +219,7 @@ export async function streamVisionAiConversation(
     `/api/ai/conversations/${encodeURIComponent(conversationId)}/messages`,
     {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...AI_PRODUCT_HEADERS },
       body: JSON.stringify(request),
       signal,
     },

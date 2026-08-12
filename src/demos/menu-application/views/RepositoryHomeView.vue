@@ -50,19 +50,33 @@ const recentRepositories: DemoRepository[] = recentRepositoryKeys
   .map((key) => demoRepositories.find((repository) => repository.key === key))
   .filter((repository): repository is DemoRepository => Boolean(repository))
 
-const statusItems: VisDropdownEntry[] = [
-  { type: 'item', label: '全部状态', active: true },
-  { type: 'item', label: '活跃' },
-  { type: 'item', label: '已归档' },
-  { type: 'item', label: '已锁定' },
-]
+const repositorySearch = ref('')
+const selectedStatus = ref('全部状态')
+const selectedCreator = ref('全部创建人')
 
-const creatorItems: VisDropdownEntry[] = [
-  { type: 'item', label: '全部创建人', active: true },
-  { type: 'item', label: '张大山', itemType: 'avatar', title: '张大山', subtitle: 'zhangdashan', avatarImageVariant: '09' },
-  { type: 'item', label: '李思雨', itemType: 'avatar', title: '李思雨', subtitle: 'lisiyu', avatarImageVariant: '06' },
-  { type: 'item', label: '王建国', itemType: 'avatar', title: '王建国', subtitle: 'wangjianguo', avatarImageVariant: '03' },
-]
+const statusItems = computed<VisDropdownEntry[]>(() =>
+  ['全部状态', '活跃', '已归档', '已锁定'].map((label) => ({
+    type: 'item',
+    label,
+    active: selectedStatus.value === label,
+  })),
+)
+
+const creatorItems = computed<VisDropdownEntry[]>(() =>
+  ['全部创建人', '张大山', '李思雨', '王建国'].map((label, index) => ({
+    type: 'item',
+    label,
+    active: selectedCreator.value === label,
+    ...(index > 0
+      ? {
+          itemType: 'avatar' as const,
+          title: label,
+          subtitle: ['zhangdashan', 'lisiyu', 'wangjianguo'][index - 1],
+          avatarImageVariant: ['09', '06', '03'][index - 1] as '09' | '06' | '03',
+        }
+      : {}),
+  })),
+)
 
 const moreItems: VisDropdownEntry[] = [
   { type: 'item', label: '按最近访问排序', active: true },
@@ -78,7 +92,7 @@ const repoRows: RepoListRow[] = [
   { key: 'flight-control-core', name: '飞控核心模块', level: 3, kind: 'repo', stars: 23 },
   { key: 'guidance-algo', name: '制导算法库', level: 3, kind: 'repo', stars: 23 },
   { key: 'attitude-algo', name: '姿态估计算法', level: 3, kind: 'repo', stars: 23 },
-  { key: 'group-telemetry', name: '遥测数据网关', level: 2, kind: 'group', fileIcon: 'code', stars: 23 },
+  { key: 'telemetry-gateway', name: '遥测数据网关', level: 2, kind: 'repo', stars: 15 },
   { key: 'command', name: '指挥控制系统', level: 1, kind: 'group', fileIcon: 'folder', stars: 23 },
   { key: 'mission-plan-frontend', name: '任务规划前端', level: 3, kind: 'repo', stars: 23 },
   { key: 'embedded-drivers', name: '嵌入式驱动组件', level: 3, kind: 'repo', stars: 23 },
@@ -98,7 +112,30 @@ const visibleRepoRows = computed<RepoListRow[]>(() => {
     visible.push(row)
     if (row.kind === 'group') path.push(row)
   }
+  const query = repositorySearch.value.trim().toLocaleLowerCase()
+  const statusMap: Record<DemoRepository['status'], string> = {
+    active: '活跃',
+    archived: '已归档',
+    locked: '已锁定',
+  }
+  const hasFilters = Boolean(query)
+    || selectedStatus.value !== '全部状态'
+    || selectedCreator.value !== '全部创建人'
+  if (!hasFilters) return visible
+
   return visible
+    .filter((row) => {
+      const detail = repoDetail(row)
+      if (!detail) return false
+      const matchesQuery = !query
+        || `${detail.name} ${detail.code} ${detail.description} ${detail.language}`.toLocaleLowerCase().includes(query)
+      const matchesStatus = selectedStatus.value === '全部状态'
+        || statusMap[detail.status] === selectedStatus.value
+      const matchesCreator = selectedCreator.value === '全部创建人'
+        || detail.creator === selectedCreator.value
+      return matchesQuery && matchesStatus && matchesCreator
+    })
+    .map((row) => ({ ...row, level: 0 }))
 })
 
 function toggleGroup(key: string): void {
@@ -114,6 +151,22 @@ function isGroupExpanded(key: string): boolean {
 
 function repoDetail(row: RepoListRow): DemoRepository | undefined {
   return row.kind === 'repo' ? findRepositoryByKey(row.key) : undefined
+}
+
+function repositoryMergeRequestCount(repository: DemoRepository | undefined): number {
+  return repository?.data.mergeRequests.filter((request) => request.status === 'open' || request.status === 'draft').length ?? 0
+}
+
+function repositoryBranchCount(repository: DemoRepository | undefined): number {
+  return repository?.data.branches.length ?? 0
+}
+
+function handleStatusSelect(payload: { item: VisDropdownEntry }): void {
+  if (payload.item.label) selectedStatus.value = payload.item.label
+}
+
+function handleCreatorSelect(payload: { item: VisDropdownEntry }): void {
+  if (payload.item.label) selectedCreator.value = payload.item.label
 }
 
 function openRepository(repositoryKey: string): void {
@@ -162,18 +215,18 @@ function openRepository(repositoryKey: string): void {
                   size="md"
                   prefix
                   icon-name="git-pull-request"
-                  :label="String(repository.pullRequests)"
+                  :label="String(repositoryMergeRequestCount(repository))"
                 >
-                  {{ repository.pullRequests }}
+                  {{ repositoryMergeRequestCount(repository) }}
                 </VisButton>
                 <VisButton
                   variant="link-grey"
                   size="md"
                   prefix
                   icon-name="git-branch-02"
-                  :label="String(repository.branches)"
+                  :label="String(repositoryBranchCount(repository))"
                 >
-                  {{ repository.branches }}
+                  {{ repositoryBranchCount(repository) }}
                 </VisButton>
                 <VisButton
                   variant="link-grey"
@@ -196,12 +249,13 @@ function openRepository(repositoryKey: string): void {
         <div class="repository-toolbar">
           <div class="repository-toolbar__filters">
             <VisInputSearchBox
+              v-model="repositorySearch"
               class="repository-toolbar__search"
               placeholder="请输入标题/编号/描述关键字"
               aria-label="搜索代码仓库"
             />
-            <VisDropdown :items="statusItems" button-label="状态" />
-            <VisDropdown :items="creatorItems" button-label="创建人" />
+            <VisDropdown :items="statusItems" :button-label="selectedStatus" @select="handleStatusSelect" />
+            <VisDropdown :items="creatorItems" :button-label="selectedCreator" @select="handleCreatorSelect" />
             <VisDropdown :items="moreItems">
               <template #trigger="{ toggle }">
                 <VisButton
@@ -209,7 +263,8 @@ function openRepository(repositoryKey: string): void {
                   size="md"
                   prefix
                   icon-name="filter-funnel-02"
-                  label="更多筛选"
+                  label="更多筛选（演示）"
+                  disabled
                   aria-haspopup="menu"
                   @click="toggle"
                 >
@@ -220,15 +275,16 @@ function openRepository(repositoryKey: string): void {
           </div>
 
           <div class="repository-toolbar__actions">
-            <VisButton variant="secondary" size="md" prefix icon-name="settings-01" label="设置">设置</VisButton>
+            <VisButton variant="secondary" size="md" prefix icon-name="settings-01" label="设置（演示）" disabled>设置</VisButton>
             <VisButtonSplit color="primary">
-              <VisButton variant="primary" size="md" prefix icon-name="plus" label="新建仓库">新建仓库</VisButton>
+              <VisButton variant="primary" size="md" prefix icon-name="plus" label="新建仓库（演示）" disabled>新建仓库</VisButton>
               <VisButton
                 variant="primary"
                 size="md"
                 icon-only
                 icon-name="chevron-down"
-                label="更多新建方式"
+                label="更多新建方式（演示）"
+                disabled
               />
             </VisButtonSplit>
           </div>
@@ -293,10 +349,10 @@ function openRepository(repositoryKey: string): void {
                 size="sm"
                 prefix
                 icon-name="git-pull-request"
-                :label="String(repoDetail(row)?.pullRequests ?? 0)"
+                :label="String(repositoryMergeRequestCount(repoDetail(row)))"
                 @click.stop
               >
-                {{ repoDetail(row)?.pullRequests ?? 0 }}
+                {{ repositoryMergeRequestCount(repoDetail(row)) }}
               </VisButton>
               <VisButton
                 class="repository-tree__stat"
@@ -304,10 +360,10 @@ function openRepository(repositoryKey: string): void {
                 size="sm"
                 prefix
                 icon-name="git-branch-02"
-                :label="String(repoDetail(row)?.branches ?? 0)"
+                :label="String(repositoryBranchCount(repoDetail(row)))"
                 @click.stop
               >
-                {{ repoDetail(row)?.branches ?? 0 }}
+                {{ repositoryBranchCount(repoDetail(row)) }}
               </VisButton>
             </template>
             <VisButton
@@ -331,6 +387,9 @@ function openRepository(repositoryKey: string): void {
               :label="`${row.name}更多操作`"
               @click.stop
             />
+          </div>
+          <div v-if="visibleRepoRows.length === 0" class="repository-tree__empty">
+            未找到符合条件的代码仓库
           </div>
         </div>
       </div>
@@ -561,5 +620,15 @@ function openRepository(repositoryKey: string): void {
 
 .repository-tree__more {
   flex: 0 0 var(--space-24);
+}
+
+.repository-tree__empty {
+  min-block-size: 160px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-tertiary);
+  font-size: var(--font-text-md-size);
+  line-height: var(--font-text-md-line-height);
 }
 </style>

@@ -35,10 +35,10 @@ import { VisTooltip } from '../../components/tooltip'
 import {
   downloadVisionAiArtifact,
   fetchVisionAiArtifactContent,
-} from '../../services/ai/artifact-client'
+} from './services/artifact-client'
 import {
   fetchVisionAiModels,
-} from '../../services/ai/chat-client'
+} from './services/chat-client'
 import {
   createVisionAiConversation,
   deleteVisionAiConversation,
@@ -48,20 +48,20 @@ import {
   updateVisionAiConversation,
   type VisionAiConversation,
   type VisionAiTurn,
-} from '../../services/ai/conversation-client'
+} from './services/conversation-client'
 import {
   deleteVisionAiFile,
   uploadVisionAiFiles,
-} from '../../services/ai/file-client'
+} from './services/file-client'
 import {
   fetchVisionAuthUser,
   signInVisionAccount,
   signOutVisionAccount,
   type VisionAuthUser,
 } from '../../services/auth/auth-client'
-import chatBackgroundUrl from './assets/ai-chat-background.png'
+import chatBackgroundUrl from '../../assets/ai/chat-background.png'
 
-defineOptions({ name: 'AiAssistantWorkspace' })
+defineOptions({ name: 'EmbeddedAssistantWorkspace' })
 
 type AiAssistantMode = 'copilot' | 'independent' | 'float'
 type AiChatTurn = VisionAiTurn
@@ -192,7 +192,7 @@ const floatPositionStyle = computed(() => {
 
 function draftStorageKey(conversationId: VisAiKey = conversationKey.value): string | null {
   if (!authUser.value?.id) return null
-  return `vision-ai-draft:${authUser.value.id}:${String(conversationId || 'new')}`
+  return `vision-embedded-assistant-draft:${authUser.value.id}:${String(conversationId || 'new')}`
 }
 
 function saveDraft(conversationId: VisAiKey = conversationKey.value): void {

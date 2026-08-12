@@ -3,6 +3,7 @@ import { computed } from 'vue'
 
 import VisAvatarLabel from '../avatar/VisAvatarLabel.vue'
 import VisBadge from '../badge/VisBadge.vue'
+import { resolveVisBadgeColor, resolveVisBadgeType } from '../badge/badge.adapter'
 import VisButton from '../button/VisButton.vue'
 import VisCheckbox from '../checkbox/VisCheckbox.vue'
 import Icon from '../icons/Icon.vue'
@@ -29,8 +30,13 @@ const props = withDefaults(defineProps<VisTableItemProps>(), {
   rateValue: 3.5,
   numberValue: undefined,
   trend: 'up',
-  badgeType: 'status',
-  badgeColorType: 'success',
+  badgeType: 'default',
+  badgeColor: undefined,
+  badgeSize: 'md',
+  badgeDotOnly: false,
+  badgeIconOnly: false,
+  badgeIconName: 'download-03',
+  badgeColorType: undefined,
   badgeSolid: false,
   badgeSubtle: false,
   tagLabel: '菜单',
@@ -63,6 +69,8 @@ const textValue = computed(() => {
 })
 
 const resolvedNumber = computed(() => props.numberValue ?? textValue.value)
+const resolvedBadgeColor = computed(() => resolveVisBadgeColor(props.badgeColor, props.badgeColorType, 'aqua'))
+const resolvedBadgeType = computed(() => resolveVisBadgeType(props.badgeType))
 </script>
 
 <template>
@@ -84,8 +92,8 @@ const resolvedNumber = computed(() => props.numberValue ?? textValue.value)
         <span class="vis-table-item__primary-text">{{ textValue }}</span>
         <VisBadge
           v-if="suffix"
-          type="text"
-          color-type="warning"
+          type="default"
+          color="yellow"
           :label="suffixLabel"
         />
       </template>
@@ -97,8 +105,8 @@ const resolvedNumber = computed(() => props.numberValue ?? textValue.value)
         <VisTableLink :text="textValue" :href="href" />
         <VisBadge
           v-if="suffix"
-          type="text"
-          color-type="warning"
+          type="default"
+          color="yellow"
           :label="suffixLabel"
         />
       </template>
@@ -168,22 +176,26 @@ const resolvedNumber = computed(() => props.numberValue ?? textValue.value)
         <VisTableTrendIcon :trend="trend" />
       </template>
 
-      <VisBadge
-        v-else-if="type === 'badge'"
-        class="vis-table-item__badge"
-        :type="badgeType"
-        :color-type="badgeColorType"
-        :solid="badgeSolid"
-        :subtle="badgeSubtle"
-        :label="textValue"
-      />
+      <div v-else-if="type === 'badge'" class="vis-table-item__badge-slot">
+        <VisBadge
+          class="vis-table-item__badge"
+          :type="resolvedBadgeType"
+          :color="resolvedBadgeColor"
+          :size="badgeSize"
+          :solid="badgeSolid"
+          :dot-only="badgeDotOnly"
+          :icon-only="badgeIconOnly"
+          :icon-name="badgeIconName"
+          :label="textValue"
+        />
+      </div>
 
       <VisTag v-else-if="type === 'tag'" :label="value == null ? tagLabel : textValue" />
 
       <VisAvatarLabel
         v-else-if="type === 'avatar'"
         class="vis-table-item__avatar"
-        size="sm"
+        size="xs"
         :addition="avatarAddition"
         :title="avatarTitle || textValue"
         :subtitle="avatarSubtitle"
@@ -273,13 +285,23 @@ const resolvedNumber = computed(() => props.numberValue ?? textValue.value)
   block-size: var(--space-24);
 }
 
-.vis-table-item__avatar {
+.vis-table-item__badge-slot {
   min-inline-size: 0;
-  flex: 1 1 auto;
+  display: flex;
+  align-items: flex-start;
+  flex: 1 1 0;
 }
 
-:deep(.vis-table-item__avatar .vis-avatar-label__title) {
-  font-weight: 400 !important;
+.vis-table-item__avatar {
+  min-inline-size: 0;
+}
+
+.vis-table-item.appearance-horizontal .vis-table-item__avatar {
+  flex: 0 0 auto;
+}
+
+.vis-table-item.appearance-grid .vis-table-item__avatar {
+  flex: 1 1 0;
 }
 
 .vis-table-item__drag {

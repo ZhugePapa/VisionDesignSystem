@@ -1,4 +1,5 @@
-import type { VisAiArtifactItem } from '../../components/ai'
+import type { VisAiArtifactItem } from '../../../components/ai'
+import { AI_PRODUCT_HEADERS } from './product'
 
 async function responseError(response: Response): Promise<Error> {
   try {
@@ -13,7 +14,7 @@ export async function fetchVisionAiArtifactContent(
   artifact: VisAiArtifactItem,
 ): Promise<string> {
   const response = await fetch(artifact.previewUrl, {
-    headers: { Accept: 'application/json' },
+    headers: { Accept: 'application/json', ...AI_PRODUCT_HEADERS },
   })
   if (!response.ok) throw await responseError(response)
   const payload = await response.json() as { content: string }

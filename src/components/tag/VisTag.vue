@@ -94,7 +94,7 @@ watch(
         <img v-if="avatarSrc" class="vis-tag__avatar-image" :src="avatarSrc" :alt="avatarAlt" />
         <span v-else class="vis-tag__avatar-fallback" :class="`variant-${avatarVariant}`" />
       </span>
-      <VisBadge v-else-if="type === 'dot'" class="vis-tag__dot" type="dot" color-type="danger" />
+      <VisBadge v-else-if="type === 'dot'" class="vis-tag__dot" type="dot" color-type="danger" dot-only />
     </slot>
 
     <span class="vis-tag__label">

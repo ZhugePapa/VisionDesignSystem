@@ -1,0 +1,275 @@
+#!/usr/bin/env python3
+import re
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent
+SKILL = Path("/Users/leiwang/.codex/skills/product-teardown")
+TMPL_EN = SKILL / "assets/product-teardown-template-en.html"
+TMPL_ZH = SKILL / "assets/product-teardown-template-zh.html"
+DATE = "2026-08-12"
+YM = "202608"
+OUT_EN = ROOT / f"product-teardown-gitlab-en-{YM}.html"
+OUT_ZH = ROOT / f"product-teardown-gitlab-zh-{YM}.html"
+
+SHOTS = {
+    "SHOT_1_URL": "https://res.cloudinary.com/about-gitlab-com/image/upload/v1772058387/irzlmm0gukanjt7ryq9b.png",
+    "SHOT_2_URL": "https://res.cloudinary.com/about-gitlab-com/image/upload/v1772058392/ajr6nquefob7lefdcxng.png",
+    "SHOT_3_URL": "https://res.cloudinary.com/about-gitlab-com/image/upload/v1772058387/gbwwawybg9u4jzibuurw.png",
+    "SHOT_4_URL": "https://res.cloudinary.com/about-gitlab-com/image/upload/v1772058387/rijlwchqo1zytp842bld.png",
+    "SHOT_5_URL": "https://res.cloudinary.com/about-gitlab-com/image/upload/v1772058392/bwqipksewm1hejuycwqh.png",
+    "SHOT_6_URL": "https://res.cloudinary.com/about-gitlab-com/image/upload/v1772058395/cdm4mye5edkpemedpxts.png",
+}
+
+EN = {
+    "PRODUCT": "GitLab",
+    "ONE_LINER_2_LINE_SUBTITLE": "The system of record for turning software intent into governed production change — now repositioning from all-in-one DevSecOps suite to the control plane for human and AI-agent delivery.",
+    "DATE_YYYY_MM_DD": DATE,
+    "TIMESTAMP": f"{DATE} · Principal PM Teardown",
+    "CATEGORY": "Intelligent DevSecOps orchestration platform",
+    "USER_SCALE": "50M+ registered users · 100K organizations · 10,682 customers above $5K ARR",
+    "BUSINESS_MODEL_SHORT": "Per-seat subscription + AI usage credits",
+    "STAGE_MATURITY": "Public scale-up · $1B+ ARR · 26% FY26 revenue growth",
+    "ASSUMPTIONS_ONE_PARAGRAPH_LIST_WHAT_IS_INFERRED_VS_KNOWN": (
+        "Known: FY2026 revenue was $955.2M, ARR crossed $1B, NRR was 118%, Premium is $29/user/month, and Duo Agent Platform is GA. "
+        "[inferred] UX scores, metric stack, moat score, and strategic recommendations are analytical judgments. Sources: "
+        "<a href='https://ir.gitlab.com/news/news-details/2026/GitLab-Reports-Fourth-Quarter-and-Full-Year-Fiscal-Year-2026-Financial-Results-Board-of-Directors-Authorizes-400-million-for-Share-Repurchase-Program/default.aspx'>FY26 results</a>, "
+        "<a href='https://about.gitlab.com/pricing/'>pricing</a>, <a href='https://about.gitlab.com/platform/'>platform</a>, and "
+        "<a href='https://about.gitlab.com/press/releases/2026-01-15-gitlab-announces-duo-agent-platform-general-availability/'>Duo GA</a>."
+    ),
+    "VERDICT_ONE_LINER": "GitLab owns the evidence chain from idea to production; the next battle is making that breadth feel like leverage, not tax.",
+    "VERDICT_BODY_2_3_LINES": "GitLab's durable advantage is one permission model and one lifecycle graph spanning planning, source, CI/CD, security, compliance, and deployment. Duo can exploit context point tools cannot see. But GitHub owns developer distribution and moves faster at the interaction layer; unless GitLab compresses complexity, its breadth becomes the reason teams bypass it.",
+    "STAR_ROW_e_g_★★★★☆": "★★★★☆", "STAR_RATING_x": "4.4",
+    "TLDR_1_HEADLINE": "The lifecycle graph is the moat",
+    "TLDR_1_BODY": "Issue → MR → pipeline → finding → approval → deployment is one auditable chain. That shared context lowers integration entropy and gives agents grounded evidence.",
+    "TLDR_2_HEADLINE": "Breadth creates a UX tax",
+    "TLDR_2_BODY": "GitLab can replace many tools, but its navigation, settings, tier boundaries, and admin surfaces reveal the cost. The product often feels assembled by stage rather than composed around outcomes.",
+    "TLDR_3_HEADLINE": "AI changes the unit of value",
+    "TLDR_3_BODY": "Duo Agent Platform, Custom Flows, CLI, and external agents move GitLab beyond seat software. The monetizable unit becomes a governed delivery outcome, not an AI chat seat.",
+    "TTV_VALUE": "30", "TTV_UNIT": "min",
+    "TTV_NOTE_WHAT_HAPPENS_AT_AHA": "Import a repository, commit .gitlab-ci.yml, and see one MR produce a tested pipeline plus traceable evidence. Self-managed enterprise setup is much slower.",
+    "LOOP_FREQ": "Many × day", "LOOP_FREQ_NOTE_TRIGGER_CONTEXT": "Every push, MR review, pipeline, vulnerability, approval, and deployment re-enters the loop; platform teams and agents can trigger it continuously.",
+    "MOAT_SCORE": "8.0", "MOAT_REASONING_ONE_LINE": "Unified lifecycle context, deployment choice, governance, and switching cost are strong; developer attention remains structurally weaker than GitHub's.",
+    "SNAPSHOT_ONE_TO_TWO_SENTENCE_DEFINITION": "GitLab is not merely a Git host. It is a shared ledger and execution system that converts software intent into an approved, tested, secured, and deployed change.",
+    "USER_PROMISE": "Use one platform and one evidence trail to plan, build, secure, govern, and ship software — whether work is performed by people or agents.",
+    "CATEGORY_POSITIONING_PARAGRAPH": "GitLab sits above source control and below enterprise software delivery strategy. Its claim is consolidation: replace fragmented SCM, CI, planning, security, compliance, and analytics tools with one platform and unified data store. The 2026 repositioning adds intelligent orchestration rather than abandoning DevSecOps.",
+    "ASSUMPTION_1": "Primary economic buyer is the enterprise platform/security leader, while developers remain the daily user and adoption veto.",
+    "ASSUMPTION_2": "The highest-value wedge is regulated or complex delivery where auditability and deployment control matter more than pure social coding reach.",
+    "SEGMENT_1_NAME": "Enterprise platform engineering", "SEGMENT_1_DETAIL": "Standardize repositories, CI/CD, runners, policies, and developer workflows across hundreds or thousands of engineers.",
+    "SEGMENT_2_NAME": "Security & compliance teams", "SEGMENT_2_DETAIL": "Shift controls into pipelines and merge gates; retain evidence for vulnerability, SBOM, approval, and audit workflows.",
+    "SEGMENT_3_NAME": "Developers and open-source teams", "SEGMENT_3_DETAIL": "Host code, collaborate through merge requests, automate tests, and ship without assembling a bespoke toolchain.",
+    "TRIGGER_MOMENT": "A toolchain-consolidation mandate; migration from legacy SCM/Jenkins; new compliance requirement; or agent adoption exposing fragmented lifecycle context.",
+    "FREQUENCY": "Developers: many times daily. Platform/security: continuous event monitoring plus weekly policy and value-stream review.",
+    "USAGE_CONTEXT": "GitLab spans browser, IDE, terminal, API, runners, and deployment infrastructure. It is both destination UI and background system executing on every software event.",
+    "JTBD_FUNCTIONAL": "When software changes, I need one governed path from issue to production so delivery is fast, repeatable, secure, and provable.",
+    "JTBD_EMOTIONAL": "I want confidence that speed will not create invisible operational or regulatory debt.",
+    "JTBD_SOCIAL": "I want leadership, auditors, and engineering teams to see one credible source of truth instead of competing dashboards.",
+    "LOOP_TRIGGER_TITLE": "Intent or event", "LOOP_TRIGGER_DETAIL": "Issue, code push, vulnerability, failed pipeline, policy change, or agent assignment creates work.",
+    "LOOP_ACTION_TITLE": "Change through MR", "LOOP_ACTION_DETAIL": "Human or agent edits code/config, opens a merge request, and invokes reviewers, tests, scans, and policies.",
+    "LOOP_REWARD_TITLE": "Trusted green state", "LOOP_REWARD_DETAIL": "Pipeline passes, findings are resolved, approvals are recorded, and deployment evidence becomes visible in one chain.",
+    "LOOP_RETURN_TITLE": "Evidence improves next action", "LOOP_RETURN_DETAIL": "Operational, security, and value-stream signals feed planning and agent context; the next issue starts with more organizational memory.",
+    "LOOP_ONE_LINE_INSIGHT_WHAT_THE_LOOP_ACTUALLY_TEACHES_THE_USER": "Shipping is not a handoff between tools; it is one policy-aware state transition with evidence attached.",
+    "ACQUISITION_LOOP_DETAIL": "Open-source/free project → CI adoption → team standardization → Premium collaboration → Ultimate security/compliance → broader organizational rollout. Community contribution and alumni reuse reinforce the top of funnel.",
+    "AHA_MOMENT_DETAIL": "The first MR that automatically builds, tests, scans, requires the right approvals, and leaves an audit trail without stitching five integrations together.",
+    "RETENTION_1": "Repository and MR history become organizational memory.",
+    "RETENTION_2": "CI/CD runners, templates, policies, registries, and secrets embed deeply into operations.",
+    "RETENTION_3": "Security, compliance, and value-stream evidence increase switching cost at enterprise scale.",
+    "VIRALITY_DETAIL_OR_NONE": "External virality is weaker than GitHub's public social graph. Internal expansion is strong: every shared project, runner, policy template, and group standard pulls adjacent teams onto the platform.",
+    "SURFACE_1_NAME": "Projects & groups", "SURFACE_1_ROLE": "Namespace, permissions, repositories, and portfolio hierarchy — the organizational skeleton.",
+    "SURFACE_2_NAME": "Work items", "SURFACE_2_ROLE": "Issues, epics, tasks, roadmaps, and service requests encode intent before code exists.",
+    "SURFACE_3_NAME": "Merge requests", "SURFACE_3_ROLE": "Primary convergence surface for code, discussion, review, checks, findings, and approvals.",
+    "SURFACE_4_NAME": "Pipelines & runners", "SURFACE_4_ROLE": "Execution engine for build, test, scan, release, deployment, and agentic flows.",
+    "SURFACE_5_NAME": "Secure & Govern", "SURFACE_5_ROLE": "Vulnerabilities, policies, compliance frameworks, audit events, and software supply-chain evidence.",
+    "SURFACE_6_NAME": "Duo & analytics", "SURFACE_6_ROLE": "Agentic chat, flows, AI catalog, value streams, DORA, and cross-lifecycle interpretation.",
+    "ENTITY_1": "Project / repository", "ENTITY_2": "Work item", "ENTITY_3": "Merge request", "ENTITY_4": "Pipeline / job", "ENTITY_5": "Finding / deployment",
+    "IA_LOGIC_PARAGRAPH": "The data model is nested by namespace (instance → group → subgroup → project) and traversed by lifecycle stage (Plan → Code → Build → Secure → Deploy → Measure). This mirrors enterprise control boundaries, but users must understand both hierarchy and stage taxonomy.",
+    "NAV_INTERACTION_PARAGRAPH": "Context-sensitive left navigation, global Search-or-go-to command palette, keyboard shortcuts, and detail panels preserve local context. The interface is powerful but configuration-heavy; there is no single dominant verb comparable to GitHub's pull request or Linear's command palette.",
+    "CRAFT_PRINCIPLE": "GitLab craft is infrastructural rather than decorative: consistency of evidence, permissions, automation, and deployment matters more than visual minimalism.",
+    "CRAFT_1_NAME": "Merge request as evidence envelope", "CRAFT_1_DETAIL": "Discussion, diffs, approvals, pipelines, security findings, and deployment status converge around one change object. Competitors often distribute this context across tabs or add-ons.",
+    "CRAFT_2_NAME": "CI as versioned policy", "CRAFT_2_DETAIL": ".gitlab-ci.yml, reusable components, runners, and policies turn delivery logic into reviewable code. The workflow is portable, auditable, and close to the repository.",
+    "CRAFT_3_NAME": "One namespace permission model", "CRAFT_3_DETAIL": "Groups and projects propagate access, settings, policies, and AI controls. This is enterprise leverage, though inheritance becomes hard to reason about at depth.",
+    "CRAFT_4_NAME": "Deployment plurality by design", "CRAFT_4_DETAIL": "Multi-tenant SaaS, self-managed, Dedicated, government, air-gapped, and BYOM options treat deployment constraints as product primitives, not professional-services exceptions.",
+    "CRAFT_5_NAME": "Open development as trust signal", "CRAFT_5_DETAIL": "Public issues, handbook, release cadence, and open-core code make roadmaps and tradeoffs unusually inspectable. GitHub cannot easily copy this cultural transparency.",
+    "TTV_BAR": "68", "TTV_LABEL": "Moderate", "COG_BAR": "78", "COG_LABEL": "High", "DELIGHT_BAR": "60", "DELIGHT_LABEL": "Medium", "TRUST_BAR": "88", "TRUST_LABEL": "Very high", "STRUGGLE_BAR": "72", "STRUGGLE_LABEL": "High",
+    "DELIGHT_1": "One MR shows diff, pipeline, security, approval, and deployment state.",
+    "DELIGHT_2": "Fork/import plus a small CI file can replace a surprising amount of toolchain glue.",
+    "DELIGHT_3": "Self-managed and air-gapped teams retain control without abandoning modern workflows.",
+    "STRUGGLE_1": "Navigation and settings scale with platform breadth; first-time users face a wall of nouns and tiers.",
+    "STRUGGLE_2": "Pipeline debugging still demands YAML, logs, runner knowledge, and cross-surface backtracking.",
+    "STRUGGLE_3": "Feature maturity and polish vary by stage; the suite sometimes feels like adjacent products sharing a shell.",
+    "REVENUE_MODEL_NAME": "Seat subscription + usage credits", "REVENUE_MODEL_DETAIL": "Free → Premium at $29/user/month billed annually → Ultimate custom pricing; GitLab Credits meter Duo Agent Platform at $1/credit on demand, with promotional included credits.",
+    "FREE_PAID_BOUNDARY_NAME": "From collaboration to enterprise assurance", "FREE_PAID_DETAIL": "Free proves repository and basic CI value. Premium monetizes team scale and advanced delivery. Ultimate monetizes application security, supply-chain security, governance, portfolio, and value-stream control.",
+    "MON_ENTRY_HEADLINE": "Consolidation pays for the upgrade", "MON_ENTRY_DETAIL": "The economic trigger is not storage; it is replacing tool licenses, integration maintenance, audit labor, and delivery delay. Duo adds variable spend when agents perform work.",
+    "UX_MON_HEADLINE": "Strategically aligned, cognitively messy", "UX_MON_DETAIL_ARE_THEY_ALIGNED_OR_IN_TENSION": "Enterprise risk and scale are valid paid boundaries, but tier matrices, add-ons, compute, storage, seats, and credits make total cost hard to predict. GitLab Flex is an attempt to reduce procurement friction rather than product complexity.",
+    "COMP_INTRO": "GitHub is the distribution and AI-interaction leader; Azure DevOps is the Microsoft-enterprise bundle; Bitbucket wins price and Atlassian adjacency; the composable Jira/Jenkins/Snyk stack preserves best-of-breed choice.",
+    "COMP_1_NAME": "GitHub", "COMP_2_NAME": "Azure DevOps", "COMP_3_NAME": "Bitbucket", "COMP_4_NAME": "Jira + Jenkins + Snyk",
+    "COMP_DIM_1": "Product philosophy", "COMP_DIM_2": "Speed & craft", "COMP_DIM_3": "Non-core audience fit", "COMP_DIM_4": "AI depth (2026)",
+    "COMP_OWN_D1": "One governed lifecycle and data graph", "COMP_1_D1": "Developer network first; extensible marketplace", "COMP_2_D1": "Enterprise delivery inside Microsoft estate", "COMP_3_D1": "Lightweight SCM inside Atlassian suite", "COMP_4_D1": "Best-of-breed composability and local optimization",
+    "COMP_OWN_D2": "Broad, consistent evidence; uneven interaction polish", "COMP_1_D2": "Best developer familiarity and social UX", "COMP_2_D2": "Powerful but legacy-feeling and fragmented", "COMP_3_D2": "Simple, lower ceiling, fewer surfaces", "COMP_4_D2": "Each tool may excel; seams and handoffs remain",
+    "COMP_OWN_D3": "Strong for security, platform, audit, and executives", "COMP_1_D3": "Strong developers; improving security and enterprise control", "COMP_2_D3": "Strong PM/QA/IT in Microsoft organizations", "COMP_3_D3": "Strong Jira teams; limited strategic analytics", "COMP_4_D3": "Role-specific tools fit each buyer, not one shared model",
+    "COMP_OWN_D4": "Autonomous flows across SDLC with governed context", "COMP_1_D4": "Leading coding-agent distribution, cloud agent, review, ecosystem", "COMP_2_D4": "Copilot/Autofix attached to Azure workflows", "COMP_3_D4": "Atlassian AI and automation, narrower code context", "COMP_4_D4": "Powerful point agents; no native cross-tool control plane",
+    "COMP_WHERE_OWN_WINS": "End-to-end context, self-managed/air-gapped deployment, integrated security and compliance, and one audit trail. GitLab can govern both humans and external agents without making code hosting the only center.",
+    "COMP_WHERE_RIVALS_CATCH": "GitHub is ahead in developer reach, agent marketplace, and daily interaction quality. Azure DevOps defends through procurement and Microsoft identity. Best-of-breed stacks can out-innovate individual GitLab stages.",
+    "CHANNEL_1": "Open source, free tier, and developer discovery", "CHANNEL_2": "Enterprise consolidation and security/compliance sales", "CHANNEL_3": "Cloud partners, systems integrators, migrations, and community programs",
+    "GROWTH_LOOP_1_NAME": "Repository → platform expansion", "GROWTH_LOOP_1_DETAIL": "Code lands → CI becomes standard → security/policies attach → adjacent teams inherit templates → enterprise upgrades to reduce fragmentation.",
+    "GROWTH_LOOP_2_NAME": "Evidence compounding loop", "GROWTH_LOOP_2_DETAIL": "More lifecycle events create richer context → analytics and agents improve → platform becomes harder to replace → more workflows consolidate.",
+    "HORIZONTAL_1": "Enterprise planning and service management", "HORIZONTAL_2": "Agent catalog and third-party agent orchestration", "VERTICAL_1": "Security remediation from finding to verified fix", "VERTICAL_2": "Delivery analytics from code authoring to production outcome", "PLATFORM_1": "REST/GraphQL APIs, webhooks, integrations, MCP and external agents", "PLATFORM_2": "Orbit lifecycle context graph plus next-generation agent-scale SCM",
+    "ACTIVE_IF_ASSISTIVE": "", "ACTIVE_IF_EMBEDDED": "", "ACTIVE_IF_AUTONOMOUS": "active",
+    "CURRENT_AI_USAGE_PARAGRAPH": "Level ~2.5: autonomous within bounded workflows. Agentic Chat can act on GitLab objects; foundational and custom flows implement issues, review MRs, fix pipelines, and run from events; Duo CLI extends context to the terminal. Humans still approve sensitive handoffs, so this is governed autonomy rather than a lights-out factory.",
+    "AGENTIC_CANDIDATE_1": "Policy-aware dependency upgrades across hundreds of repositories.", "AGENTIC_CANDIDATE_2": "Continuous vulnerability triage, patch generation, validation, and rollout.", "AGENTIC_CANDIDATE_3": "Incident-to-fix loops grounded in pipeline, deployment, and observability context.",
+    "AI_OPPORTUNITY_1": "Outcome-based flow templates that report verified time saved and risk reduced.", "AI_OPPORTUNITY_2": "Orbit-backed cross-repository organizational memory available to any approved agent.",
+    "AI_DISRUPTION_RISK": "Medium-high. AI increases GitLab's value as context and governance, but it also makes code-host switching easier and shifts attention to IDE/terminal agents. If GitLab remains a background ledger while GitHub/Cursor own intent, it risks commoditization despite deep workflow lock-in.",
+    "METRICS_INTRO": "GitLab discloses revenue and customer metrics, not product OKRs. The following stack is [inferred] from the product's unit of value: a trusted production change completed through the platform.",
+    "NORTH_STAR_METRIC": "Weekly trusted delivery loops completed per active organization", "NORTH_STAR_WHY": "Counts value, not activity: a change that passes the organization's tests, policies, security gates, approvals, and deployment path. It aligns developers, security, and business outcomes.",
+    "INPUT_METRIC_1_NAME": "MR cycle time to verified merge", "INPUT_METRIC_1_WHY": "Captures planning, review, CI, and policy friction around the central change object.",
+    "INPUT_METRIC_2_NAME": "First-pass pipeline success rate", "INPUT_METRIC_2_WHY": "A direct signal of delivery quality, template health, runner reliability, and developer feedback speed.",
+    "INPUT_METRIC_3_NAME": "Agent flow completion with accepted output", "INPUT_METRIC_3_WHY": "Separates impressive demos from autonomous work teams trust enough to merge and deploy.",
+    "GUARDRAIL_METRIC": "Escaped policy/security violations per production change", "GUARDRAIL_WHY": "GitLab cannot trade governance for speed; one autonomous incident can destroy the control-plane thesis.",
+    "METRIC_BLINDSPOT": "Daily developer friction across the long tail", "METRIC_BLINDSPOT_WHY": "Enterprise expansion can mask small interaction taxes. Those taxes push developers toward GitHub, local agents, and shadow workflows even when the company renews.",
+    "FRICTION_1_TITLE": "The platform map is harder than the job", "FRICTION_1_BODY_WHY_IT_MATTERS": "Users must navigate groups, projects, stages, tiers, settings, policies, and inheritance before completing simple work. Breadth becomes cognitive rent, especially for occasional users and new teams.",
+    "FRICTION_2_TITLE": "Suite quality is uneven", "FRICTION_2_BODY": "SCM and CI/CD are core; planning, analytics, security, and emerging AI surfaces do not always share the same depth or polish. Buyers purchase one platform but users still experience maturity by stage.",
+    "FRICTION_3_TITLE": "Pricing moved from simple seats to a formula", "FRICTION_3_BODY": "Seats, tiers, compute, storage, Dedicated, credits, and Flex improve monetization coverage but reduce predictability. AI value is difficult to trust when users cannot connect credit burn to shipped outcomes.",
+    "FRICTION_4_TITLE": "Developer gravity still belongs to GitHub", "FRICTION_4_BODY": "Public collaboration, ecosystem mindshare, Actions marketplace, and Copilot distribution create a default choice GitLab cannot beat with feature breadth alone. GitLab wins deliberate enterprise decisions, not reflexive developer selection.",
+    "RISK_INTRO": "Four risks can break the move from DevSecOps suite to agentic control plane. Each requires a product mitigation, not only positioning.",
+    "RISK_1_NAME": "GitHub captures agent intent and ecosystem", "RISK_1_CAT": "Competitive", "RISK_1_SEV": "High", "RISK_1_SEV_CLASS": "high", "RISK_1_LIK": "High · already happening", "RISK_1_MIT": "Make GitLab the best governed backend for any agent and any code host; ship outcome APIs, cross-host policies, and first-class Codex/Claude/Cursor flows.",
+    "RISK_2_NAME": "Platform breadth degrades user velocity", "RISK_2_CAT": "Product / growth", "RISK_2_SEV": "High", "RISK_2_SEV_CLASS": "high", "RISK_2_LIK": "High · 12 months", "RISK_2_MIT": "Introduce role- and outcome-based workspaces, simplify defaults, and measure time-to-success for the top ten workflows across new and expert users.",
+    "RISK_3_NAME": "Agent cost and trust fail to scale", "RISK_3_CAT": "Market / technical", "RISK_3_SEV": "High", "RISK_3_SEV_CLASS": "high", "RISK_3_LIK": "Medium · 12–24 months", "RISK_3_MIT": "Show per-flow cost, acceptance, rework, risk avoided, and rollback; add budget-aware model routing and deterministic guardrails.",
+    "RISK_4_NAME": "Agent-scale SCM remains roadmap, not moat", "RISK_4_CAT": "Technical", "RISK_4_SEV": "Medium", "RISK_4_SEV_CLASS": "med", "RISK_4_LIK": "Medium · 18 months", "RISK_4_MIT": "Move next-gen SCM and Orbit from beta to measurable production SLOs, with workload benchmarks and compatibility guarantees.",
+    "OPP_1_HEADLINE": "Outcome cockpit for every agent flow", "OPP_1_DETAIL_WHAT_HOW_WHY": "Replace credit counters with a ledger showing task, cost, human interventions, tests passed, risks found, rollback status, and time saved. Buyers need auditable ROI before they will let agents run continuously.",
+    "OPP_2_HEADLINE": "Progressive workspace modes", "OPP_2_DETAIL": "Offer Developer, Reviewer, Security, Platform, and Executive modes over the same data model. Hide irrelevant stages without forking the product; make breadth an adaptive advantage rather than permanent navigation debt.",
+    "OPP_3_HEADLINE": "Orbit as organizational memory API", "OPP_3_DETAIL": "Expose permissions-aware lifecycle context to approved internal and third-party agents across repositories, incidents, deployments, and policies. Charge for high-value context queries and keep model choice open.",
+    "STRATEGIC_HEADLINE": "Become the neutral governance plane for all software agents", "STRATEGIC_DETAIL_HIGH_IMPACT_BET": "Do not require GitLab to own every editor, model, or even repository. Own identity, policy, context, evidence, and approval around agent actions across the toolchain. That turns GitHub's agent proliferation into GitLab demand.",
+    "MOONSHOT_HEADLINE": "Verifiable autonomous software factory", "MOONSHOT_DETAIL_WHY_IT_COULD_RESHAPE_THE_CATEGORY": "A business outcome enters as an approved intent; agents plan, implement, test, secure, deploy, observe, and repair under explicit policy. Humans govern objectives and exceptions. GitLab provides the proof chain that makes autonomy acceptable to enterprises.",
+    "FINAL_WINS": "Unified lifecycle context, integrated execution, deployment flexibility, security/compliance depth, and transparent open-core development. GitLab is strongest where software delivery must be proven, not merely completed.",
+    "FINAL_BREAKS": "The suite asks users to carry its complexity. Interaction quality and developer distribution lag GitHub; pricing and AI credits obscure value; emerging agent infrastructure is not yet fully mature.",
+    "FINAL_MOAT_OR_LACK_THEREOF": "Durable if GitLab owns the evidence and governance layer for every human and agent action. Vulnerable if it insists on winning the front-end coding assistant battle or treats breadth as a substitute for workflow clarity.",
+    "SHOT_1_CAPTION": "Issue context becomes the specification handed to an external agent.",
+    "SHOT_2_CAPTION": "Agent prompt and organizational context converge inside GitLab.",
+    "SHOT_3_CAPTION": "External agent implementation returns as a reviewable change.",
+    "SHOT_4_CAPTION": "Generated application demonstrates issue-to-MR execution.",
+    "SHOT_5_CAPTION": "Agent creates pipeline and container configuration in the same loop.",
+    "SHOT_6_CAPTION": "Successful pipeline closes the evidence chain from intent to delivery.",
+}
+
+# Chinese is written as a product judgment, not a literal line-by-line translation.
+ZH = {**EN,
+    "ONE_LINER_2_LINE_SUBTITLE": "把软件意图变成可治理生产变更的系统账本——正从一体化 DevSecOps 套件，升级为人类与 AI 代理共同交付软件的控制平面。",
+    "TIMESTAMP": f"{DATE} · 首席产品经理拆解", "CATEGORY": "智能 DevSecOps 编排平台",
+    "USER_SCALE": "5000 万+ 注册用户 · 10 万家组织 · 10,682 家 ARR 超 5000 美元客户",
+    "BUSINESS_MODEL_SHORT": "按席位订阅 + AI 使用量积分", "STAGE_MATURITY": "上市规模化阶段 · ARR 超 10 亿美元 · FY26 收入增长 26%",
+    "ASSUMPTIONS_ONE_PARAGRAPH_LIST_WHAT_IS_INFERRED_VS_KNOWN": "已知：FY2026 收入 9.552 亿美元、ARR 超 10 亿美元、净收入留存率 118%、Premium 为 29 美元/人/月、Duo Agent Platform 已正式可用。[推断] 体验评分、指标栈、护城河分数和战略建议是本报告判断。来源：<a href='https://ir.gitlab.com/news/news-details/2026/GitLab-Reports-Fourth-Quarter-and-Full-Year-Fiscal-Year-2026-Financial-Results-Board-of-Directors-Authorizes-400-million-for-Share-Repurchase-Program/default.aspx'>FY26 财报</a>、<a href='https://about.gitlab.com/pricing/'>定价</a>、<a href='https://about.gitlab.com/platform/'>平台页</a>与 <a href='https://about.gitlab.com/press/releases/2026-01-15-gitlab-announces-duo-agent-platform-general-availability/'>Duo GA 公告</a>。",
+    "VERDICT_ONE_LINER": "GitLab 掌握从想法到生产的证据链；下一场仗，是让产品宽度成为杠杆，而不是负担。",
+    "VERDICT_BODY_2_3_LINES": "GitLab 最耐久的优势，是一套权限和一张生命周期图同时覆盖规划、代码、流水线、安全、合规与部署。Duo 能调用点工具看不到的上下文。但 GitHub 掌握开发者分发并在交互层更快；如果 GitLab 不压缩复杂度，功能宽度会变成团队绕开它的原因。",
+    "TLDR_1_HEADLINE": "生命周期图谱才是护城河", "TLDR_1_BODY": "Issue → MR → 流水线 → 安全发现 → 审批 → 部署是一条可审计链。共享上下文既减少集成熵，也给 AI 代理提供可信证据。",
+    "TLDR_2_HEADLINE": "宽度收取体验税", "TLDR_2_BODY": "GitLab 能替换很多工具，但导航、设置、版本边界和管理后台都暴露了代价。产品常常像按阶段拼起来，而不是围绕交付结果组合起来。",
+    "TLDR_3_HEADLINE": "AI 改变价值单位", "TLDR_3_BODY": "Duo Agent Platform、自定义流程、CLI 和外部代理让 GitLab 超出席位软件。未来可收费的单位是一次受治理的交付结果，而不是一个 AI 聊天席位。",
+    "TTV_NOTE_WHAT_HAPPENS_AT_AHA": "导入仓库、提交 .gitlab-ci.yml，第一次看到一个 MR 自动生成测试结果与完整证据链。自托管企业部署则慢得多。",
+    "LOOP_FREQ_NOTE_TRIGGER_CONTEXT": "每次推送、评审、流水线、安全发现、审批与部署都会重新进入循环；平台团队和代理会持续触发。",
+    "MOAT_REASONING_ONE_LINE": "统一上下文、部署选择、治理和切换成本很强；开发者注意力仍结构性弱于 GitHub。",
+    "SNAPSHOT_ONE_TO_TWO_SENTENCE_DEFINITION": "GitLab 不只是 Git 托管。它是一套共享账本与执行系统，把软件意图变成经过审批、测试、安全检查并完成部署的变更。",
+    "USER_PROMISE": "用一个平台和一条证据链完成规划、开发、安全、治理与交付——无论工作由人还是 AI 代理完成。",
+    "CATEGORY_POSITIONING_PARAGRAPH": "GitLab 位于源码管理之上、企业软件交付战略之下。它用统一数据仓替代分散的 SCM、CI、规划、安全、合规和分析工具；2026 年的“智能编排”是在 DevSecOps 地基上增加代理控制层。",
+    "ASSUMPTION_1": "主要经济买家是企业平台或安全负责人；开发者是日常用户，也是采用否决者。", "ASSUMPTION_2": "最强切口是受监管或复杂交付场景：审计和部署控制比公共社交影响力更重要。",
+    "SEGMENT_1_NAME": "企业平台工程", "SEGMENT_1_DETAIL": "在数百到数千名工程师之间统一仓库、CI/CD、Runner、策略与开发流程。",
+    "SEGMENT_2_NAME": "安全与合规团队", "SEGMENT_2_DETAIL": "把安全控制放进流水线和合并门禁，保留漏洞、SBOM、审批和审计证据。",
+    "SEGMENT_3_NAME": "开发者与开源团队", "SEGMENT_3_DETAIL": "托管代码、通过 MR 协作、自动测试，不再自己拼装整套工具链。",
+    "TRIGGER_MOMENT": "工具链整合、从旧 SCM/Jenkins 迁移、新合规要求，或 AI 代理采用暴露出生命周期上下文碎片化。",
+    "FREQUENCY": "开发者每天多次；平台和安全团队持续监控事件，每周复盘策略与价值流。", "USAGE_CONTEXT": "GitLab 横跨浏览器、IDE、终端、API、Runner 和部署基础设施；既是界面，也是每次软件事件背后的执行系统。",
+    "JTBD_FUNCTIONAL": "当软件发生变更时，我需要一条从 Issue 到生产的受治理路径，让交付快速、可重复、安全且可证明。",
+    "JTBD_EMOTIONAL": "我需要确信，速度不会制造看不见的运营或监管债务。", "JTBD_SOCIAL": "我希望领导、审计和工程团队看到同一可信事实源，而不是互相冲突的仪表盘。",
+    "LOOP_TRIGGER_TITLE": "意图或事件", "LOOP_TRIGGER_DETAIL": "Issue、代码推送、漏洞、失败流水线、策略变化或代理任务产生工作。",
+    "LOOP_ACTION_TITLE": "通过 MR 变更", "LOOP_ACTION_DETAIL": "人或代理修改代码/配置，打开 MR，触发评审、测试、扫描和策略。",
+    "LOOP_REWARD_TITLE": "可信的绿色状态", "LOOP_REWARD_DETAIL": "流水线通过、风险被处理、审批被记录，部署证据落在同一条链上。",
+    "LOOP_RETURN_TITLE": "证据改善下一步", "LOOP_RETURN_DETAIL": "运营、安全和价值流信号回到规划与代理上下文；下一条 Issue 带着更多组织记忆开始。",
+    "LOOP_ONE_LINE_INSIGHT_WHAT_THE_LOOP_ACTUALLY_TEACHES_THE_USER": "交付不是工具间的接力，而是一次附带证据的策略感知状态转换。",
+    "ACQUISITION_LOOP_DETAIL": "开源/免费项目 → 采用 CI → 团队标准化 → Premium 协作 → Ultimate 安全与合规 → 组织扩张。社区贡献和员工流动持续补充顶层漏斗。",
+    "AHA_MOMENT_DETAIL": "第一个 MR 自动完成构建、测试、扫描与审批，并留下审计记录，不再维护五套集成。",
+    "RETENTION_1": "仓库和 MR 历史成为组织记忆。", "RETENTION_2": "CI/CD Runner、模板、策略、制品库和密钥深度嵌入运营。", "RETENTION_3": "安全、合规和价值流证据把企业切换成本推高。",
+    "VIRALITY_DETAIL_OR_NONE": "外部传播弱于 GitHub 的公共社交图谱，内部扩张却很强：共享项目、Runner、策略模板和集团标准会把相邻团队拉进平台。",
+    "SURFACE_1_NAME": "项目与群组", "SURFACE_1_ROLE": "命名空间、权限、仓库与组合层级——组织骨架。", "SURFACE_2_NAME": "工作项", "SURFACE_2_ROLE": "Issue、Epic、任务、路线图和服务请求在代码出现前记录意图。",
+    "SURFACE_3_NAME": "合并请求", "SURFACE_3_ROLE": "代码、讨论、评审、检查、安全发现和审批的主汇合面。", "SURFACE_4_NAME": "流水线与 Runner", "SURFACE_4_ROLE": "构建、测试、扫描、发布、部署和代理流程的执行引擎。",
+    "SURFACE_5_NAME": "安全与治理", "SURFACE_5_ROLE": "漏洞、策略、合规框架、审计事件与供应链证据。", "SURFACE_6_NAME": "Duo 与分析", "SURFACE_6_ROLE": "代理聊天、流程、AI 目录、价值流、DORA 与跨生命周期解释层。",
+    "ENTITY_1": "项目 / 仓库", "ENTITY_2": "工作项", "ENTITY_3": "合并请求", "ENTITY_4": "流水线 / Job", "ENTITY_5": "安全发现 / 部署",
+    "IA_LOGIC_PARAGRAPH": "数据模型按命名空间嵌套（实例 → 群组 → 子群组 → 项目），再按生命周期阶段横向穿行（规划 → 代码 → 构建 → 安全 → 部署 → 度量）。这符合企业控制边界，却要求用户同时理解层级和阶段。",
+    "NAV_INTERACTION_PARAGRAPH": "上下文左导航、全局 Search-or-go-to 命令面板、快捷键和详情侧板保留局部上下文。能力很强，但设置密度高；缺少一个像 GitHub PR 或 Linear 命令面板那样压倒性的核心动词。",
+    "CRAFT_PRINCIPLE": "GitLab 的工艺更偏基础设施：证据、权限、自动化和部署的一致性，比视觉极简更重要。",
+    "CRAFT_1_NAME": "MR 是证据封套", "CRAFT_1_DETAIL": "讨论、Diff、审批、流水线、安全发现和部署状态围绕同一变更对象汇合。多数对手把它们拆散在标签页或插件里。",
+    "CRAFT_2_NAME": "CI 即版本化策略", "CRAFT_2_DETAIL": ".gitlab-ci.yml、可复用组件、Runner 和策略让交付逻辑变成可评审代码，既可移植又可审计。",
+    "CRAFT_3_NAME": "统一命名空间权限模型", "CRAFT_3_DETAIL": "群组和项目向下继承访问、设置、策略与 AI 控制。它是企业杠杆，但层级深入后很难推理。",
+    "CRAFT_4_NAME": "部署形态是一等公民", "CRAFT_4_DETAIL": "多租户 SaaS、自托管、Dedicated、政府、隔离网络与 BYOM 都是产品能力，不是咨询例外。",
+    "CRAFT_5_NAME": "开放开发本身就是信任信号", "CRAFT_5_DETAIL": "公开 Issue、Handbook、发布节奏与开放核心，让路线图和取舍异常透明；GitHub 很难复制这层文化。",
+    "TTV_LABEL": "中等", "COG_LABEL": "高", "DELIGHT_LABEL": "中等", "TRUST_LABEL": "很高", "STRUGGLE_LABEL": "高",
+    "DELIGHT_1": "一个 MR 同时展示 Diff、流水线、安全、审批与部署状态。", "DELIGHT_2": "导入仓库加一份短 CI 文件，就能替代大量工具链胶水。", "DELIGHT_3": "自托管和隔离网络团队能保留控制权，同时使用现代流程。",
+    "STRUGGLE_1": "导航与设置随平台宽度增长；新人一上来就面对大量名词与版本差异。", "STRUGGLE_2": "排查流水线仍要求懂 YAML、日志、Runner，并在多个界面回溯。", "STRUGGLE_3": "各阶段的成熟度和精致度不一；套件有时像共享外壳的相邻产品。",
+    "REVENUE_MODEL_NAME": "席位订阅 + 使用量积分", "REVENUE_MODEL_DETAIL": "Free → Premium（29 美元/人/月，年付）→ Ultimate 自定义定价；Duo Agent Platform 以 GitLab Credits 计量，按需标准价 1 美元/积分，并有促销赠送积分。",
+    "FREE_PAID_BOUNDARY_NAME": "从协作升级到企业级保证", "FREE_PAID_DETAIL": "Free 验证仓库与基础 CI；Premium 收费于团队规模和高级交付；Ultimate 收费于应用安全、供应链、治理、组合管理和价值流控制。",
+    "MON_ENTRY_HEADLINE": "整合收益支付升级", "MON_ENTRY_DETAIL": "付费触发器不是存储，而是替代工具许可证、集成维护、审计人力与交付延迟。Duo 在代理真正工作时增加变量收入。",
+    "UX_MON_HEADLINE": "战略对齐，认知混乱", "UX_MON_DETAIL_ARE_THEY_ALIGNED_OR_IN_TENSION": "企业风险与规模是合理付费边界，但版本、附加项、算力、存储、席位和积分让总成本难预测。GitLab Flex 主要缓解采购摩擦，而不是产品复杂度。",
+    "COMP_INTRO": "GitHub 掌握开发者分发与 AI 交互；Azure DevOps 依赖微软企业捆绑；Bitbucket 靠价格与 Atlassian 邻接；Jira/Jenkins/Snyk 组合保留最佳工具自由。",
+    "COMP_DIM_1": "产品哲学", "COMP_DIM_2": "速度与工艺", "COMP_DIM_3": "非核心角色适配", "COMP_DIM_4": "AI 深度（2026）",
+    "COMP_OWN_D1": "一个受治理的生命周期与数据图", "COMP_1_D1": "开发者网络优先，市场可扩展", "COMP_2_D1": "微软体系内的企业交付", "COMP_3_D1": "Atlassian 套件中的轻量 SCM", "COMP_4_D1": "最佳工具组合与局部最优",
+    "COMP_OWN_D2": "证据一致且覆盖广，交互精致度不均", "COMP_1_D2": "开发者最熟悉，社交体验最好", "COMP_2_D2": "能力强，但老旧且分散", "COMP_3_D2": "简单、上限较低、界面更少", "COMP_4_D2": "单工具可能更强，接缝和交接仍在",
+    "COMP_OWN_D3": "安全、平台、审计和高管角色强", "COMP_1_D3": "开发者强，企业治理持续补齐", "COMP_2_D3": "微软组织里的 PM、QA、IT 强", "COMP_3_D3": "Jira 团队强，战略分析较弱", "COMP_4_D3": "每个角色得到专用工具，却没有共享模型",
+    "COMP_OWN_D4": "在受治理上下文中跨 SDLC 自主执行", "COMP_1_D4": "编程代理分发、云代理、评审和生态领先", "COMP_2_D4": "Copilot/Autofix 附着在 Azure 流程", "COMP_3_D4": "Atlassian AI 与自动化，代码上下文较窄", "COMP_4_D4": "点状代理很强，没有原生跨工具控制平面",
+    "COMP_WHERE_OWN_WINS": "端到端上下文、自托管与隔离部署、集成安全合规和一条审计链。GitLab 能同时治理人和外部代理。", "COMP_WHERE_RIVALS_CATCH": "GitHub 在开发者触达、代理市场和日常交互上领先；Azure DevOps 靠采购与身份体系防守；最佳工具组合能在单个阶段跑得更快。",
+    "CHANNEL_1": "开源、免费版与开发者发现", "CHANNEL_2": "企业整合与安全合规销售", "CHANNEL_3": "云伙伴、系统集成商、迁移与社区计划",
+    "GROWTH_LOOP_1_NAME": "仓库 → 平台扩张", "GROWTH_LOOP_1_DETAIL": "代码进入 → CI 标准化 → 安全/策略附着 → 相邻团队继承模板 → 企业为减少碎片化升级。",
+    "GROWTH_LOOP_2_NAME": "证据复利循环", "GROWTH_LOOP_2_DETAIL": "更多生命周期事件产生更丰富上下文 → 分析与代理改善 → 平台更难替换 → 更多流程整合。",
+    "HORIZONTAL_1": "企业规划与服务管理", "HORIZONTAL_2": "代理目录与第三方代理编排", "VERTICAL_1": "从漏洞发现到验证修复的安全闭环", "VERTICAL_2": "从代码编写到生产结果的交付分析", "PLATFORM_1": "REST/GraphQL、Webhook、集成、MCP 与外部代理", "PLATFORM_2": "Orbit 生命周期图谱与面向代理并发的新 SCM",
+    "CURRENT_AI_USAGE_PARAGRAPH": "约 2.5 级：在边界明确的流程内自主执行。Agentic Chat 可操作 GitLab 对象；基础和自定义流程能实现 Issue、评审 MR、修流水线并由事件触发；Duo CLI 把上下文带到终端。敏感交接仍由人批准，因此是“受治理自主”，不是无人软件工厂。",
+    "AGENTIC_CANDIDATE_1": "跨数百仓库进行策略感知的依赖升级。", "AGENTIC_CANDIDATE_2": "持续漏洞分诊、生成补丁、验证与分批上线。", "AGENTIC_CANDIDATE_3": "基于流水线、部署与可观测上下文的事故到修复闭环。",
+    "AI_OPPORTUNITY_1": "以交付结果为单位的流程模板，展示真实节省时间和降低风险。", "AI_OPPORTUNITY_2": "基于 Orbit 的跨仓库组织记忆，供任何获批代理调用。",
+    "AI_DISRUPTION_RISK": "中高。AI 提高 GitLab 作为上下文和治理层的价值，也让代码托管迁移更容易，并把注意力移到 IDE/终端代理。如果 GitLab 只做后台账本、由 GitHub/Cursor 掌握意图入口，深度锁定也可能被商品化。",
+    "METRICS_INTRO": "GitLab 披露财务与客户指标，不公开产品 OKR。以下指标栈是[推断]：产品最小价值单位应是一条通过平台完成的可信生产变更。",
+    "NORTH_STAR_METRIC": "每个活跃组织每周完成的可信交付闭环数", "NORTH_STAR_WHY": "它计算价值而非活动：变更通过组织的测试、策略、安全门禁、审批和部署，统一开发、安全与业务结果。",
+    "INPUT_METRIC_1_NAME": "MR 到可信合并的周期", "INPUT_METRIC_1_WHY": "覆盖围绕核心变更对象的规划、评审、CI 与策略摩擦。", "INPUT_METRIC_2_NAME": "流水线首次通过率", "INPUT_METRIC_2_WHY": "直接反映交付质量、模板健康、Runner 可靠性和反馈速度。", "INPUT_METRIC_3_NAME": "代理流程完成且结果被接受率", "INPUT_METRIC_3_WHY": "把漂亮演示与团队真正敢合并、敢部署的自主工作分开。",
+    "GUARDRAIL_METRIC": "每次生产变更逃逸的策略/安全违规数", "GUARDRAIL_WHY": "GitLab 不能用治理换速度；一次自主代理事故就能摧毁控制平面叙事。", "METRIC_BLINDSPOT": "长尾日常开发摩擦", "METRIC_BLINDSPOT_WHY": "企业扩张会遮住微小交互税；公司续费时，开发者仍可能流向 GitHub、本地代理和影子流程。",
+    "FRICTION_1_TITLE": "平台地图比工作本身更难", "FRICTION_1_BODY_WHY_IT_MATTERS": "用户先要理解群组、项目、阶段、版本、设置、策略和继承，才能完成简单工作。对偶尔使用者和新团队，宽度变成认知租金。",
+    "FRICTION_2_TITLE": "套件质量不均", "FRICTION_2_BODY": "SCM 与 CI/CD 是核心；规划、分析、安全与新 AI 界面并不总有同等深度和精致度。买家买的是一个平台，用户体验的仍是不同成熟阶段。",
+    "FRICTION_3_TITLE": "定价从席位变成公式", "FRICTION_3_BODY": "席位、版本、算力、存储、Dedicated、积分与 Flex 提高收入覆盖，却降低可预测性。用户无法把积分消耗对应到交付结果时，就不会信任 AI 价值。",
+    "FRICTION_4_TITLE": "开发者引力仍属于 GitHub", "FRICTION_4_BODY": "公共协作、生态心智、Actions 市场和 Copilot 分发构成默认选择。GitLab 赢的是深思熟虑的企业决策，不是开发者的本能选择。",
+    "RISK_INTRO": "四类风险可能打断从 DevSecOps 套件到代理控制平面的转型；每一类都需要产品缓解，而不只是重新定位。",
+    "RISK_1_NAME": "GitHub 抢走代理意图与生态", "RISK_1_CAT": "竞争", "RISK_1_LIK": "高 · 已发生", "RISK_1_MIT": "成为任何代理和代码主机最好的治理后端；提供结果 API、跨主机策略和一等 Codex/Claude/Cursor 流程。",
+    "RISK_2_NAME": "平台宽度拖慢用户", "RISK_2_CAT": "产品 / 增长", "RISK_2_LIK": "高 · 12 个月", "RISK_2_MIT": "推出按角色和结果组织的工作区，简化默认值，衡量十大流程的新手与专家成功时间。",
+    "RISK_3_NAME": "代理成本与信任无法规模化", "RISK_3_CAT": "市场 / 技术", "RISK_3_LIK": "中 · 12–24 个月", "RISK_3_MIT": "逐流程展示成本、接受、返工、降低风险和回滚；增加预算感知模型路由与确定性门禁。",
+    "RISK_4_NAME": "代理级 SCM 仍停留在路线图", "RISK_4_CAT": "技术", "RISK_4_SEV": "中", "RISK_4_LIK": "中 · 18 个月", "RISK_4_MIT": "把新 SCM 与 Orbit 从测试版推到可衡量的生产 SLO，并发布负载基准和兼容保证。",
+    "OPP_1_HEADLINE": "每条代理流程的结果驾驶舱", "OPP_1_DETAIL_WHAT_HOW_WHY": "用一份账本替代积分计数器：任务、成本、人工介入、测试、发现风险、回滚状态和节省时间。企业先看到可审计 ROI，才会允许代理持续运行。",
+    "OPP_2_HEADLINE": "渐进式角色工作区", "OPP_2_DETAIL": "在同一数据模型上提供开发者、评审、安全、平台和高管模式。隐藏无关阶段但不分叉产品，让宽度变成自适应优势。",
+    "OPP_3_HEADLINE": "把 Orbit 做成组织记忆 API", "OPP_3_DETAIL": "向获批内部和第三方代理开放权限感知的跨仓库、事故、部署与策略上下文；按高价值查询收费，保持模型开放。",
+    "STRATEGIC_HEADLINE": "成为所有软件代理的中立治理平面", "STRATEGIC_DETAIL_HIGH_IMPACT_BET": "不要求 GitLab 拥有每个编辑器、模型，甚至每个仓库；拥有代理动作的身份、策略、上下文、证据和审批。这样 GitHub 的代理繁荣反而会制造 GitLab 需求。",
+    "MOONSHOT_HEADLINE": "可验证的自主软件工厂", "MOONSHOT_DETAIL_WHY_IT_COULD_RESHAPE_THE_CATEGORY": "业务结果作为获批意图进入；代理在明确策略下规划、实现、测试、安全检查、部署、观察和修复。人治理目标与例外，GitLab 提供让企业敢于接受自主性的证明链。",
+    "FINAL_WINS": "统一生命周期上下文、集成执行、多种部署、安全合规深度与开放核心透明度。GitLab 在“交付必须被证明”时最强。",
+    "FINAL_BREAKS": "套件让用户承担复杂度；交互与开发者分发落后 GitHub；定价与积分模糊价值；新代理基础设施还未完全成熟。",
+    "FINAL_MOAT_OR_LACK_THEREOF": "如果 GitLab 拿下所有人类与代理动作的证据和治理层，护城河耐久；如果坚持赢前端编码助手，或把功能宽度当成流程清晰度替代品，就会脆弱。",
+    "SHOT_1_CAPTION": "Issue 上下文成为交给外部代理的规格。", "SHOT_2_CAPTION": "代理提示词与组织上下文在 GitLab 汇合。", "SHOT_3_CAPTION": "外部代理实现以可评审变更返回。", "SHOT_4_CAPTION": "生成应用展示从 Issue 到 MR 的执行。", "SHOT_5_CAPTION": "代理在同一循环创建流水线与容器配置。", "SHOT_6_CAPTION": "成功流水线闭合从意图到交付的证据链。",
+}
+
+def render(template: Path, values: dict[str, str], lang: str) -> str:
+    html = template.read_text(encoding="utf-8")
+    all_values = {**values, **SHOTS,
+        "LANG_EN_HREF": OUT_EN.name, "LANG_ZH_HREF": OUT_ZH.name,
+        "ACTIVE_IF_EN": "active" if lang == "en" else "",
+        "ACTIVE_IF_ZH": "active" if lang == "zh" else "",
+    }
+    placeholders = set(re.findall(r"\{\{([^}]+)\}\}", html)) - {"PLACEHOLDER"}
+    missing = sorted(placeholders - set(all_values))
+    if missing:
+        raise RuntimeError(f"Missing values for {lang}: {missing}")
+    for key in sorted(all_values, key=len, reverse=True):
+        html = html.replace("{{" + key + "}}", str(all_values[key]))
+    html = html.replace("{{PLACEHOLDER}}", "PLACEHOLDER")
+    remaining = sorted(set(re.findall(r"\{\{[^}]+\}\}", html)))
+    if remaining:
+        raise RuntimeError(f"Unresolved placeholders in {lang}: {remaining}")
+    for marker in ("Dreameryanyan", "brand-mark", "yanliudreamer", "xiaohongshu"):
+        if marker not in html:
+            raise RuntimeError(f"Missing brand marker {marker} in {lang}")
+    active_ai = html.count('class="ai-stage active')
+    if active_ai != 1:
+        raise RuntimeError(f"Expected one active AI state in {lang}, got {active_ai}")
+    return html
+
+ROOT.mkdir(parents=True, exist_ok=True)
+OUT_EN.write_text(render(TMPL_EN, EN, "en"), encoding="utf-8")
+OUT_ZH.write_text(render(TMPL_ZH, ZH, "zh"), encoding="utf-8")
+print(OUT_EN)
+print(OUT_ZH)
