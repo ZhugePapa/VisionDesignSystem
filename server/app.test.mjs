@@ -56,7 +56,7 @@ test('recognizes contextual file requests without treating ordinary output as a 
   ]), false)
 })
 
-test('streams all three OpenCode Go chat-completions models through one credential', async (context) => {
+test('streams all four standalone Chat models through one OpenCode Go credential', async (context) => {
   const requests = []
   const encoder = new TextEncoder()
   const baseUrl = await startServer(context, {
@@ -86,7 +86,7 @@ test('streams all three OpenCode Go chat-completions models through one credenti
     runtime: testRuntime(),
   })
 
-  const models = ['kimi-k3', 'deepseek-v4-flash', 'glm-5.2']
+  const models = ['kimi-k3', 'deepseek-v4-flash', 'deepseek-v4-pro', 'glm-5.2']
   for (const model of models) {
     const response = await fetch(`${baseUrl}/api/ai/chat`, {
       method: 'POST',
@@ -107,7 +107,7 @@ test('streams all three OpenCode Go chat-completions models through one credenti
     assert.match(stream, /event: done/)
   }
 
-  assert.equal(requests.length, 3)
+  assert.equal(requests.length, 4)
   for (const [index, model] of models.entries()) {
     const request = requests[index]
     assert.equal(request.url, 'https://opencode.ai/zen/go/v1/chat/completions')
@@ -294,11 +294,11 @@ test('rejects models outside the server allowlist', async (context) => {
   assert.equal(upstreamCalled, false)
 })
 
-test('lists only the three OpenCode Go models without exposing its credential', async (context) => {
+test('lists DeepSeek V4 Pro as the standalone Chat default without exposing credentials', async (context) => {
   const baseUrl = await startServer(context, {
     env: {
       OPENCODE_GO_API_KEY: 'opencode-secret',
-      AI_DEFAULT_MODEL: 'deepseek-v4-flash',
+      AI_STANDALONE_CHAT_DEFAULT_MODEL: 'deepseek-v4-pro',
     },
     runtime: testRuntime(),
   })
@@ -307,7 +307,7 @@ test('lists only the three OpenCode Go models without exposing its credential', 
   const payload = await response.json()
 
   assert.equal(response.status, 200)
-  assert.equal(payload.defaultModel, 'deepseek-v4-flash')
+  assert.equal(payload.defaultModel, 'deepseek-v4-pro')
   assert.deepEqual(
     payload.models.map((model) => [
       model.id,
@@ -318,10 +318,30 @@ test('lists only the three OpenCode Go models without exposing its credential', 
     [
       ['kimi-k3', 'opencode-go', true, true],
       ['deepseek-v4-flash', 'opencode-go', true, true],
+      ['deepseek-v4-pro', 'opencode-go', true, true],
       ['glm-5.2', 'opencode-go', true, true],
     ],
   )
   assert.doesNotMatch(JSON.stringify(payload), /secret/)
+})
+
+test('keeps DeepSeek V4 Pro out of the embedded assistant model catalog', async (context) => {
+  const baseUrl = await startServer(context, {
+    env: { OPENCODE_GO_API_KEY: 'opencode-secret' },
+    runtime: testRuntime(),
+  })
+
+  const response = await fetch(`${baseUrl}/api/ai/models`, {
+    headers: { 'X-Vision-AI-Product': 'embedded-assistant' },
+  })
+  const payload = await response.json()
+
+  assert.equal(response.status, 200)
+  assert.equal(payload.defaultModel, 'deepseek-v4-flash')
+  assert.deepEqual(
+    payload.models.map((model) => model.id),
+    ['kimi-k3', 'deepseek-v4-flash', 'glm-5.2'],
+  )
 })
 
 test('reports whether the OpenCode Go key is configured', async (context) => {
@@ -336,7 +356,7 @@ test('reports whether the OpenCode Go key is configured', async (context) => {
     status: 'ok',
     auth: 'enabled',
     database: 'connected',
-    defaultModel: 'deepseek-v4-flash',
+    defaultModel: 'deepseek-v4-pro',
     configured: false,
     models: [],
   })

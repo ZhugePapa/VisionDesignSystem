@@ -84,8 +84,10 @@ const emit = defineEmits<{
 
 const senderValue = ref('')
 const deepThinking = ref(false)
-const selectedModel = ref<VisAiKey>('')
+const defaultModel = ref<VisAiKey>('deepseek-v4-pro')
+const selectedModel = ref<VisAiKey>('deepseek-v4-pro')
 const senderModels = ref<VisAiSenderModel[]>([
+  { key: 'deepseek-v4-pro', label: 'DeepSeek V4 Pro', iconName: 'cube-01', supportsThinking: true },
   { key: 'kimi-k3', label: 'Kimi K3', iconName: 'cube-01', supportsThinking: true },
   { key: 'deepseek-v4-flash', label: 'DeepSeek V4 Flash', iconName: 'cube-01', supportsThinking: true },
   { key: 'glm-5.2', label: 'GLM-5.2', iconName: 'cube-01', supportsThinking: true },
@@ -124,6 +126,7 @@ let dragOffsetY = 0
 let restoringDraft = false
 const uploadControllers = new Map<string, AbortController>()
 const retryFiles = new Map<string, File>()
+const modelPreferenceUpdates = new Map<string, Promise<void>>()
 
 const acceptedAttachmentTypes = [
   '.png', '.jpg', '.jpeg', '.webp',
@@ -277,6 +280,7 @@ function resetConversation(): void {
   senderValue.value = ''
   attachments.value = []
   selectedSkill.value = ''
+  selectedModel.value = defaultModel.value
   deepThinking.value = false
   uploadError.value = ''
   closeArtifactPreview()
@@ -292,6 +296,17 @@ function sessionFromConversation(conversation: VisionAiConversation): AiChatSess
   }
 }
 
+function isSelectableModel(model: VisAiKey): boolean {
+  const candidate = senderModels.value.find((item) => item.key === model)
+  return Boolean(candidate && !candidate.disabled)
+}
+
+function syncSelectedModel(session?: AiChatSession): void {
+  selectedModel.value = session?.model && isSelectableModel(session.model)
+    ? session.model
+    : defaultModel.value
+}
+
 async function loadConversationTurns(session: AiChatSession): Promise<void> {
   if (session.turnsLoaded) return
   session.turns = await fetchVisionAiTurns(session.id)
@@ -304,7 +319,10 @@ async function loadConversations(): Promise<void> {
 
   if (!conversationKey.value && sessions.value.length) {
     conversationKey.value = sessions.value[0].id
+    syncSelectedModel(sessions.value[0])
     await loadConversationTurns(sessions.value[0])
+  } else {
+    syncSelectedModel(activeSession.value)
   }
 }
 
@@ -318,10 +336,11 @@ async function loadAvailableModels(): Promise<void> {
       disabled: !model.available,
       supportsThinking: model.supportsThinking,
     }))
+    defaultModel.value = catalog.defaultModel
 
     const selected = senderModels.value.find((model) => model.key === selectedModel.value)
     if (!selected || selected.disabled) {
-      selectedModel.value = catalog.defaultModel
+      syncSelectedModel(activeSession.value)
     }
   } catch {
     // Keep the local catalog visible when the API is unavailable during component development.
@@ -333,10 +352,8 @@ async function initializeAuth(): Promise<void> {
   try {
     authUser.value = await fetchVisionAuthUser()
     if (authUser.value) {
-      await Promise.all([
-        loadAvailableModels(),
-        loadConversations(),
-      ])
+      await loadAvailableModels()
+      await loadConversations()
       restoreDraft()
     }
   } catch {
@@ -355,10 +372,8 @@ async function submitLogin(): Promise<void> {
   try {
     authUser.value = await signInVisionAccount(username, loginPassword.value)
     loginPassword.value = ''
-    await Promise.all([
-      loadAvailableModels(),
-      loadConversations(),
-    ])
+    await loadAvailableModels()
+    await loadConversations()
     restoreDraft()
   } catch {
     loginError.value = '账号或密码错误，请重新输入。'
@@ -540,7 +555,10 @@ function dropFiles(event: DragEvent): void {
 }
 
 async function createSession(question: string): Promise<AiChatSession> {
-  const conversation = await createVisionAiConversation(question.slice(0, 28))
+  const conversation = await createVisionAiConversation(
+    question.slice(0, 28),
+    String(selectedModel.value || defaultModel.value),
+  )
   const session: AiChatSession = {
     ...conversation,
     turns: [],
@@ -809,7 +827,10 @@ async function selectConversation(item: VisAiConversationItemData): Promise<void
   restoreDraft(item.key)
   responding.value = false
   const session = sessions.value.find((entry) => entry.id === String(item.key))
-  if (session) await loadConversationTurns(session)
+  if (session) {
+    syncSelectedModel(session)
+    await loadConversationTurns(session)
+  }
 }
 
 async function toggleConversationPin(item: VisAiConversationItemData): Promise<void> {
@@ -849,6 +870,7 @@ async function handleConversationAction(payload: {
     if (conversationKey.value === target.id) {
       closeArtifactPreview()
       conversationKey.value = sessions.value[0]?.id ?? ''
+      syncSelectedModel(sessions.value[0])
       if (sessions.value[0]) await loadConversationTurns(sessions.value[0])
     }
   }
@@ -948,6 +970,47 @@ watch(
     if (mode !== 'independent') closeArtifactPreview()
   },
 )
+
+watch(selectedModel, (model) => {
+  const session = activeSession.value
+  if (
+    !session
+    || !model
+    || !isSelectableModel(model)
+    || session.model === String(model)
+  ) return
+
+  const conversationId = session.id
+  const previousModel = session.model
+  const requestedModel = String(model)
+  session.model = requestedModel
+
+  const queued = modelPreferenceUpdates.get(conversationId) ?? Promise.resolve()
+  let update: Promise<void>
+  update = queued
+    .catch(() => undefined)
+    .then(async () => {
+      const conversation = await updateVisionAiConversation(conversationId, {
+        model: requestedModel,
+      })
+      session.title = conversation.title
+      session.pinned = conversation.pinned
+      session.updatedAt = conversation.updatedAt
+      if (session.model === requestedModel) session.model = conversation.model
+    })
+    .catch(() => {
+      if (modelPreferenceUpdates.get(conversationId) !== update) return
+      session.model = previousModel
+      if (activeSession.value?.id === conversationId) syncSelectedModel(session)
+      uploadError.value = '模型偏好保存失败，请重新选择。'
+    })
+    .finally(() => {
+      if (modelPreferenceUpdates.get(conversationId) === update) {
+        modelPreferenceUpdates.delete(conversationId)
+      }
+    })
+  modelPreferenceUpdates.set(conversationId, update)
+})
 
 watch(
   [

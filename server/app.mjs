@@ -15,6 +15,7 @@ import {
   defaultAiModelId,
   listAiModels,
   resolveAiModel,
+  validatedAiModelId,
 } from './models.mjs'
 import { completeOpenCodeGoChat, streamOpenCodeGoChat } from './opencode-go.mjs'
 
@@ -485,8 +486,8 @@ export async function createVisionAiServer({
 
       if (req.method === 'GET' && url.pathname === '/api/ai/models') {
         json(res, 200, {
-          defaultModel: defaultAiModelId(env),
-          models: listAiModels(env),
+          defaultModel: defaultAiModelId(env, productId),
+          models: listAiModels(env, productId),
         })
         return
       }
@@ -593,6 +594,7 @@ export async function createVisionAiServer({
           userId,
           body.title,
           productId,
+          validatedAiModelId(body.model, env, productId),
         )
         json(res, 201, { conversation })
         return
@@ -624,6 +626,9 @@ export async function createVisionAiServer({
       const conversationId = routeId(url.pathname)
       if (conversationId && req.method === 'PATCH') {
         const body = await readJson(req)
+        if (Object.hasOwn(body, 'model')) {
+          body.model = validatedAiModelId(body.model, env, productId)
+        }
         const conversation = conversationStore.updateConversation(
           userId,
           conversationId,
@@ -660,7 +665,7 @@ export async function createVisionAiServer({
         }
 
         const body = await readJson(req)
-        const model = resolveAiModel(body.model, env)
+        const model = resolveAiModel(body.model, env, productId)
         body.thinking = model.supportsThinking && body.thinking === true
         const requestedAttachments = validatedAttachments(body.attachments)
         const resolvedAttachments = fileStore
@@ -708,6 +713,14 @@ export async function createVisionAiServer({
           json(res, 404, { error: '会话或消息不存在。' })
           return
         }
+        if (!body.regenerateTurnId) {
+          conversationStore.updateConversation(
+            userId,
+            messagesConversationId,
+            { model: model.id },
+            productId,
+          )
+        }
         if (fileStore && attachments.length) {
           fileStore.markReferenced(
             userId,
@@ -746,7 +759,7 @@ export async function createVisionAiServer({
         let reasoning = ''
         let toolCalls = []
         const markdownRequested = Boolean(artifactStore && wantsMarkdownArtifact(messages))
-        const markdownToolChoice = model.id === 'deepseek-v4-flash' ? 'auto' : 'required'
+        const markdownToolChoice = model.id.startsWith('deepseek-v4-') ? 'auto' : 'required'
 
         openEventStream(res)
         sse(res, 'start', {
@@ -862,7 +875,7 @@ export async function createVisionAiServer({
 
         const body = await readJson(req)
         body.messages = validatedMessages(body.messages)
-        const model = resolveAiModel(body.model, env)
+        const model = resolveAiModel(body.model, env, productId)
         body.thinking = model.supportsThinking && body.thinking === true
         const stream = createStreamController(req, res, timeoutMs)
         let answer = ''

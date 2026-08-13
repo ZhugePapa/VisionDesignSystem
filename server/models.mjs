@@ -1,4 +1,9 @@
-export const DEFAULT_MODEL_ID = 'deepseek-v4-flash'
+export const DEFAULT_MODEL_ID = 'deepseek-v4-pro'
+
+const EMBEDDED_ASSISTANT_PRODUCT_ID = 'embedded-assistant'
+const STANDALONE_CHAT_PRODUCT_ID = 'standalone-chat'
+const EMBEDDED_ASSISTANT_DEFAULT_MODEL_ID = 'deepseek-v4-flash'
+const STANDALONE_CHAT_DEFAULT_MODEL_ID = DEFAULT_MODEL_ID
 
 const API_KEY_ENV = 'OPENCODE_GO_API_KEY'
 const BASE_URL_ENV = 'OPENCODE_GO_BASE_URL'
@@ -21,6 +26,14 @@ const modelDefinitions = [
     supportsThinking: true,
   },
   {
+    id: 'deepseek-v4-pro',
+    label: 'DeepSeek V4 Pro',
+    provider: 'opencode-go',
+    apiStyle: 'chat-completions',
+    supportsThinking: true,
+    products: [STANDALONE_CHAT_PRODUCT_ID],
+  },
+  {
     id: 'glm-5.2',
     label: 'GLM-5.2',
     provider: 'opencode-go',
@@ -40,28 +53,54 @@ function publicModel(definition, env) {
   }
 }
 
-export function listAiModels(env = process.env) {
-  return modelDefinitions.map((definition) => publicModel(definition, env))
+function definitionsForProduct(productId = STANDALONE_CHAT_PRODUCT_ID) {
+  return modelDefinitions.filter(
+    (definition) => !definition.products || definition.products.includes(productId),
+  )
 }
 
-export function defaultAiModelId(env = process.env) {
-  const requested = env.AI_DEFAULT_MODEL || DEFAULT_MODEL_ID
-  return modelDefinitions.some((definition) => definition.id === requested)
+export function listAiModels(env = process.env, productId = STANDALONE_CHAT_PRODUCT_ID) {
+  return definitionsForProduct(productId).map((definition) => publicModel(definition, env))
+}
+
+export function defaultAiModelId(env = process.env, productId = STANDALONE_CHAT_PRODUCT_ID) {
+  const fallback = productId === EMBEDDED_ASSISTANT_PRODUCT_ID
+    ? EMBEDDED_ASSISTANT_DEFAULT_MODEL_ID
+    : STANDALONE_CHAT_DEFAULT_MODEL_ID
+  const requested = productId === EMBEDDED_ASSISTANT_PRODUCT_ID
+    ? env.AI_EMBEDDED_ASSISTANT_DEFAULT_MODEL || env.AI_DEFAULT_MODEL || fallback
+    : env.AI_STANDALONE_CHAT_DEFAULT_MODEL || fallback
+  return definitionsForProduct(productId).some((definition) => definition.id === requested)
     ? requested
-    : DEFAULT_MODEL_ID
+    : fallback
 }
 
-export function resolveAiModel(requestedId, env = process.env) {
+export function validatedAiModelId(
+  requestedId,
+  env = process.env,
+  productId = STANDALONE_CHAT_PRODUCT_ID,
+) {
   const id = typeof requestedId === 'string' && requestedId
     ? requestedId
-    : defaultAiModelId(env)
-  const definition = modelDefinitions.find((candidate) => candidate.id === id)
+    : defaultAiModelId(env, productId)
+  const definition = definitionsForProduct(productId).find((candidate) => candidate.id === id)
 
   if (!definition) {
     const error = new Error('不支持所选模型。')
     error.statusCode = 400
     throw error
   }
+
+  return id
+}
+
+export function resolveAiModel(
+  requestedId,
+  env = process.env,
+  productId = STANDALONE_CHAT_PRODUCT_ID,
+) {
+  const id = validatedAiModelId(requestedId, env, productId)
+  const definition = definitionsForProduct(productId).find((candidate) => candidate.id === id)
 
   const apiKey = env[API_KEY_ENV]
   if (!apiKey) {

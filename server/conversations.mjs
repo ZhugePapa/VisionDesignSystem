@@ -35,6 +35,7 @@ function conversationFromRow(row) {
     id: row.id,
     title: row.title,
     pinned: Boolean(row.pinned),
+    model: row.model_id || null,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   }
@@ -71,6 +72,7 @@ export class ConversationStore {
         id TEXT PRIMARY KEY,
         user_id TEXT NOT NULL,
         product_id TEXT NOT NULL DEFAULT 'standalone-chat',
+        model_id TEXT,
         title TEXT NOT NULL,
         pinned INTEGER NOT NULL DEFAULT 0,
         created_at TEXT NOT NULL,
@@ -109,6 +111,23 @@ export class ConversationStore {
         ADD COLUMN product_id TEXT NOT NULL DEFAULT 'standalone-chat'
       `)
     }
+    if (!conversationColumns.some((column) => column.name === 'model_id')) {
+      this.database.exec(`
+        ALTER TABLE ai_conversation
+        ADD COLUMN model_id TEXT
+      `)
+      this.database.exec(`
+        UPDATE ai_conversation
+        SET model_id = (
+          SELECT turn.model
+          FROM ai_turn AS turn
+          WHERE turn.conversation_id = ai_conversation.id
+          ORDER BY turn.position DESC
+          LIMIT 1
+        )
+        WHERE model_id IS NULL
+      `)
+    }
     this.database.exec(`
       CREATE INDEX IF NOT EXISTS ai_conversation_product_updated_idx
       ON ai_conversation(user_id, product_id, updated_at DESC)
@@ -125,7 +144,7 @@ export class ConversationStore {
 
   listConversations(userId, productId = 'standalone-chat') {
     return this.database.prepare(`
-      SELECT id, title, pinned, created_at, updated_at
+      SELECT id, title, pinned, model_id, created_at, updated_at
       FROM ai_conversation
       WHERE user_id = ? AND product_id = ?
       ORDER BY pinned DESC, updated_at DESC
@@ -134,7 +153,7 @@ export class ConversationStore {
 
   getConversation(userId, conversationId, productId = 'standalone-chat') {
     const row = this.database.prepare(`
-      SELECT id, title, pinned, created_at, updated_at
+      SELECT id, title, pinned, model_id, created_at, updated_at
       FROM ai_conversation
       WHERE id = ? AND user_id = ? AND product_id = ?
       LIMIT 1
@@ -143,24 +162,26 @@ export class ConversationStore {
     return row ? conversationFromRow(row) : null
   }
 
-  createConversation(userId, title, productId = 'standalone-chat') {
+  createConversation(userId, title, productId = 'standalone-chat', model = null) {
     const timestamp = now()
     const conversation = {
       id: randomUUID(),
       title: String(title || '新会话').trim().slice(0, 80) || '新会话',
       pinned: false,
+      model,
       createdAt: timestamp,
       updatedAt: timestamp,
     }
 
     this.database.prepare(`
       INSERT INTO ai_conversation (
-        id, user_id, product_id, title, pinned, created_at, updated_at
-      ) VALUES (?, ?, ?, ?, 0, ?, ?)
+        id, user_id, product_id, model_id, title, pinned, created_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?, 0, ?, ?)
     `).run(
       conversation.id,
       userId,
       productId,
+      model,
       conversation.title,
       timestamp,
       timestamp,
@@ -177,18 +198,20 @@ export class ConversationStore {
       ? patch.title.trim().slice(0, 80) || existing.title
       : existing.title
     const pinned = typeof patch.pinned === 'boolean' ? patch.pinned : existing.pinned
+    const model = typeof patch.model === 'string' && patch.model ? patch.model : existing.model
     const updatedAt = now()
 
     this.database.prepare(`
       UPDATE ai_conversation
-      SET title = ?, pinned = ?, updated_at = ?
+      SET title = ?, pinned = ?, model_id = ?, updated_at = ?
       WHERE id = ? AND user_id = ? AND product_id = ?
-    `).run(title, pinned ? 1 : 0, updatedAt, conversationId, userId, productId)
+    `).run(title, pinned ? 1 : 0, model, updatedAt, conversationId, userId, productId)
 
     return {
       ...existing,
       title,
       pinned,
+      model,
       updatedAt,
     }
   }

@@ -97,7 +97,8 @@ prepare_persistent_runtime() {
     false
   fi
 
-  set_environment_value AI_DEFAULT_MODEL deepseek-v4-flash
+  set_environment_value AI_STANDALONE_CHAT_DEFAULT_MODEL deepseek-v4-pro
+  set_environment_value AI_EMBEDDED_ASSISTANT_DEFAULT_MODEL deepseek-v4-flash
   for legacy_key in \
     DEEPSEEK_API_KEY \
     DEEPSEEK_BASE_URL \

@@ -95,6 +95,36 @@ test('isolates conversations for embedded and standalone AI products', () => {
   database.close()
 })
 
+test('persists the selected model on its conversation', () => {
+  const database = new DatabaseSync(':memory:')
+  database.exec('CREATE TABLE "user" (id TEXT PRIMARY KEY)')
+  database.prepare('INSERT INTO "user" (id) VALUES (?)').run('model-user')
+  const store = new ConversationStore(database)
+  store.migrate()
+
+  const conversation = store.createConversation(
+    'model-user',
+    '模型偏好',
+    'standalone-chat',
+    'deepseek-v4-pro',
+  )
+  assert.equal(conversation.model, 'deepseek-v4-pro')
+
+  const updated = store.updateConversation(
+    'model-user',
+    conversation.id,
+    { model: 'kimi-k3' },
+    'standalone-chat',
+  )
+  assert.equal(updated.model, 'kimi-k3')
+  assert.equal(
+    store.getConversation('model-user', conversation.id, 'standalone-chat')?.model,
+    'kimi-k3',
+  )
+
+  database.close()
+})
+
 test('migrates conversations created before the product split to standalone chat', () => {
   const database = new DatabaseSync(':memory:')
   database.exec(`
@@ -124,6 +154,66 @@ test('migrates conversations created before the product split to standalone chat
     ['legacy-conversation'],
   )
   assert.deepEqual(store.listConversations('legacy-user', 'embedded-assistant'), [])
+
+  database.close()
+})
+
+test('backfills a legacy conversation model from its latest turn', () => {
+  const database = new DatabaseSync(':memory:')
+  database.exec(`
+    CREATE TABLE "user" (id TEXT PRIMARY KEY);
+    INSERT INTO "user" (id) VALUES ('legacy-model-user');
+    CREATE TABLE ai_conversation (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      product_id TEXT NOT NULL DEFAULT 'standalone-chat',
+      title TEXT NOT NULL,
+      pinned INTEGER NOT NULL DEFAULT 0,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    );
+    CREATE TABLE ai_turn (
+      id TEXT PRIMARY KEY,
+      conversation_id TEXT NOT NULL,
+      position INTEGER NOT NULL,
+      question TEXT NOT NULL,
+      answer TEXT NOT NULL DEFAULT '',
+      reasoning TEXT NOT NULL DEFAULT '',
+      model TEXT NOT NULL,
+      status TEXT NOT NULL,
+      thinking INTEGER NOT NULL DEFAULT 0,
+      attachments TEXT NOT NULL DEFAULT '[]',
+      answer_versions TEXT NOT NULL DEFAULT '[]',
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL,
+      UNIQUE (conversation_id, position)
+    );
+    INSERT INTO ai_conversation (
+      id, user_id, product_id, title, created_at, updated_at
+    ) VALUES (
+      'legacy-model-conversation', 'legacy-model-user', 'standalone-chat',
+      '旧会话', '2026-08-01T00:00:00.000Z', '2026-08-01T00:00:00.000Z'
+    );
+    INSERT INTO ai_turn (
+      id, conversation_id, position, question, model, status, created_at, updated_at
+    ) VALUES
+      ('turn-1', 'legacy-model-conversation', 1, '第一问', 'kimi-k3', 'done',
+       '2026-08-01T00:00:00.000Z', '2026-08-01T00:00:00.000Z'),
+      ('turn-2', 'legacy-model-conversation', 2, '第二问', 'deepseek-v4-flash', 'done',
+       '2026-08-02T00:00:00.000Z', '2026-08-02T00:00:00.000Z');
+  `)
+
+  const store = new ConversationStore(database)
+  store.migrate()
+
+  assert.equal(
+    store.getConversation(
+      'legacy-model-user',
+      'legacy-model-conversation',
+      'standalone-chat',
+    )?.model,
+    'deepseek-v4-flash',
+  )
 
   database.close()
 })

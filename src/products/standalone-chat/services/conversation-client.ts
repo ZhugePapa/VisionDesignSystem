@@ -16,6 +16,7 @@ export interface VisionAiConversation {
   id: string
   title: string
   pinned: boolean
+  model: string | null
   createdAt: string
   updatedAt: string
 }
@@ -102,12 +103,13 @@ export async function fetchVisionAiConversations(): Promise<VisionAiConversation
 
 export async function createVisionAiConversation(
   title: string,
+  model: string,
 ): Promise<VisionAiConversation> {
   const payload = await requestJson<{ conversation: VisionAiConversation }>(
     '/api/ai/conversations',
     {
       method: 'POST',
-      body: JSON.stringify({ title }),
+      body: JSON.stringify({ title, model }),
     },
   )
   return payload.conversation
@@ -124,7 +126,7 @@ export async function fetchVisionAiTurns(
 
 export async function updateVisionAiConversation(
   conversationId: string,
-  patch: Partial<Pick<VisionAiConversation, 'title' | 'pinned'>>,
+  patch: Partial<Pick<VisionAiConversation, 'title' | 'pinned' | 'model'>>,
 ): Promise<VisionAiConversation> {
   const payload = await requestJson<{ conversation: VisionAiConversation }>(
     `/api/ai/conversations/${encodeURIComponent(conversationId)}`,

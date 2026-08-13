@@ -21,7 +21,7 @@ documentation and API before restarting `vision-ai`.
 ## AI model configuration
 
 The OpenCode Go credential stays on the ECS host in `/etc/vision-ai.env`. It is
-not stored in the repository or GitHub Actions. All three public models use the
+not stored in the repository or GitHub Actions. All public models use the
 same subscription and API key.
 
 Every release also repairs the persistent runtime before restarting the API: it
@@ -35,7 +35,8 @@ once and retained in `/etc/vision-ai.env`.
 | --- | --- | --- |
 | `OPENCODE_GO_API_KEY` | OpenCode Go subscription API key for all models | Required |
 | `OPENCODE_GO_BASE_URL` | OpenCode Go API base URL | `https://opencode.ai/zen/go/v1` |
-| `AI_DEFAULT_MODEL` | Initially selected public model ID | `deepseek-v4-flash` |
+| `AI_STANDALONE_CHAT_DEFAULT_MODEL` | Default model for the standalone Chat product | `deepseek-v4-pro` |
+| `AI_EMBEDDED_ASSISTANT_DEFAULT_MODEL` | Default model for the embedded demo assistant | `deepseek-v4-flash` |
 | `BETTER_AUTH_URL` | Public origin used for signed authentication cookies | `https://vision.leoht.space` |
 | `BETTER_AUTH_SECRET` | High-entropy secret used to sign authentication state | Required |
 | `AI_SEED_PASSWORD` | Initial password shared by the ten built-in accounts | Required |
@@ -44,7 +45,7 @@ once and retained in `/etc/vision-ai.env`.
 | `VISION_AI_UPLOAD_DIR` | Persistent, authenticated attachment storage outside release contents | `/opt/vision-design-system/data/uploads` |
 | `VISION_AI_ARTIFACT_DIR` | Persistent, authenticated AI-generated artifact storage | `/opt/vision-design-system/data/artifacts` |
 
-The browser sends only one of `kimi-k3`, `deepseek-v4-flash`, or `glm-5.2`.
+Standalone Chat can send `deepseek-v4-pro`, `kimi-k3`, `deepseek-v4-flash`, or `glm-5.2`. The embedded assistant does not expose `deepseek-v4-pro`.
 The API resolves that ID through the server-side allowlist before choosing the
 OpenCode Go Chat Completions endpoint. Use `GET /api/ai/models` to
 inspect the public catalog and availability without exposing the credential.
