@@ -8,4 +8,6 @@ export interface VisTooltipProps {
   trigger?: VisTooltipTrigger
   disabled?: boolean
   arrow?: boolean
+  openDelay?: number
+  teleported?: boolean
 }

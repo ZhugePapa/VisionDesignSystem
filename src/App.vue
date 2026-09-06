@@ -3,6 +3,7 @@ import { computed, ref } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 
 import aiDemoImage from './assets/avatars/avatar-06.png'
+import githubIconUrl from './assets/github.svg'
 import {
   VisAiActions,
   VisAiArtifact,
@@ -131,6 +132,7 @@ import {
   getDemoRouteName,
   type DemoPageId,
 } from './docs/demo-pages'
+import { changelogEntries, CURRENT_VERSION, versionPolicy } from './docs/changelog'
 
 type SidebarPageId = DemoPageId | 'icons'
 
@@ -465,6 +467,8 @@ const sliderLabel = ref(false)
 const tableAppearance = ref<VisTableAppearance>('horizontal')
 const tableActiveRowKey = ref<VisTableRowKey | null>(null)
 const tableHighlightActiveRow = ref(false)
+const tableFixedStartColumns = ref(1)
+const tableFixedEndColumns = ref(1)
 
 const accordionContent =
   '设计系统（Design System） 是一套用于指导产品设计和开发的标准化工具、规则和组件集合。它的核心目标是确保产品在视觉、交互和功能上保持一致性，同时提升团队协作效率。以下是设计系统的关键要素和意义。'
@@ -581,9 +585,9 @@ const tableItemPreviews: Array<{
   value?: unknown
   props?: Omit<VisTableItemProps, 'appearance' | 'type' | 'value'>
 }> = [
-  { type: 'tree', value: '树形标题', props: { treeLevel: 2, treeWithFolder: true, prefix: true } },
+  { type: 'tree', value: '树形标题', props: { treeWithFolder: true, prefix: true } },
   { type: 'heading', value: '标题文本', props: { prefix: true, suffix: true } },
-  { type: 'text', value: '正文文本' },
+  { type: 'text', value: '正文文本', props: { prefix: true } },
   { type: 'checkbox', props: { checked: true } },
   { type: 'radio', props: { radioChecked: true } },
   { type: 'drag' },
@@ -906,7 +910,7 @@ const sidebarGroups: SidebarGroup[] = [
     title: 'Documentation',
     items: [
       { title: 'Introduction', subtitle: '介绍' },
-      { title: 'Changelog', subtitle: '更新记录' },
+      { title: 'Changelog', subtitle: '更新记录', page: 'changelog' },
     ],
   },
   {
@@ -1001,6 +1005,7 @@ const themeToggleIcon = computed(() => (theme.value === 'light' ? 'sun' : 'moon-
 const themeToggleLabel = computed(() => (theme.value === 'light' ? '切换到暗色模式' : '切换到亮色模式'))
 
 const apiTables: Record<DemoPageId, ApiRow[]> = {
+  changelog: [],
   'ai-actions': [
     { visionApi: 'current', elementApi: '', description: '当前回答序号，支持 v-model:current。', type: 'number', defaultValue: '1' },
     { visionApi: 'total', elementApi: '', description: '回答总数。', type: 'number', defaultValue: '5' },
@@ -2583,7 +2588,7 @@ const apiTables: Record<DemoPageId, ApiRow[]> = {
     {
       visionApi: 'size',
       elementApi: 'size',
-      description: 'Figma 尺寸轴；sm 为 20px / 12px 文本，md 为 24px / 14px 文本。',
+      description: 'Figma 尺寸轴；sm 为 20px，md 为 24px，两个尺寸均使用 12px / 18px 文本。',
       type: "'sm' | 'md'",
       defaultValue: "'sm'",
     },
@@ -4364,6 +4369,13 @@ const apiTables: Record<DemoPageId, ApiRow[]> = {
       defaultValue: 'undefined',
     },
     {
+      visionApi: 'itemProps.prefix / prefixIcon / prefixColor',
+      elementApi: 'default slot',
+      description: '为 text、tree 与 heading 类型显示前缀图标；text 默认使用 16px flag-02，也可替换图标并配置语义色。',
+      type: 'boolean / IconName / VisBadgeColor',
+      defaultValue: "false / 'flag-02'（text）或 'zap'（tree、heading）/ blue",
+    },
+    {
       visionApi: 'itemProps.badgeColor / badgeSize / badgeType / badgeSolid',
       elementApi: 'ElTag props',
       description: 'Badge 类型位于可伸展的 Slot 4 容器内，默认对应 Figma 的 aqua / md / default / soft。',
@@ -4383,6 +4395,20 @@ const apiTables: Record<DemoPageId, ApiRow[]> = {
       description: 'horizontal 仅显示行分割线；grid 同时显示列分割线。',
       type: "'horizontal' | 'grid'",
       defaultValue: "'horizontal'",
+    },
+    {
+      visionApi: 'fixedStartColumns',
+      elementApi: 'ElTableColumn fixed="left"',
+      description: '按 columns 声明顺序冻结首 n 列；多选列会自动并入左侧冻结区，但不计入 n。',
+      type: 'number',
+      defaultValue: '0',
+    },
+    {
+      visionApi: 'fixedEndColumns',
+      elementApi: 'ElTableColumn fixed="right"',
+      description: '按 columns 声明顺序冻结尾 n 列；与首列数量重叠时，首列侧优先。',
+      type: 'number',
+      defaultValue: '0',
     },
     {
       visionApi: 'rowKey',
@@ -4481,7 +4507,9 @@ const apiTables: Record<DemoPageId, ApiRow[]> = {
   ],
   menu: [
     { visionApi: 'type', elementApi: 'mode', description: '切换项目内常驻侧栏与全局主侧栏。', type: "'project' | 'main'", defaultValue: "'project'" },
-    { visionApi: 'items', elementApi: 'default slot', description: '项目菜单树；父节点通过 children 声明二级菜单，图标支持 iconName 或 projectLogo。', type: 'VisMenuItemData[]', defaultValue: '[]' },
+    { visionApi: 'items', elementApi: 'default slot', description: '项目菜单树；父节点通过 children 声明二级菜单，每项可设置 icon 图标变体。', type: 'VisMenuItemData[]', defaultValue: '[]' },
+    { visionApi: 'items[].icon', elementApi: '无直接对应', description: 'Menu Item 图标变体：none 隐藏图标，linear 使用 16px 线性图标，featured 使用 24px Featured Icon。featured 仅用于一级叶子项。', type: 'VisMenuItemIcon', defaultValue: "'linear'" },
+    { visionApi: 'items[].iconName', elementApi: '无直接对应', description: 'linear 与 featured 变体使用的图标名称；未设置时使用默认图标。', type: 'IconName', defaultValue: "'bar-chart-square-01'" },
     { visionApi: 'sections', elementApi: 'default slot', description: '主侧栏分组数据；传入后优先于 items。', type: 'VisMenuSection[]', defaultValue: '[]' },
     { visionApi: 'activeKey', elementApi: 'default-active', description: '当前路由对应的激活菜单 key，父项会根据激活后代同步高亮。', type: 'VisMenuKey', defaultValue: 'undefined' },
     { visionApi: 'openKey', elementApi: 'default-openeds / unique-opened', description: '当前唯一内联展开的父菜单，支持 v-model:open-key。', type: 'VisMenuKey | null', defaultValue: 'undefined' },
@@ -4504,6 +4532,7 @@ const apiTables: Record<DemoPageId, ApiRow[]> = {
 const noElementApiRows = (): ElementApiRow[] => []
 
 const elementApiTables: Record<DemoPageId, ElementApiRow[]> = {
+  changelog: [],
   'ai-actions': noElementApiRows(),
   'ai-artifact': noElementApiRows(),
   'ai-attachment': noElementApiRows(),
@@ -5619,6 +5648,7 @@ const elementApiTables: Record<DemoPageId, ElementApiRow[]> = {
 }
 
 const visionComponentNames: Record<DemoPageId, string> = {
+  changelog: 'Changelog',
   'ai-actions': 'VisAiActions',
   'ai-artifact': 'VisAiArtifact',
   'ai-attachment': 'VisAiAttachment',
@@ -5763,6 +5793,7 @@ const exposeColumns: ApiColumn[] = [
 ]
 
 const visionEventTables: Record<DemoPageId, ApiDisplayRow[]> = {
+  changelog: [],
   'ai-actions': [
     { api: 'update:current', description: '回答序号变化时触发。', type: '(current: number) => void' },
     { api: 'change', description: '切换上一条或下一条回答时触发。', type: '(current: number) => void' },
@@ -6485,6 +6516,7 @@ const visionEventTables: Record<DemoPageId, ApiDisplayRow[]> = {
 }
 
 const elementExtraApiRows: Record<DemoPageId, ElementApiRow[]> = {
+  changelog: [],
   'ai-actions': [],
   'ai-artifact': [],
   'ai-attachment': [],
@@ -7098,20 +7130,31 @@ function toggleGroup(title: string) {
       <header class="docs-topbar">
         <div class="brand">
           <span class="brand-mark" aria-hidden="true" v-html="logoSvg" />
-          <div>
-            <strong>Vision Design</strong>
-            <small>Design System</small>
+          <div class="brand-heading">
+            <strong>Vision Design System</strong>
+            <VisBadge color="grey" size="sm" :label="`v${CURRENT_VERSION}`" />
           </div>
         </div>
 
-        <VisButton
-          class="docs-theme-button"
-          variant="secondary"
-          icon-only
-          :icon-name="themeToggleIcon"
-          :label="themeToggleLabel"
-          @click="toggleTheme"
-        />
+        <div class="docs-topbar-actions">
+          <VisButton
+            class="docs-theme-button"
+            variant="secondary"
+            icon-only
+            :icon-name="themeToggleIcon"
+            :label="themeToggleLabel"
+            @click="toggleTheme"
+          />
+          <a
+            class="docs-github-button"
+            href="https://github.com/ZhugePapa/VisionDesignSystem"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="在 GitHub 打开 Vision Design System"
+          >
+            <img :src="githubIconUrl" alt="" aria-hidden="true">
+          </a>
+        </div>
       </header>
 
       <div class="docs-body">
@@ -7163,7 +7206,52 @@ function toggleGroup(title: string) {
             </div>
 
             <section class="demo-panel">
-              <div v-if="activePage === 'accordion'" class="accordion-demo">
+              <div v-if="activePage === 'changelog'" class="changelog-page">
+                <p class="changelog-page__lead">
+                  这里记录 Vision Design System 的稳定版本与重要能力变化。当前版本为 v{{ CURRENT_VERSION }}。
+                </p>
+
+                <article
+                  v-for="entry in changelogEntries"
+                  :key="entry.version"
+                  class="changelog-release"
+                >
+                  <header class="changelog-release__header">
+                    <div class="changelog-release__version">
+                      <VisBadge color="blue" size="md" solid :label="`v${entry.version}`" />
+                      <h3>{{ entry.title }}</h3>
+                    </div>
+                    <time :datetime="entry.date">{{ entry.date }}</time>
+                  </header>
+                  <p class="changelog-release__summary">{{ entry.summary }}</p>
+
+                  <section
+                    v-for="section in entry.sections"
+                    :key="section.title"
+                    class="changelog-release__section"
+                  >
+                    <h4>{{ section.title }}</h4>
+                    <ul>
+                      <li v-for="item in section.items" :key="item">{{ item }}</li>
+                    </ul>
+                  </section>
+                </article>
+
+                <section class="version-policy" aria-labelledby="version-policy-title">
+                  <div class="version-policy__heading">
+                    <h3 id="version-policy-title">版本维护规则</h3>
+                    <p>版本号代表组件能力基线，避免由细微视觉调整造成无意义的频繁升级。</p>
+                  </div>
+                  <dl>
+                    <div v-for="rule in versionPolicy" :key="rule.title">
+                      <dt>{{ rule.title }}</dt>
+                      <dd>{{ rule.description }}</dd>
+                    </div>
+                  </dl>
+                </section>
+              </div>
+
+              <div v-else-if="activePage === 'accordion'" class="accordion-demo">
                 <VisAccordion v-model="accordionActiveKey" :items="accordionItems" />
                 <VisAccordion v-model="accordionBorderlessKey" :items="accordionItems.slice(0, 4)" borderless />
                 <VisAccordion v-model="accordionNoIconKey" :items="accordionItems.slice(0, 4)" :icon="false" />
@@ -8099,12 +8187,34 @@ function toggleGroup(title: string) {
                     <input v-model="tableHighlightActiveRow" type="checkbox">
                     Highlight active row
                   </label>
+                  <label class="table-demo__fixed-control">
+                    <span>冻结首列</span>
+                    <VisInputNumber
+                      v-model="tableFixedStartColumns"
+                      :min="0"
+                      :max="tableColumns.length"
+                      :width="120"
+                      aria-label="冻结首列数量"
+                    />
+                  </label>
+                  <label class="table-demo__fixed-control">
+                    <span>冻结尾列</span>
+                    <VisInputNumber
+                      v-model="tableFixedEndColumns"
+                      :min="0"
+                      :max="tableColumns.length"
+                      :width="120"
+                      aria-label="冻结尾列数量"
+                    />
+                  </label>
                 </div>
 
                 <VisTable
                   :data="tableData"
                   :columns="tableColumns"
                   :appearance="tableAppearance"
+                  :fixed-start-columns="tableFixedStartColumns"
+                  :fixed-end-columns="tableFixedEndColumns"
                   selectable
                   :highlight-active-row="tableHighlightActiveRow"
                   :active-row-key="tableActiveRowKey"
@@ -9379,7 +9489,7 @@ function toggleGroup(title: string) {
               </VisScrollShadow>
             </section>
 
-            <section class="api-section" aria-label="组件 API">
+            <section v-if="activePage !== 'changelog'" class="api-section" aria-label="组件 API">
               <div v-if="currentVisionApiSections.length > 0" class="api-section__major">
                 <h3 class="api-section__title ld-heading-h3">Vision API</h3>
 
@@ -9469,7 +9579,8 @@ function toggleGroup(title: string) {
   --shell-text-primary: var(--color-text-primary);
   --shell-text-secondary: var(--color-text-secondary);
   --shell-text-tertiary: var(--color-text-tertiary);
-  --shell-active-bg: var(--color-bg-secondary);
+  --shell-hover-bg: var(--color-bg-tertiary);
+  --shell-active-bg: var(--color-bg-tertiary);
   --shell-scrollbar-track: transparent;
   --shell-scrollbar-thumb: var(--primitive-grey-200);
   --shell-scrollbar-thumb-hover: var(--primitive-grey-300);
@@ -9538,29 +9649,26 @@ function toggleGroup(title: string) {
 
 .brand {
   min-inline-size: 0;
+  flex: 1 1 auto;
   display: flex;
   align-items: center;
   gap: var(--space-12);
 }
 
-.brand > div {
+.brand-heading {
   min-inline-size: 0;
   display: flex;
-  flex-direction: column;
+  align-items: center;
+  gap: var(--space-12);
 }
 
-.brand strong {
-  color: var(--shell-text-primary);
-  font-size: var(--font-text-md-size);
-  font-weight: 500;
-  line-height: var(--font-text-md-line-height);
-}
-
-.brand small {
+.brand-heading strong {
   overflow: hidden;
-  color: var(--shell-text-tertiary);
-  font-size: var(--font-text-sm-size);
-  line-height: var(--font-text-sm-line-height);
+  color: var(--shell-text-primary);
+  font-family: var(--font-family-heading);
+  font-size: var(--font-heading-h4-size);
+  font-weight: 700;
+  line-height: var(--font-heading-h4-line-height);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -9578,8 +9686,46 @@ function toggleGroup(title: string) {
   block-size: 28px;
 }
 
-.docs-theme-button {
+.docs-topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-12);
+}
+
+.docs-theme-button,
+.docs-github-button {
   flex: 0 0 auto;
+}
+
+.docs-github-button {
+  box-sizing: border-box;
+  inline-size: var(--space-32);
+  block-size: var(--space-32);
+  border-radius: var(--radius-sm);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-bg-surface);
+  box-shadow: inset 0 0 0 1px var(--color-border-default);
+}
+
+.docs-github-button:hover {
+  background: var(--color-bg-tertiary);
+}
+
+.docs-github-button:active {
+  background: var(--color-bg-quaternary);
+}
+
+.docs-github-button:focus-visible {
+  outline: 2px solid var(--color-effect-focus-ring-brand);
+  outline-offset: 2px;
+}
+
+.docs-github-button img {
+  inline-size: var(--space-20);
+  block-size: var(--space-20);
+  display: block;
 }
 
 .docs-body {
@@ -9636,7 +9782,7 @@ function toggleGroup(title: string) {
 }
 
 .menu-group:hover {
-  background: var(--shell-active-bg);
+  background: var(--shell-hover-bg);
 }
 
 .menu-group span {
@@ -9686,7 +9832,10 @@ function toggleGroup(title: string) {
   cursor: pointer;
 }
 
-.menu-item:hover:not(:disabled),
+.menu-item:hover:not(:disabled) {
+  background: var(--shell-hover-bg);
+}
+
 .menu-item.active {
   background: var(--shell-active-bg);
 }
@@ -9817,6 +9966,135 @@ function toggleGroup(title: string) {
 .demo-panel:has(.page-header-demo) {
   max-inline-size: 1120px;
   inline-size: 100%;
+}
+
+.demo-panel:has(.changelog-page) {
+  max-inline-size: 960px;
+  inline-size: 100%;
+}
+
+.changelog-page {
+  inline-size: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-32);
+}
+
+.changelog-page__lead,
+.changelog-release__summary,
+.version-policy__heading p {
+  margin: 0;
+  color: var(--shell-text-secondary);
+  font-size: var(--font-text-md-size);
+  line-height: var(--font-text-md-line-height);
+}
+
+.changelog-release {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.changelog-release__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-16);
+}
+
+.changelog-release__version {
+  min-inline-size: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-12);
+}
+
+.changelog-release__version h3,
+.version-policy__heading h3 {
+  margin: 0;
+  color: var(--shell-text-primary);
+  font-family: var(--font-family-heading);
+  font-size: var(--font-heading-h4-size);
+  font-weight: 600;
+  line-height: var(--font-heading-h4-line-height);
+}
+
+.changelog-release__header time {
+  flex: 0 0 auto;
+  color: var(--shell-text-tertiary);
+  font-size: var(--font-text-sm-size);
+  line-height: var(--font-text-sm-line-height);
+}
+
+.changelog-release__summary {
+  margin-block-start: var(--space-12);
+  padding-block-end: var(--space-20);
+  border-block-end: 1px solid var(--color-border-default);
+}
+
+.changelog-release__section {
+  margin-block-start: var(--space-20);
+}
+
+.changelog-release__section h4 {
+  margin: 0 0 var(--space-8);
+  color: var(--shell-text-primary);
+  font-size: var(--font-text-md-size);
+  font-weight: 600;
+  line-height: var(--font-text-md-line-height);
+}
+
+.changelog-release__section ul {
+  margin: 0;
+  padding-inline-start: var(--space-20);
+  color: var(--shell-text-secondary);
+}
+
+.changelog-release__section li {
+  padding-block: 2px;
+  font-size: var(--font-text-md-size);
+  line-height: var(--font-text-md-line-height);
+}
+
+.version-policy {
+  border-radius: var(--radius-md);
+  padding: var(--space-24);
+  background: var(--color-bg-secondary);
+}
+
+.version-policy__heading {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.version-policy dl {
+  margin: var(--space-20) 0 0;
+  display: grid;
+  gap: var(--space-12);
+}
+
+.version-policy dl > div {
+  display: grid;
+  grid-template-columns: 112px minmax(0, 1fr);
+  gap: var(--space-16);
+}
+
+.version-policy dt,
+.version-policy dd {
+  margin: 0;
+  font-size: var(--font-text-md-size);
+  line-height: var(--font-text-md-line-height);
+}
+
+.version-policy dt {
+  color: var(--shell-text-primary);
+  font-weight: 600;
+}
+
+.version-policy dd {
+  color: var(--shell-text-secondary);
 }
 
 .demo-panel:has(.card-demo) {
@@ -10564,6 +10842,15 @@ function toggleGroup(title: string) {
   flex-wrap: wrap;
   align-items: center;
   gap: var(--space-12);
+}
+
+.table-demo__fixed-control {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-8);
+  color: var(--color-text-secondary);
+  font-size: var(--font-text-sm-size);
+  line-height: var(--font-text-sm-line-height);
 }
 
 .table-demo__variants {

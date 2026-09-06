@@ -264,7 +264,8 @@ onMounted(syncDocumentTitle)
                   class="merge-request-item__status-icon"
                   :class="statusClass(request.status)"
                   name="git-pull-request"
-                  :size="24"
+                  :size="20"
+                  :stroke-width="1.5"
                   :label="statusLabel(request.status)"
                   :decorative="false"
                 />
@@ -289,7 +290,7 @@ onMounted(syncDocumentTitle)
                 <span class="merge-request-item__identity">
                   <span class="merge-request-item__author">
                     <VisAvatar
-                      size="xxs"
+                      size="xs"
                       type="image"
                       :image-variant="avatarVariant(request.author)"
                       :image-alt="request.author"
@@ -435,7 +436,7 @@ onMounted(syncDocumentTitle)
 }
 
 .merge-request-item__status-icon {
-  flex: 0 0 var(--space-24);
+  flex: 0 0 var(--space-20);
 }
 
 .merge-request-item__status-icon.is-active {
@@ -478,7 +479,7 @@ onMounted(syncDocumentTitle)
 }
 
 .merge-request-item__meta {
-  padding-inline-start: 36px;
+  padding-inline-start: calc(var(--space-24) + var(--space-4));
   gap: var(--space-12);
   color: var(--color-text-tertiary);
   font-size: var(--font-text-md-size);

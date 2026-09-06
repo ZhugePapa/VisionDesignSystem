@@ -4,11 +4,15 @@ import type { VisAvatarImageVariant } from '../avatar/avatar.types'
 export type VisMenuKey = string | number
 export type VisMenuType = 'project' | 'main'
 export type VisMenuItemState = 'default' | 'hover'
+export type VisMenuItemIcon = 'none' | 'linear' | 'featured'
 export type VisProjectLogoVariant = 'logo_001' | 'logo_002' | 'logo_003' | 'logo_004'
 
 export interface VisMenuItemData {
   key: VisMenuKey
   label: string
+  /** Figma Icon axis. Featured is intended for top-level leaf items. */
+  icon?: VisMenuItemIcon
+  /** Glyph used by the linear or featured icon variant. */
   iconName?: IconName
   projectLogo?: VisProjectLogoVariant
   route?: unknown

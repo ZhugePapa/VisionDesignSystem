@@ -238,7 +238,7 @@ const avatarStyle = computed<CSSProperties>(() => {
         ? 'var(--color-bg-secondary)'
         : 'var(--color-bg-tertiary)',
     '--vis-avatar-content-color': props.type === 'text' ? 'var(--color-text-secondary)' : 'var(--color-fg-tertiary)',
-    '--vis-avatar-body-border-width': isImageType ? (props.groupOutlined ? '2px' : '1px') : '0px',
+    '--vis-avatar-body-border-width': isImageType ? '1px' : '0px',
     '--vis-avatar-body-border-color': isImageType
       ? props.groupOutlined
         ? 'var(--color-border-white)'

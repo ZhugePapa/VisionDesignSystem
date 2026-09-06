@@ -4,6 +4,7 @@ import { computed } from 'vue'
 import VisAvatarLabel from '../avatar/VisAvatarLabel.vue'
 import VisBadge from '../badge/VisBadge.vue'
 import { resolveVisBadgeColor, resolveVisBadgeType } from '../badge/badge.adapter'
+import type { VisBadgeColor } from '../badge/badge.types'
 import VisButton from '../button/VisButton.vue'
 import VisCheckbox from '../checkbox/VisCheckbox.vue'
 import Icon from '../icons/Icon.vue'
@@ -18,11 +19,9 @@ import type { VisTableAction, VisTableItemProps } from './table.types'
 const props = withDefaults(defineProps<VisTableItemProps>(), {
   type: 'text',
   appearance: 'horizontal',
-  state: 'default',
   value: undefined,
   prefix: false,
   suffix: false,
-  prefixIcon: 'zap',
   suffixLabel: 'Hot!',
   href: undefined,
   checked: false,
@@ -69,6 +68,25 @@ const textValue = computed(() => {
 })
 
 const resolvedNumber = computed(() => props.numberValue ?? textValue.value)
+const resolvedPrefixIcon = computed(() => props.prefixIcon ?? (props.type === 'text' ? 'flag-02' : 'zap'))
+const prefixColorTokens: Record<VisBadgeColor, string> = {
+  grey: 'var(--color-fg-tertiary)',
+  red: 'var(--utility-red-500)',
+  orange: 'var(--utility-orange-500)',
+  yellow: 'var(--utility-yellow-500)',
+  moss: 'var(--utility-moss-500)',
+  green: 'var(--utility-green-500)',
+  aqua: 'var(--utility-aqua-500)',
+  cyan: 'var(--utility-cyan-500)',
+  blue: 'var(--utility-blue-500)',
+  purple: 'var(--utility-purple-500)',
+  violet: 'var(--utility-violet-500)',
+  scarlet: 'var(--utility-scarlet-500)',
+  pink: 'var(--utility-pink-500)',
+}
+const resolvedPrefixColor = computed(() =>
+  props.prefixColor ? prefixColorTokens[props.prefixColor] : undefined,
+)
 const resolvedBadgeColor = computed(() => resolveVisBadgeColor(props.badgeColor, props.badgeColorType, 'aqua'))
 const resolvedBadgeType = computed(() => resolveVisBadgeType(props.badgeType))
 </script>
@@ -76,7 +94,7 @@ const resolvedBadgeType = computed(() => resolveVisBadgeType(props.badgeType))
 <template>
   <div
     class="vis-table-item"
-    :class="[`type-${type}`, `appearance-${appearance}`, `state-${state}`]"
+    :class="[`type-${type}`, `appearance-${appearance}`]"
   >
     <slot>
       <template v-if="type === 'tree'">
@@ -87,7 +105,9 @@ const resolvedBadgeType = computed(() => resolveVisBadgeType(props.badgeType))
           @toggle="emit('tree-toggle', $event)"
         />
         <span v-if="prefix" class="vis-table-item__issue-icon" aria-hidden="true">
-          <Icon :name="prefixIcon" :size="12" decorative />
+          <span class="vis-table-item__issue-icon-visual">
+            <Icon :name="resolvedPrefixIcon" :size="12" decorative />
+          </span>
         </span>
         <span class="vis-table-item__primary-text">{{ textValue }}</span>
         <VisBadge
@@ -100,7 +120,9 @@ const resolvedBadgeType = computed(() => resolveVisBadgeType(props.badgeType))
 
       <template v-else-if="type === 'heading'">
         <span v-if="prefix" class="vis-table-item__issue-icon" aria-hidden="true">
-          <Icon :name="prefixIcon" :size="12" decorative />
+          <span class="vis-table-item__issue-icon-visual">
+            <Icon :name="resolvedPrefixIcon" :size="12" decorative />
+          </span>
         </span>
         <VisTableLink :text="textValue" :href="href" />
         <VisBadge
@@ -111,7 +133,17 @@ const resolvedBadgeType = computed(() => resolveVisBadgeType(props.badgeType))
         />
       </template>
 
-      <span v-else-if="type === 'text'" class="vis-table-item__text">{{ textValue }}</span>
+      <template v-else-if="type === 'text'">
+        <Icon
+          v-if="prefix"
+          class="vis-table-item__text-prefix"
+          :name="resolvedPrefixIcon"
+          :size="16"
+          :style="resolvedPrefixColor ? { color: resolvedPrefixColor } : undefined"
+          decorative
+        />
+        <span class="vis-table-item__text">{{ textValue }}</span>
+      </template>
 
       <VisCheckbox
         v-else-if="type === 'checkbox'"
@@ -229,12 +261,12 @@ const resolvedBadgeType = computed(() => resolveVisBadgeType(props.badgeType))
   gap: var(--space-4);
 }
 
-.vis-table-item.appearance-grid {
-  border-inline-start: 1px solid var(--color-border-default);
+.vis-table-item.type-text {
+  gap: var(--space-6);
 }
 
-.vis-table-item.appearance-grid:is(:hover, .state-hover) {
-  background: var(--color-bg-tertiary);
+.vis-table-item.appearance-grid {
+  border-inline-start: 1px solid var(--color-border-default);
 }
 
 .vis-table-item:is(.type-checkbox, .type-radio, .type-drag, .type-shortcuts) {
@@ -261,7 +293,21 @@ const resolvedBadgeType = computed(() => resolveVisBadgeType(props.badgeType))
   flex: 1 1 auto;
 }
 
+.vis-table-item__text-prefix {
+  color: var(--color-fg-brand-primary);
+  flex: 0 0 var(--space-16);
+}
+
 .vis-table-item__issue-icon {
+  inline-size: var(--space-24);
+  block-size: var(--space-24);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 var(--space-24);
+}
+
+.vis-table-item__issue-icon-visual {
   inline-size: var(--space-20);
   block-size: var(--space-20);
   border-radius: var(--radius-sm);
@@ -270,7 +316,6 @@ const resolvedBadgeType = computed(() => resolveVisBadgeType(props.badgeType))
   justify-content: center;
   color: var(--color-text-white);
   background: var(--utility-purple-500);
-  flex: 0 0 var(--space-20);
 }
 
 .vis-table-item__number {

@@ -1,15 +1,25 @@
 <script setup lang="ts">
+import { computed } from 'vue'
+
+import sortDefaultUrl from './assets/sort-default.svg'
+import sortDownUrl from './assets/sort-down.svg'
+import sortUpUrl from './assets/sort-up.svg'
 import type { VisTableSortIconProps } from './table.types'
 
-withDefaults(defineProps<VisTableSortIconProps>(), {
+const props = withDefaults(defineProps<VisTableSortIconProps>(), {
   state: 'default',
+})
+
+const iconUrl = computed(() => {
+  if (props.state === 'up') return sortUpUrl
+  if (props.state === 'down') return sortDownUrl
+  return sortDefaultUrl
 })
 </script>
 
 <template>
   <span class="vis-table-sort-icon" :class="`state-${state}`" aria-hidden="true">
-    <span class="vis-table-sort-icon__caret ascending" />
-    <span class="vis-table-sort-icon__caret descending" />
+    <img class="vis-table-sort-icon__image" :src="iconUrl" alt="">
   </span>
 </template>
 
@@ -22,29 +32,9 @@ withDefaults(defineProps<VisTableSortIconProps>(), {
   flex: 0 0 var(--space-16);
 }
 
-.vis-table-sort-icon__caret {
-  position: absolute;
-  inset-inline-start: 4px;
-  inline-size: 0;
-  block-size: 0;
-  border: 4px solid transparent;
-}
-
-.vis-table-sort-icon__caret.ascending {
-  inset-block-start: -2px;
-  border-block-end-color: var(--color-fg-tertiary);
-}
-
-.vis-table-sort-icon__caret.descending {
-  inset-block-end: -2px;
-  border-block-start-color: var(--color-fg-tertiary);
-}
-
-.vis-table-sort-icon.state-up .ascending {
-  border-block-end-color: var(--color-fg-brand-primary);
-}
-
-.vis-table-sort-icon.state-down .descending {
-  border-block-start-color: var(--color-fg-brand-primary);
+.vis-table-sort-icon__image {
+  display: block;
+  inline-size: 100%;
+  block-size: 100%;
 }
 </style>

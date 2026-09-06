@@ -153,7 +153,7 @@ watch(
       type="button"
       role="radio"
       :aria-checked="isSelected(option)"
-      :aria-label="!text ? option.ariaLabel ?? option.label : undefined"
+      :aria-label="option.ariaLabel ?? (!text ? option.label : undefined)"
       :disabled="disabled || option.disabled"
       :tabindex="isSelected(option) ? 0 : -1"
       :data-vis-segmented-index="index"

@@ -52,7 +52,12 @@ const mainActiveKey = computed<VisMenuKey>(() => `main-${currentProject.value.ke
 const themeLabel = computed(() => (theme.value === 'light' ? '切换到暗色模式' : '切换到亮色模式'))
 const isRepositoryDetail = computed(() => route.meta.layout === 'repository-detail')
 const isApplicationWorkspace = computed(() => route.meta.layout === 'application-workspace')
-const isFullBleedWorkspace = computed(() => isRepositoryDetail.value || isApplicationWorkspace.value)
+const isPermissionWorkspace = computed(() => route.meta.layout === 'permission-management')
+const isWorkItemsWorkspace = computed(() => route.meta.layout === 'work-items')
+const isFullBleedWorkspace = computed(() =>
+  isRepositoryDetail.value || isApplicationWorkspace.value || isPermissionWorkspace.value || isWorkItemsWorkspace.value,
+)
+const showPageActions = computed(() => route.meta.hidePageActions !== true)
 const pageDescription = computed(() =>
   typeof route.meta.description === 'string' ? route.meta.description : activeItem.value.description,
 )
@@ -141,6 +146,8 @@ onMounted(() => {
             :class="{
               'is-repository-detail': isRepositoryDetail,
               'is-application-workspace': isApplicationWorkspace,
+              'is-permission-workspace': isPermissionWorkspace,
+              'is-work-items-workspace': isWorkItemsWorkspace,
             }"
           >
             <div v-if="!isFullBleedWorkspace" class="application-content__heading">
@@ -149,7 +156,7 @@ onMounted(() => {
                 <h1>{{ activeItem.label }}</h1>
                 <p>{{ pageDescription }}</p>
               </div>
-              <div class="application-heading__actions">
+              <div v-if="showPageActions" class="application-heading__actions">
                 <VisButton variant="secondary" size="md" prefix icon-name="filter-lines">筛选</VisButton>
                 <VisButton size="md" prefix icon-name="plus">新建任务</VisButton>
               </div>
@@ -236,6 +243,18 @@ onMounted(() => {
   background: var(--color-bg-surface);
 }
 
+.application-content.is-permission-workspace {
+  padding: 0;
+  overflow: hidden;
+  background: var(--color-bg-surface);
+}
+
+.application-content.is-work-items-workspace {
+  padding: 0;
+  overflow: hidden;
+  background: var(--color-bg-surface);
+}
+
 .application-content__heading {
   max-inline-size: 1240px;
   margin-inline: auto;
@@ -315,6 +334,14 @@ onMounted(() => {
   }
 
   .application-content.is-application-workspace {
+    padding: 0;
+  }
+
+  .application-content.is-permission-workspace {
+    padding: 0;
+  }
+
+  .application-content.is-work-items-workspace {
     padding: 0;
   }
 

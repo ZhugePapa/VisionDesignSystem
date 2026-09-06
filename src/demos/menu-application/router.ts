@@ -9,21 +9,32 @@ const projectRoutes: RouteRecordRaw[] = getProjectPageItems().map((item) => ({
   component:
     item.key === 'overview'
       ? () => import('./views/ProjectOverviewView.vue')
+      : item.key === 'work-items'
+        ? () => import('./views/ProjectWorkItemsView.vue')
       : item.key === 'repositories'
         ? () => import('./views/RepositoryHomeView.vue')
         : item.key === 'applications'
           ? () => import('./views/ApplicationListView.vue')
-      : () => import('./views/ProjectSectionView.vue'),
+          : item.key === 'settings-roles'
+            ? () => import('./views/ProjectPermissionView.vue')
+          : String(item.key).startsWith('settings-')
+            ? () => import('./views/ProjectSettingsView.vue')
+            : () => import('./views/ProjectSectionView.vue'),
   meta: {
     menuKey: item.key,
     title: item.key === 'repositories' ? '代码仓库' : item.label,
     description: item.description,
     layout:
-      item.key === 'repositories'
+      item.key === 'work-items'
+        ? 'work-items'
+        : item.key === 'repositories'
         ? 'repository-detail'
         : item.key === 'applications'
           ? 'application-workspace'
+          : item.key === 'settings-roles'
+            ? 'permission-management'
           : undefined,
+    hidePageActions: String(item.key).startsWith('settings-'),
   },
 }))
 

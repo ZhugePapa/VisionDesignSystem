@@ -372,6 +372,7 @@ export type {
   VisMenuGroupProps,
   VisMenuHeaderNavigationProps,
   VisMenuItemData,
+  VisMenuItemIcon,
   VisMenuItemProps,
   VisMenuItemState,
   VisMenuKey,

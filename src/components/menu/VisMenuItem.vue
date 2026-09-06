@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 
 import VisBadge from '../badge/VisBadge.vue'
+import VisFeaturedIcon from '../featured-icon/VisFeaturedIcon.vue'
 import Icon from '../icons/Icon.vue'
 import type { VisMenuItemProps } from './menu.types'
 import VisProjectLogo from './VisProjectLogo.vue'
@@ -26,6 +27,11 @@ const emit = defineEmits<{
 
 const hasChildren = computed(() => Boolean(props.item.children?.length))
 const hasBadge = computed(() => props.item.badgeCount !== undefined && props.item.badgeCount !== null)
+const resolvedIcon = computed(() => {
+  const icon = props.item.icon ?? 'linear'
+  return icon === 'featured' && (props.subLevel || hasChildren.value) ? 'linear' : icon
+})
+const resolvedIconName = computed(() => props.item.iconName ?? 'bar-chart-square-01')
 const classes = computed(() => ({
   'is-active': props.active,
   'is-open': props.open,
@@ -34,6 +40,7 @@ const classes = computed(() => ({
   'is-disabled': props.item.disabled,
   'is-hover-preview': props.state === 'hover' && !props.item.disabled,
   'has-children': hasChildren.value,
+  'has-featured-icon': resolvedIcon.value === 'featured',
 }))
 
 function onSelect(event: MouseEvent | KeyboardEvent): void {
@@ -73,19 +80,36 @@ function onKeydown(event: KeyboardEvent): void {
     @mouseleave="emit('hover-close')"
     @keydown="onKeydown"
   >
-    <span v-if="!subLevel && (item.projectLogo || item.iconName)" class="vis-menu-item__icon">
+    <span v-if="resolvedIcon === 'linear'" class="vis-menu-item__icon">
       <VisProjectLogo v-if="item.projectLogo" :variant="item.projectLogo" :size="16" />
-      <Icon v-else-if="item.iconName" :name="item.iconName" :size="16" decorative />
+      <Icon v-else :name="resolvedIconName" :size="16" decorative />
     </span>
+
+    <VisFeaturedIcon
+      v-else-if="resolvedIcon === 'featured'"
+      class="vis-menu-item__featured-icon"
+      size="sm"
+      type="modern"
+      color="grey"
+      :icon="resolvedIconName"
+      decorative
+    >
+      <template #icon>
+        <span class="vis-menu-item__featured-glyph">
+          <Icon :name="resolvedIconName" :size="14" decorative />
+        </span>
+      </template>
+    </VisFeaturedIcon>
 
     <span v-if="!collapsed" class="vis-menu-item__label">{{ item.label }}</span>
 
     <VisBadge
       v-if="!collapsed && hasBadge"
       class="vis-menu-item__badge"
-      type="number"
-      :color-type="active || open ? 'brand' : 'grey'"
-      :count="item.badgeCount"
+      type="default"
+      size="sm"
+      :color="active || open ? 'blue' : 'grey'"
+      :label="String(item.badgeCount)"
     />
 
     <Icon
@@ -129,6 +153,10 @@ function onKeydown(event: KeyboardEvent): void {
   padding: 0;
 }
 
+.vis-menu-item.has-featured-icon:not(.is-collapsed) {
+  padding-inline: var(--space-8) var(--space-12);
+}
+
 .vis-menu-item:is(:hover, :focus-visible, .is-hover-preview):not(.is-disabled):not(.is-active) {
   color: var(--color-text-primary);
   background: var(--color-bg-tertiary);
@@ -137,6 +165,11 @@ function onKeydown(event: KeyboardEvent): void {
 .vis-menu-item.is-active:not(.is-disabled) {
   color: var(--color-text-brand-primary);
   background: var(--color-fg-brand-subtle);
+}
+
+.vis-menu-item.has-featured-icon.is-active:not(.is-disabled) {
+  color: var(--color-text-primary);
+  background: var(--color-bg-tertiary);
 }
 
 .vis-menu-item:is(.is-active, .is-open).has-children:not(.is-disabled) {
@@ -173,6 +206,15 @@ function onKeydown(event: KeyboardEvent): void {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+}
+
+.vis-menu-item__featured-glyph {
+  inline-size: 14px;
+  block-size: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-fg-primary);
 }
 
 .vis-menu-item:is(:hover, :focus-visible, .is-hover-preview):not(.is-disabled) .vis-menu-item__icon,

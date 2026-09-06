@@ -76,6 +76,7 @@ const resolvedSections = computed<VisMenuSection[]>(() => {
 const helpItem = computed<VisMenuItemData>(() => ({
   key: '__vis-menu-help',
   label: props.helpLabel,
+  icon: 'linear',
   iconName: 'help-square',
 }))
 

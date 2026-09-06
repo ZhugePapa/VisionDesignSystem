@@ -1,4 +1,7 @@
+import chevronSelectorHorizontalOpenedMarkup from './icons/assets/chevron-selector-horizontal-opened.svg?raw'
+import chevronSelectorVerticalOpenedMarkup from './icons/assets/chevron-selector-vertical-opened.svg?raw'
 import robotMarkup from './icons/assets/robot.svg?raw'
+import scrumMarkup from './icons/assets/scrum.svg?raw'
 import unpinMarkup from './icons/assets/unpin.svg?raw'
 import webhookMarkup from './icons/assets/webhook.svg?raw'
 
@@ -240,7 +243,9 @@ export const iconNames = [
   "chevron-right-double",
   "chevron-right",
   "chevron-selector-horizontal",
+  "chevron-selector-horizontal-opened",
   "chevron-selector-vertical",
+  "chevron-selector-vertical-opened",
   "chevron-up-double",
   "chevron-up",
   "chrome-cast",
@@ -938,6 +943,7 @@ export const iconNames = [
   "scissors-02",
   "scissors-cut-01",
   "scissors-cut-02",
+  "scrum",
   "search-lg",
   "search-md",
   "search-refraction",
@@ -1426,7 +1432,9 @@ export const iconRegistry: Record<IconName, string> = {
   "chevron-right-double": `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none"><path d="M4 11.3333L7.33333 7.99996L4 4.66663M8.66667 11.3333L12 7.99996L8.66667 4.66663" stroke="currentColor" stroke-width="1.33" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
   "chevron-right": `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none"><path d="M6 12L10 8L6 4" stroke="currentColor" stroke-width="1.33" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
   "chevron-selector-horizontal": `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none"><path d="M5.99996 4.66663L2.66663 7.99996L5.99996 11.3333M9.99996 4.66663L13.3333 7.99996L9.99996 11.3333" stroke="currentColor" stroke-width="1.33" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+  "chevron-selector-horizontal-opened": chevronSelectorHorizontalOpenedMarkup,
   "chevron-selector-vertical": `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none"><path d="M4.66663 9.99996L7.99996 13.3333L11.3333 9.99996M4.66663 5.99996L7.99996 2.66663L11.3333 5.99996" stroke="currentColor" stroke-width="1.33" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+  "chevron-selector-vertical-opened": chevronSelectorVerticalOpenedMarkup,
   "chevron-up-double": `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none"><path d="M11.3333 12L7.99996 8.66667L4.66663 12M11.3333 7.33333L7.99996 4L4.66663 7.33333" stroke="currentColor" stroke-width="1.33" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
   "chevron-up": `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none"><path d="M12 10L8 6L4 10" stroke="currentColor" stroke-width="1.33" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
   "chrome-cast": `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none"><path d="M1.33325 8.03333C2.68711 8.18391 3.94944 8.7907 4.91266 9.75392C5.87589 10.7171 6.48268 11.9795 6.63325 13.3333M1.33325 10.7333C1.97385 10.864 2.56188 11.1801 3.02417 11.6424C3.48647 12.1047 3.80261 12.6927 3.93325 13.3333M1.33325 13.3333H1.33992M9.33325 14H11.4666C12.5867 14 13.1467 14 13.5746 13.782C13.9509 13.5903 14.2569 13.2843 14.4486 12.908C14.6666 12.4802 14.6666 11.9201 14.6666 10.8V5.2C14.6666 4.0799 14.6666 3.51984 14.4486 3.09202C14.2569 2.71569 13.9509 2.40973 13.5746 2.21799C13.1467 2 12.5867 2 11.4666 2H4.53325C3.41315 2 2.85309 2 2.42527 2.21799C2.04895 2.40973 1.74299 2.71569 1.55124 3.09202C1.33325 3.51984 1.33325 4.0799 1.33325 5.2V5.33333" stroke="currentColor" stroke-width="1.33" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
@@ -2124,6 +2132,7 @@ export const iconRegistry: Record<IconName, string> = {
   "scissors-02": `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none"><path d="M3 5.73333L14 11.3333M14 4.66667L3 10.2667M4 2C5.10457 2 6 2.89543 6 4C6 5.10457 5.10457 6 4 6C2.89543 6 2 5.10457 2 4C2 2.89543 2.89543 2 4 2ZM4 10C5.10457 10 6 10.8954 6 12C6 13.1046 5.10457 14 4 14C2.89543 14 2 13.1046 2 12C2 10.8954 2.89543 10 4 10Z" stroke="currentColor" stroke-width="1.33" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
   "scissors-cut-01": `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none"><path d="M13.3333 2.66667L5.66667 10.3333M5.66667 5.66667L13.3333 13.3333M11.6667 8H11.6733M14.6667 8H14.6733M4 2C5.10457 2 6 2.89543 6 4C6 5.10457 5.10457 6 4 6C2.89543 6 2 5.10457 2 4C2 2.89543 2.89543 2 4 2ZM4 10C5.10457 10 6 10.8954 6 12C6 13.1046 5.10457 14 4 14C2.89543 14 2 13.1046 2 12C2 10.8954 2.89543 10 4 10Z" stroke="currentColor" stroke-width="1.33" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
   "scissors-cut-02": `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none"><path d="M3 5.73333L14 11.3333M14 4.66667L3 10.2667M11.6667 8H11.6733M14.6667 8H14.6733M4 2C5.10457 2 6 2.89543 6 4C6 5.10457 5.10457 6 4 6C2.89543 6 2 5.10457 2 4C2 2.89543 2.89543 2 4 2ZM4 10C5.10457 10 6 10.8954 6 12C6 13.1046 5.10457 14 4 14C2.89543 14 2 13.1046 2 12C2 10.8954 2.89543 10 4 10Z" stroke="currentColor" stroke-width="1.33" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+  "scrum": scrumMarkup,
   "search-lg": `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none"><path d="M14 14L11.6667 11.6667M13.3333 7.66667C13.3333 10.7963 10.7963 13.3333 7.66667 13.3333C4.53705 13.3333 2 10.7963 2 7.66667C2 4.53705 4.53705 2 7.66667 2C10.7963 2 13.3333 4.53705 13.3333 7.66667Z" stroke="currentColor" stroke-width="1.33" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
   "search-md": `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none"><path d="M14 14L11.1 11.1M12.6667 7.33333C12.6667 10.2789 10.2789 12.6667 7.33333 12.6667C4.38781 12.6667 2 10.2789 2 7.33333C2 4.38781 4.38781 2 7.33333 2C10.2789 2 12.6667 4.38781 12.6667 7.33333Z" stroke="currentColor" stroke-width="1.33" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
   "search-refraction": `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none"><path d="M14 14L11.1 11.1M7.33333 4C9.17428 4 10.6667 5.49238 10.6667 7.33333M12.6667 7.33333C12.6667 10.2789 10.2789 12.6667 7.33333 12.6667C4.38781 12.6667 2 10.2789 2 7.33333C2 4.38781 4.38781 2 7.33333 2C10.2789 2 12.6667 4.38781 12.6667 7.33333Z" stroke="currentColor" stroke-width="1.33" stroke-linecap="round" stroke-linejoin="round"/></svg>`,

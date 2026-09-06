@@ -161,10 +161,10 @@
   --primitive-pink-800: #5f264c;
   --primitive-pink-900: #3b1f35;
   --primitive-grey-0: #ffffff;
-  --primitive-grey-12: #fcfcfc;
+  --primitive-grey-12: #fbfbfc;
   --primitive-grey-25: #f8f9fa;
-  --primitive-grey-50: #f1f2f3;
-  --primitive-grey-100: #e8e9ea;
+  --primitive-grey-50: #f2f3f4;
+  --primitive-grey-100: #e9eaeb;
   --primitive-grey-200: #d3d4d6;
   --primitive-grey-300: #bdbec2;
   --primitive-grey-400: #a7a9ad;
@@ -341,7 +341,7 @@
   --color-bg-quaternary: var(--primitive-grey-100);
   --color-component-button-border-split: var(--primitive-alpha-white-30);
   --color-text-primary: var(--primitive-grey-950);
-  --color-text-secondary: var(--primitive-grey-700);
+  --color-text-secondary: var(--primitive-grey-800);
   --color-text-tertiary: var(--primitive-grey-500);
   --color-fg-brand-primary: var(--primitive-blue-500);
   --color-fg-brand-secondary: var(--primitive-blue-100);

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import { VisBreadcrumb, type VisBreadcrumbItem } from '../../../components/breadcrumb'
@@ -49,6 +49,30 @@ const recentRepositoryKeys = [
 const recentRepositories: DemoRepository[] = recentRepositoryKeys
   .map((key) => demoRepositories.find((repository) => repository.key === key))
   .filter((repository): repository is DemoRepository => Boolean(repository))
+const recentListRef = ref<HTMLElement | null>(null)
+const recentRepositoryCapacity = ref(recentRepositories.length)
+const visibleRecentRepositories = computed(() => recentRepositories.slice(0, recentRepositoryCapacity.value))
+
+let recentListResizeObserver: ResizeObserver | undefined
+
+function updateRecentRepositoryCapacity(): void {
+  const list = recentListRef.value
+  if (!list || list.clientWidth <= 0) return
+
+  const firstCard = list.querySelector<HTMLElement>('.repository-recent__card')
+  const cardWidth = firstCard?.getBoundingClientRect().width ?? 320
+  const columnGap = Number.parseFloat(window.getComputedStyle(list).columnGap) || 16
+  const capacity = Math.floor((list.clientWidth + columnGap) / (cardWidth + columnGap))
+  recentRepositoryCapacity.value = Math.max(1, Math.min(recentRepositories.length, capacity))
+}
+
+onMounted(() => {
+  recentListResizeObserver = new ResizeObserver(updateRecentRepositoryCapacity)
+  if (recentListRef.value) recentListResizeObserver.observe(recentListRef.value)
+  void nextTick(updateRecentRepositoryCapacity)
+})
+
+onBeforeUnmount(() => recentListResizeObserver?.disconnect())
 
 const repositorySearch = ref('')
 const selectedStatus = ref('全部状态')
@@ -183,9 +207,9 @@ function openRepository(repositoryKey: string): void {
         <h2 class="repository-home__section-title">最近访问</h2>
       </header>
 
-      <div class="repository-recent">
+      <div ref="recentListRef" class="repository-recent">
         <VisCard
-          v-for="repository in recentRepositories"
+          v-for="repository in visibleRecentRepositories"
           :key="repository.key"
           class="repository-recent__card"
           role="link"
@@ -447,9 +471,10 @@ function openRepository(repositoryKey: string): void {
 .repository-recent {
   inline-size: 100%;
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
   gap: var(--space-16);
+  overflow: hidden;
 }
 
 .repository-recent__card {

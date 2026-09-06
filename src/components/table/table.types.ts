@@ -65,6 +65,10 @@ export interface VisTableHeaderProps {
   align?: VisTableAlign
   label?: string
   leftButton?: boolean
+  leftButtonIcon?: IconName
+  leftButtonLabel?: string
+  leftButtonTooltip?: string
+  leftButtonTooltipOpenDelay?: number
   prefixIcon?: IconName
   sortable?: boolean
   sortOrder?: VisTableSortOrder
@@ -75,11 +79,11 @@ export interface VisTableHeaderProps {
 export interface VisTableItemProps {
   type?: VisTableItemType
   appearance?: VisTableAppearance
-  state?: VisTableState
   value?: unknown
   prefix?: boolean
   suffix?: boolean
   prefixIcon?: IconName
+  prefixColor?: VisBadgeColor
   suffixLabel?: string
   href?: string
   checked?: boolean
@@ -132,6 +136,10 @@ export interface VisTableColumn<Row extends VisTableRowData = VisTableRowData> {
   cellType?: VisTableItemType
   headerPrefixIcon?: IconName
   headerLeftButton?: boolean
+  headerLeftButtonIcon?: IconName
+  headerLeftButtonLabel?: string
+  headerLeftButtonTooltip?: string
+  headerLeftButtonTooltipOpenDelay?: number
   itemProps?: VisTableItemPropsResolver<Row>
   showOverflowTooltip?: boolean
   className?: string
@@ -147,6 +155,10 @@ export interface VisTableProps<Row extends VisTableRowData = VisTableRowData> {
   data?: Row[]
   columns?: VisTableColumn<Row>[]
   appearance?: VisTableAppearance
+  /** Freeze the first n declared data columns. The selection column is not counted. */
+  fixedStartColumns?: number
+  /** Freeze the last n declared data columns. The selection column is not counted. */
+  fixedEndColumns?: number
   rowKey?: string | ((row: Row) => string)
   selectable?: boolean
   highlightActiveRow?: boolean

@@ -1,4 +1,5 @@
 export const demoPages = [
+  { id: 'changelog', title: 'Changelog', subtitle: '更新记录', section: 'documentation' },
   { id: 'accordion', title: 'Accordion', subtitle: '折叠面板', section: 'shared' },
   { id: 'alert', title: 'Alert', subtitle: '警告提示', section: 'shared' },
   { id: 'avatar', title: 'Avatar', subtitle: '头像', section: 'shared' },
@@ -68,7 +69,9 @@ export function getDemoRouteName(page: DemoPageId): string {
 
 export function getDemoRoutePath(page: DemoPage): string {
   const section =
-    page.section === 'code-experience'
+    page.section === 'documentation'
+      ? 'documentation'
+      : page.section === 'code-experience'
       ? 'code-experience'
       : page.section === 'application'
       ? 'application-components'

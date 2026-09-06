@@ -3,6 +3,7 @@ import VisButton from '../button/VisButton.vue'
 import VisCheckbox from '../checkbox/VisCheckbox.vue'
 import Icon from '../icons/Icon.vue'
 import VisRadio from '../radio/VisRadio.vue'
+import VisTooltip from '../tooltip/VisTooltip.vue'
 import VisTableSortIcon from './VisTableSortIcon.vue'
 import type { VisTableHeaderProps } from './table.types'
 
@@ -13,6 +14,10 @@ withDefaults(defineProps<VisTableHeaderProps>(), {
   align: 'left',
   label: '标题',
   leftButton: false,
+  leftButtonIcon: 'chevron-selector-vertical',
+  leftButtonLabel: '调整',
+  leftButtonTooltip: undefined,
+  leftButtonTooltipOpenDelay: 0,
   prefixIcon: undefined,
   sortable: false,
   sortOrder: null,
@@ -34,15 +39,23 @@ const emit = defineEmits<{
     :class="[`type-${type}`, `appearance-${appearance}`, `state-${state}`, `align-${align}`]"
   >
     <template v-if="type === 'default'">
-      <VisButton
+      <VisTooltip
         v-if="leftButton"
-        variant="text"
-        size="sm"
-        icon-only
-        icon-name="chevron-selector-vertical"
-        label="调整"
-        @click.stop="emit('left-button-click')"
-      />
+        :content="leftButtonTooltip ?? leftButtonLabel"
+        position="top"
+        :disabled="!leftButtonTooltip"
+        :open-delay="leftButtonTooltipOpenDelay"
+        teleported
+      >
+        <VisButton
+          variant="text"
+          size="sm"
+          icon-only
+          :icon-name="leftButtonIcon"
+          :label="leftButtonLabel"
+          @click.stop="emit('left-button-click')"
+        />
+      </VisTooltip>
       <div class="vis-table-header__content">
         <Icon v-if="prefixIcon" :name="prefixIcon" :size="16" decorative />
         <span class="vis-table-header__label"><slot>{{ label }}</slot></span>

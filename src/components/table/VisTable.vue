@@ -6,6 +6,7 @@ import { computed, ref, useSlots } from 'vue'
 import type {
   VisTableAction,
   VisTableColumn,
+  VisTableFixed,
   VisTableItemProps,
   VisTableProps,
   VisTableRowData,
@@ -19,6 +20,8 @@ const props = withDefaults(defineProps<VisTableProps>(), {
   data: () => [],
   columns: () => [],
   appearance: 'horizontal',
+  fixedStartColumns: 0,
+  fixedEndColumns: 0,
   rowKey: 'id',
   selectable: false,
   highlightActiveRow: false,
@@ -38,6 +41,7 @@ const emit = defineEmits<{
   'active-change': [key: VisTableRowKey, row: VisTableRowData]
   'cell-action': [action: VisTableAction, row: VisTableRowData, column: VisTableColumn, actionIndex: number]
   'tree-toggle': [expanded: boolean, row: VisTableRowData, column: VisTableColumn]
+  'header-left-button': [column: VisTableColumn]
   'cell-shortcut': [row: VisTableRowData, column: VisTableColumn]
   'cell-drag': [event: PointerEvent, row: VisTableRowData, column: VisTableColumn]
 }>()
@@ -56,6 +60,39 @@ const tableClasses = computed(() => [
     'is-selectable': props.selectable,
   },
 ])
+
+function normalizeFixedColumnCount(value: number, maximum: number): number {
+  if (!Number.isFinite(value)) return 0
+  return Math.min(maximum, Math.max(0, Math.floor(value)))
+}
+
+const fixedStartColumnCount = computed(() =>
+  normalizeFixedColumnCount(props.fixedStartColumns, props.columns.length),
+)
+
+const fixedEndColumnCount = computed(() =>
+  normalizeFixedColumnCount(
+    props.fixedEndColumns,
+    props.columns.length - fixedStartColumnCount.value,
+  ),
+)
+
+const selectionColumnFixed = computed<VisTableFixed | undefined>(() => {
+  const hasLeftFixedColumn =
+    fixedStartColumnCount.value > 0 ||
+    props.columns.some((column) => column.fixed === true || column.fixed === 'left')
+  return hasLeftFixedColumn ? 'left' : undefined
+})
+
+function resolveColumnFixed(
+  column: VisTableColumn,
+  columnIndex: number,
+): VisTableFixed | undefined {
+  if (column.fixed !== undefined) return column.fixed
+  if (columnIndex < fixedStartColumnCount.value) return 'left'
+  if (columnIndex >= props.columns.length - fixedEndColumnCount.value) return 'right'
+  return undefined
+}
 
 function resolveRowKey(row: VisTableRowData): VisTableRowKey | undefined {
   if (typeof props.rowKey === 'function') return props.rowKey(row)
@@ -153,10 +190,16 @@ defineExpose({
     @sort-change="handleSortChange"
     @row-click="handleRowClick"
   >
-    <ElTableColumn v-if="selectable" type="selection" width="48" align="center" />
+    <ElTableColumn
+      v-if="selectable"
+      type="selection"
+      width="48"
+      align="center"
+      :fixed="selectionColumnFixed"
+    />
 
     <ElTableColumn
-      v-for="column in columns"
+      v-for="(column, columnIndex) in columns"
       :key="column.key"
       :prop="column.prop ?? column.key"
       :label="column.label"
@@ -164,7 +207,7 @@ defineExpose({
       :min-width="column.minWidth"
       :align="column.align ?? 'left'"
       :header-align="column.headerAlign ?? column.align ?? 'left'"
-      :fixed="column.fixed"
+      :fixed="resolveColumnFixed(column, columnIndex)"
       :sortable="column.sortable"
       :show-overflow-tooltip="column.showOverflowTooltip ?? true"
       :class-name="column.className"
@@ -178,8 +221,13 @@ defineExpose({
           :align="column.headerAlign ?? column.align ?? 'left'"
           :prefix-icon="column.headerPrefixIcon"
           :left-button="column.headerLeftButton"
+            :left-button-icon="column.headerLeftButtonIcon"
+            :left-button-label="column.headerLeftButtonLabel"
+            :left-button-tooltip="column.headerLeftButtonTooltip"
+            :left-button-tooltip-open-delay="column.headerLeftButtonTooltipOpenDelay"
           :sortable="Boolean(column.sortable)"
           :sort-order="columnSortOrder(column)"
+          @left-button-click="emit('header-left-button', column)"
         >
           <slot
             v-if="slots[headerSlotName(column)]"
@@ -276,9 +324,85 @@ defineExpose({
   inline-size: 100%;
 }
 
+.vis-table :deep(.vis-el-table__header-wrapper) {
+  overflow: hidden;
+}
+
 .vis-table :deep(.vis-el-table__body-wrapper) {
-  overflow-x: auto;
-  overflow-y: hidden;
+  overflow: hidden;
+}
+
+/* Element Plus ships its scrollbar styles against the default `el-*`
+   namespace. Recreate the adapter here so a `vis-el-*` table uses the
+   overlay scrollbar instead of native scrollbars that consume layout space. */
+.vis-table :deep(.vis-el-scrollbar) {
+  --el-scrollbar-opacity: 0.3;
+  --el-scrollbar-bg-color: var(--el-text-color-secondary);
+  --el-scrollbar-hover-opacity: 0.5;
+  --el-scrollbar-hover-bg-color: var(--el-text-color-secondary);
+
+  position: relative;
+  block-size: 100%;
+  overflow: hidden;
+}
+
+.vis-table :deep(.vis-el-table__body-wrapper .vis-el-scrollbar__wrap) {
+  block-size: 100%;
+  overflow: auto;
+}
+
+.vis-table :deep(.vis-el-scrollbar__wrap--hidden-default) {
+  scrollbar-width: none;
+}
+
+.vis-table :deep(.vis-el-scrollbar__wrap--hidden-default::-webkit-scrollbar) {
+  display: none;
+}
+
+.vis-table :deep(.vis-el-scrollbar__bar) {
+  position: absolute;
+  z-index: calc(var(--el-table-index) + 2);
+  inset-inline-end: 2px;
+  inset-block-end: 2px;
+  border-radius: 4px;
+}
+
+.vis-table :deep(.vis-el-scrollbar__bar.is-horizontal) {
+  inset-inline-start: 2px;
+  block-size: 6px;
+}
+
+.vis-table :deep(.vis-el-scrollbar__bar.is-horizontal > div) {
+  block-size: 100%;
+}
+
+.vis-table :deep(.vis-el-scrollbar__bar.is-vertical) {
+  inset-block-start: 2px;
+  inline-size: 6px;
+}
+
+.vis-table :deep(.vis-el-scrollbar__bar.is-vertical > div) {
+  inline-size: 100%;
+}
+
+.vis-table :deep(.vis-el-scrollbar__thumb) {
+  position: relative;
+  display: block;
+  inline-size: 0;
+  block-size: 0;
+  border-radius: inherit;
+  background-color: var(--el-scrollbar-bg-color, var(--el-text-color-secondary));
+  cursor: pointer;
+  opacity: var(--el-scrollbar-opacity, 0.3);
+  transition: var(--el-transition-duration) background-color;
+}
+
+.vis-table :deep(.vis-el-scrollbar__thumb:hover) {
+  background-color: var(
+    --el-scrollbar-hover-bg-color,
+    var(--el-text-color-secondary)
+  );
+  opacity: var(--el-scrollbar-hover-opacity, 0.5);
 }
 
 .vis-table :deep(.vis-el-table__header),
@@ -310,6 +434,71 @@ defineExpose({
 .vis-table :deep(.vis-el-table__header-wrapper th.vis-el-table__cell) {
   color: var(--color-text-secondary);
   background: var(--color-bg-primary);
+}
+
+/* Element Plus theme styles target the default `el-*` namespace. Keep the
+   fixed-column behavior inside VisTable when the application uses `vis-el-*`. */
+.vis-table :deep(.vis-el-table__header-wrapper .vis-el-table-fixed-column--left),
+.vis-table :deep(.vis-el-table__header-wrapper .vis-el-table-fixed-column--right),
+.vis-table :deep(.vis-el-table__body-wrapper .vis-el-table-fixed-column--left),
+.vis-table :deep(.vis-el-table__body-wrapper .vis-el-table-fixed-column--right) {
+  position: sticky !important;
+  z-index: calc(var(--el-table-index) + 1);
+  background: inherit;
+}
+
+.vis-table :deep(.vis-el-table-fixed-column--left.is-first-column::before),
+.vis-table :deep(.vis-el-table-fixed-column--left.is-last-column::before),
+.vis-table :deep(.vis-el-table-fixed-column--right.is-first-column::before),
+.vis-table :deep(.vis-el-table-fixed-column--right.is-last-column::before) {
+  position: absolute;
+  inset-block: 0;
+  inline-size: 10px;
+  overflow: hidden;
+  box-shadow: none;
+  content: '';
+  pointer-events: none;
+  touch-action: none;
+}
+
+.vis-table :deep(.vis-el-table-fixed-column--left.is-first-column::before),
+.vis-table :deep(.vis-el-table-fixed-column--right.is-first-column::before) {
+  inset-inline-start: -10px;
+}
+
+.vis-table :deep(.vis-el-table-fixed-column--left.is-last-column::before),
+.vis-table :deep(.vis-el-table-fixed-column--right.is-last-column::before) {
+  inset-inline-end: -10px;
+}
+
+.vis-table :deep(.vis-el-table__header-wrapper th.vis-el-table-fixed-column--left),
+.vis-table :deep(.vis-el-table__header-wrapper th.vis-el-table-fixed-column--right) {
+  background-color: var(--el-table-header-bg-color);
+}
+
+.vis-table.is-scrolling-left
+  :deep(.vis-el-table-fixed-column--right.is-first-column::before),
+.vis-table.is-scrolling-middle
+  :deep(.vis-el-table-fixed-column--right.is-first-column::before) {
+  box-shadow: var(--el-table-fixed-right-column);
+}
+
+.vis-table.is-scrolling-right
+  :deep(.vis-el-table-fixed-column--left.is-last-column::before),
+.vis-table.is-scrolling-middle
+  :deep(.vis-el-table-fixed-column--left.is-last-column::before) {
+  box-shadow: var(--el-table-fixed-left-column);
+}
+
+.vis-table.is-scrolling-none
+  :deep(.vis-el-table-fixed-column--left.is-first-column::before),
+.vis-table.is-scrolling-none
+  :deep(.vis-el-table-fixed-column--left.is-last-column::before),
+.vis-table.is-scrolling-none
+  :deep(.vis-el-table-fixed-column--right.is-first-column::before),
+.vis-table.is-scrolling-none
+  :deep(.vis-el-table-fixed-column--right.is-last-column::before) {
+  box-shadow: none;
 }
 
 .vis-table :deep(.vis-el-table__header-wrapper th.vis-el-table__cell:hover) {

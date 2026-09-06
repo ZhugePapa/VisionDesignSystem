@@ -116,7 +116,7 @@ const contentText = computed(() => {
   return props.label ?? 'Badge'
 })
 const resolvedIconName = computed(() => props.iconName ?? (isIconOnly.value ? 'dots-horizontal' : 'download-03'))
-const iconSize = computed(() => (resolvedSize.value === 'sm' ? 12 : 16))
+const iconSize = 12
 const elementBadgeProps = computed(() => resolveElementBadgeProps(props, resolvedSize.value))
 const badgeStyle = computed(() => colorStyles[resolvedColor.value])
 const badgeClass = computed(() => [
@@ -191,15 +191,19 @@ const badgeClass = computed(() => [
 
 .vis-badge.size-md {
   block-size: var(--space-24);
-  font-size: var(--font-text-md-size);
-  line-height: var(--font-text-md-line-height);
+  font-size: var(--font-text-sm-size);
+  line-height: var(--font-text-sm-line-height);
 }
 
 .vis-badge.type-default {
   padding-inline: var(--space-6);
 }
 
-.vis-badge:is(.type-icon, .type-dot) {
+.vis-badge.size-sm:is(.type-icon, .type-dot) {
+  padding-inline: var(--space-6);
+}
+
+.vis-badge.size-md:is(.type-icon, .type-dot) {
   padding-inline: var(--space-8);
 }
 
@@ -261,12 +265,8 @@ const badgeClass = computed(() => [
   overflow: hidden;
 }
 
-.vis-badge.size-sm {
+.vis-badge:is(.size-sm, .size-md) {
   --vis-badge-icon-size: 12px;
-}
-
-.vis-badge.size-md {
-  --vis-badge-icon-size: 16px;
 }
 
 .vis-badge__dot {

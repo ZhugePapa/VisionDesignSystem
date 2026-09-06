@@ -92,12 +92,12 @@ function applicationRow(row: Record<string, unknown>): ApplicationRow {
 </script>
 
 <template>
-  <section class="application-list-page" aria-label="应用管理">
+  <section class="application-list-page" aria-label="应用">
     <VisPageHeader
       class="application-list-page__header"
-      title="应用列表"
-      description="集中管理应用的创建、配置、部署与运行状态，帮助团队统一维护应用全生命周期及其关联资源。"
-      aria-label="应用列表"
+      title="应用"
+      description="集中维护应用及其关联代码、制品和发布状态。"
+      aria-label="应用"
     />
 
     <div class="application-list-page__content">

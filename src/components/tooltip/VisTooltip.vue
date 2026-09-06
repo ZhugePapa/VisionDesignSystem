@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, useId } from 'vue'
+import { computed, onBeforeUnmount, ref, useId, watch } from 'vue'
 
 import type { VisTooltipProps } from './tooltip.types'
 
@@ -14,6 +14,8 @@ const props = withDefaults(defineProps<VisTooltipProps>(), {
   trigger: 'hover',
   disabled: false,
   arrow: true,
+  openDelay: 0,
+  teleported: false,
 })
 
 const emit = defineEmits<{
@@ -24,9 +26,34 @@ const emit = defineEmits<{
 
 const tooltipId = useId()
 const internalOpen = ref(false)
+const triggerRef = ref<HTMLElement>()
+const teleportedStyle = ref<Record<string, string>>({})
+let openTimer: ReturnType<typeof setTimeout> | undefined
 
 const isControlled = computed(() => props.modelValue !== undefined)
 const isOpen = computed(() => !props.disabled && (isControlled.value ? Boolean(props.modelValue) : internalOpen.value))
+
+function updateTeleportedPosition(): void {
+  if (!props.teleported || !triggerRef.value) return
+  const rect = triggerRef.value.getBoundingClientRect()
+  teleportedStyle.value = {
+    insetInlineStart: `${rect.left}px`,
+    insetBlockStart: `${rect.top}px`,
+    inlineSize: `${rect.width}px`,
+    blockSize: `${rect.height}px`,
+  }
+}
+
+function startPositionTracking(): void {
+  updateTeleportedPosition()
+  window.addEventListener('resize', updateTeleportedPosition)
+  window.addEventListener('scroll', updateTeleportedPosition, true)
+}
+
+function stopPositionTracking(): void {
+  window.removeEventListener('resize', updateTeleportedPosition)
+  window.removeEventListener('scroll', updateTeleportedPosition, true)
+}
 
 function setOpen(value: boolean): void {
   if (props.disabled || props.trigger === 'manual') return
@@ -40,16 +67,38 @@ function setOpen(value: boolean): void {
   else emit('hide')
 }
 
+function clearOpenTimer(): void {
+  if (openTimer === undefined) return
+  clearTimeout(openTimer)
+  openTimer = undefined
+}
+
 function onPointerEnter(): void {
-  if (props.trigger === 'hover') setOpen(true)
+  if (props.trigger !== 'hover') return
+
+  clearOpenTimer()
+  if (props.openDelay <= 0) {
+    setOpen(true)
+    return
+  }
+
+  openTimer = setTimeout(() => {
+    openTimer = undefined
+    setOpen(true)
+  }, props.openDelay)
 }
 
 function onPointerLeave(): void {
-  if (props.trigger === 'hover') setOpen(false)
+  if (props.trigger !== 'hover') return
+  clearOpenTimer()
+  setOpen(false)
 }
 
 function onFocusIn(): void {
-  if (props.trigger === 'hover' || props.trigger === 'focus') setOpen(true)
+  if (props.trigger === 'hover' || props.trigger === 'focus') {
+    clearOpenTimer()
+    setOpen(true)
+  }
 }
 
 function onFocusOut(): void {
@@ -59,6 +108,16 @@ function onFocusOut(): void {
 function onClick(): void {
   if (props.trigger === 'click') setOpen(!isOpen.value)
 }
+
+watch(isOpen, (open) => {
+  stopPositionTracking()
+  if (open && props.teleported) startPositionTracking()
+})
+
+onBeforeUnmount(() => {
+  clearOpenTimer()
+  stopPositionTracking()
+})
 </script>
 
 <template>
@@ -71,11 +130,11 @@ function onClick(): void {
     @focusout="onFocusOut"
     @click="onClick"
   >
-    <span class="vis-tooltip__trigger" :aria-describedby="isOpen ? tooltipId : undefined">
+    <span ref="triggerRef" class="vis-tooltip__trigger" :aria-describedby="isOpen ? tooltipId : undefined">
       <slot />
     </span>
 
-    <Transition name="vis-tooltip-fade">
+    <Transition v-if="!teleported" name="vis-tooltip-fade">
       <span v-if="isOpen" :id="tooltipId" class="vis-tooltip__popup" role="tooltip" aria-live="polite">
         <span class="vis-tooltip__bubble">
           <slot name="content">{{ content }}</slot>
@@ -97,6 +156,36 @@ function onClick(): void {
         </span>
       </span>
     </Transition>
+
+    <Teleport v-else to="body">
+      <span
+        v-if="isOpen"
+        class="vis-tooltip vis-tooltip--teleported"
+        :class="`position-${position}`"
+        :style="teleportedStyle"
+      >
+        <span :id="tooltipId" class="vis-tooltip__popup" role="tooltip" aria-live="polite">
+          <span class="vis-tooltip__bubble">
+            <slot name="content">{{ content }}</slot>
+          </span>
+          <span v-if="arrow" class="vis-tooltip__arrow" aria-hidden="true">
+            <svg
+              class="vis-tooltip__arrow-icon"
+              width="12"
+              height="6"
+              viewBox="0 0 12 6"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M7.41421 4.58579C6.63317 5.36683 5.36683 5.36684 4.58579 4.58579L-6.57417e-07 3.69565e-07L12 6.07967e-07L7.41421 4.58579Z"
+                fill="currentColor"
+              />
+            </svg>
+          </span>
+        </span>
+      </span>
+    </Teleport>
   </span>
 </template>
 
@@ -110,6 +199,13 @@ function onClick(): void {
   display: inline-flex;
   vertical-align: middle;
   font-family: var(--font-family-sans);
+}
+
+.vis-tooltip--teleported {
+  position: fixed;
+  z-index: 40;
+  display: block;
+  pointer-events: none;
 }
 
 .vis-tooltip__trigger {

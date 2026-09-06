@@ -11,6 +11,7 @@ export type {
   VisMenuHeaderNavigationProps,
   VisMenuBrandMarkProps,
   VisMenuItemData,
+  VisMenuItemIcon,
   VisMenuItemProps,
   VisMenuItemState,
   VisMenuKey,
