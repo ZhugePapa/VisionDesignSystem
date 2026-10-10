@@ -136,6 +136,12 @@ export const menuApplicationRouter = createRouter({
       redirect: (to) => ({ name: 'project-overview', params: { projectKey: to.params.projectKey } }),
       children: [
         ...projectRoutes,
+        {
+          path: 'work-items/plan',
+          name: 'project-plan',
+          component: () => import('./views/ProjectWorkItemsView.vue'),
+          meta: { menuKey: 'work-items', title: '计划', layout: 'work-items' },
+        },
         applicationDetailRoute,
         repositoryDetailRoute,
         repositoryCommitsRoute,

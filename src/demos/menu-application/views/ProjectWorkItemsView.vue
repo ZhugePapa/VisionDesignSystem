@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 
 import { VisAvatarGroup, VisAvatarLabel } from '../../../components/avatar'
 import type { VisBadgeColor } from '../../../components/badge'
@@ -19,6 +20,9 @@ import {
   type VisTableSortChange,
 } from '../../../components/table'
 import { VisTabs, type VisTabsItem } from '../../../components/tabs'
+import PlanGanttWorkspace from '../components/PlanGanttWorkspace.vue'
+import { useProjectWorkItemStore, refreshParentSchedules } from '../work-item-store'
+import { scheduleDays, type GanttSchedule } from '../gantt-calendar'
 import issueBug from '../assets/work-items/issue-bug.svg'
 import issueEpic from '../assets/work-items/issue-epic.svg'
 import issueFeature from '../assets/work-items/issue-feature.svg'
@@ -26,7 +30,6 @@ import issueStory from '../assets/work-items/issue-story.svg'
 import issueTask from '../assets/work-items/issue-task.svg'
 import {
   demoWorkItemPeople,
-  demoWorkItems,
   type DemoWorkItem,
   type DemoWorkItemPriority,
   type DemoWorkItemStatus,
@@ -66,6 +69,15 @@ const moduleTabs: VisTabsItem[] = [
   { value: 'burndown', label: '燃尽图' },
   { value: 'releases', label: '发布' },
 ]
+
+const route = useRoute()
+const router = useRouter()
+const isPlan = computed(() => route.name === 'project-plan')
+const projectStore = computed(() => useProjectWorkItemStore(String(route.params.projectKey ?? 'lighting')))
+const ganttRef = ref<InstanceType<typeof PlanGanttWorkspace>>()
+const addExistingOpen = ref(false)
+const addExistingSearch = ref('')
+const addExistingSelection = ref<DemoWorkItem[]>([])
 
 const scopeOptions: VisSegmentedOption[] = [
   { value: 'all', label: '全部' },
@@ -190,7 +202,7 @@ const overflowItems = computed<VisDropdownEntry[]>(() => {
   ]
 })
 
-const workItems = ref<DemoWorkItem[]>(demoWorkItems.map((item) => ({ ...item, assignees: item.assignees.map((person) => ({ ...person })) })))
+const workItems = computed({ get: () => projectStore.value.items.value, set: (value: DemoWorkItem[]) => { projectStore.value.items.value = value } })
 const selectedScope = ref<WorkItemScope>('all')
 const searchValue = ref('')
 const selectedStatus = ref<DemoWorkItemStatus | 'all'>('all')
@@ -233,6 +245,7 @@ const parentById = computed(() => new Map(workItems.value.map((item) => [item.id
 const directMatches = computed(() => {
   const query = searchValue.value.trim().toLocaleLowerCase()
   return workItems.value.filter((item) => {
+    if (isPlan.value && !projectStore.value.planIds.value.includes(item.id)) return false
     const matchesScope = selectedScope.value === 'all'
       || (selectedScope.value === 'owned' && item.assignees.some((person) => person.name === '张大山'))
       || (selectedScope.value === 'followed' && item.followed)
@@ -384,6 +397,96 @@ const pagedRows = computed<WorkItemTableRow[]>(() => {
   return result
 })
 
+const planRows = computed<WorkItemTableRow[]>(() => {
+  const rows: WorkItemTableRow[] = []
+  const append = (items: DemoWorkItem[], level: number) => {
+    sortedSiblings(items).forEach(item => {
+      if (!projectStore.value.planIds.value.includes(item.id) || !includedIds.value.has(item.id)) return
+      const children = (childrenByParent.value.get(item.id) ?? []).filter(child => projectStore.value.planIds.value.includes(child.id) && includedIds.value.has(child.id))
+      const expanded = hasActiveFilters.value || expandedIds.value.has(item.id)
+      rows.push(createTableRow(item, level, children.length > 0, expanded))
+      if (children.length && expanded) append(children, level + 1)
+    })
+  }
+  append(rootItems.value, 1)
+  return rows
+})
+const planColumns = computed<VisTableColumn[]>(() => {
+  const order = ['key', 'title', 'actualHours', 'progress', 'plannedStart', 'plannedEnd', 'status', 'assignee', 'priority', 'iteration']
+  return order.map(key => {
+    const original = columns.value.find(column => column.key === key)!
+    return {
+      ...original,
+      width: key === 'title' ? 320 : key === 'iteration' ? 200 : ['assignee', 'priority'].includes(key) ? 160 : 120,
+      minWidth: undefined,
+      headerAlign: ['actualHours', 'progress'].includes(key) ? 'right' as const : 'left' as const,
+      headerLeftButton: key === 'title',
+      headerLeftButtonIcon: allExpanded.value ? 'chevron-selector-vertical-opened' as const : 'chevron-selector-vertical' as const,
+      headerLeftButtonLabel: allExpanded.value ? '全部折叠' : '全部展开',
+      headerLeftButtonTooltip: allExpanded.value ? '全部折叠' : '全部展开',
+      headerLeftButtonTooltipOpenDelay: 1000,
+      label: key === 'plannedStart' ? '开始时间' : key === 'plannedEnd' ? '结束时间' : original.label,
+    }
+  })
+})
+const ganttProps = computed(() => isPlan.value ? {
+  milestones: projectStore.value.milestones.value,
+  schedules: workItems.value.filter(item => projectStore.value.planIds.value.includes(item.id)),
+} : {})
+const availableWorkItems = computed(() => workItems.value.filter(item =>
+  !projectStore.value.planIds.value.includes(item.id)
+  && `${item.key} ${item.title}`.toLocaleLowerCase().includes(addExistingSearch.value.trim().toLocaleLowerCase()),
+).map(item => ({ ...item } as unknown as VisTableRowData)))
+
+function handleModuleChange(value: string | number): void {
+  if (value === 'plan' || value === 'work-items') {
+    void router.push({ name: value === 'plan' ? 'project-plan' : 'project-work-items', params: { projectKey: route.params.projectKey } })
+  } else setMessage('该模块将在后续版本补充', 'info')
+}
+function updatePlanItem(id: string, schedule: GanttSchedule): void {
+  const item = workItems.value.find(value => value.id === id)
+  if (!item) return
+  if (!scheduleDays(schedule) || schedule.progress < 0 || schedule.progress > 100 || !Number.isFinite(schedule.progress)) {
+    setMessage('日期或完成度无效，未保存修改', 'warning')
+    return
+  }
+  const before = { plannedStart: item.plannedStart, plannedEnd: item.plannedEnd, progress: item.progress }
+  if (childrenByParent.value.has(id)) {
+    // Pin only the fields the user actually changed; other fields still roll up.
+    item.scheduleOverrides = {
+      ...item.scheduleOverrides,
+      ...(before.plannedStart !== schedule.plannedStart ? { plannedStart: schedule.plannedStart } : {}),
+      ...(before.plannedEnd !== schedule.plannedEnd ? { plannedEnd: schedule.plannedEnd } : {}),
+      ...(before.progress !== schedule.progress ? { progress: schedule.progress } : {}),
+    }
+  }
+  Object.assign(item, { plannedStart: schedule.plannedStart, plannedEnd: schedule.plannedEnd, progress: schedule.progress })
+  refreshParentSchedules(workItems.value)
+  projectStore.value.changes.value.push({ workItemId: id, before, after: { ...schedule }, changedAt: new Date().toISOString() })
+  setMessage('修改已生效')
+}
+function confirmAddExisting(): void {
+  if (!addExistingSelection.value.length) {
+    setMessage('请选择需要添加的工作项', 'warning')
+    return
+  }
+  const next = new Set(projectStore.value.planIds.value)
+  const add = (item: DemoWorkItem) => {
+    if (next.has(item.id)) return
+    next.add(item.id)
+    if (item.parentId) {
+      const parent = workItems.value.find(value => value.id === item.parentId)
+      if (parent) add(parent)
+    }
+  }
+  addExistingSelection.value.forEach(add)
+  projectStore.value.planIds.value = [...next]
+  addExistingOpen.value = false
+  addExistingSelection.value = []
+  addExistingSearch.value = ''
+  setMessage('已添加到计划')
+}
+
 const paginationTotal = computed(() =>
   activeView.value === 'list' ? listItems.value.length : rootItems.value.length,
 )
@@ -512,6 +615,7 @@ function confirmCreate(): void {
     progress: 0,
   })
   workItems.value = [...workItems.value]
+  if (isPlan.value) projectStore.value.planIds.value = [...projectStore.value.planIds.value, workItems.value.at(-1)!.id]
   createOpen.value = false
   createTitle.value = ''
   setMessage('已成功新建')
@@ -522,14 +626,14 @@ watch([selectedScope, searchValue, selectedStatus, selectedCreator, selectedPrio
 })
 
 onMounted(() => {
-  document.title = '工作项 - Vision Application'
+  document.title = `${isPlan.value ? '计划' : '工作项'} - Vision Application`
 })
 </script>
 
 <template>
-  <section class="work-items-page" aria-label="项目工作项">
+  <section class="work-items-page" :class="{ 'is-plan': isPlan }" :aria-label="isPlan ? '项目计划' : '项目工作项'">
     <header class="work-items-page__module-nav">
-      <VisTabs :model-value="'work-items'" :items="moduleTabs" aria-label="项目管理模块" />
+      <VisTabs :model-value="isPlan ? 'plan' : 'work-items'" :items="moduleTabs" aria-label="项目管理模块" @change="handleModuleChange" />
     </header>
 
     <div class="work-items-page__workspace">
@@ -560,7 +664,13 @@ onMounted(() => {
         </div>
 
         <div class="work-items-page__actions">
+          <template v-if="isPlan">
+            <VisButton variant="text" size="md" label="定位今天" @click="ganttRef?.locateToday()">今天</VisButton>
+            <VisButton variant="text" size="md" label="定位计划" @click="ganttRef?.locatePlan()">定位计划</VisButton>
+            <VisButton variant="secondary" size="md" label="添加已有工作项" @click="addExistingSelection = []; addExistingSearch = ''; addExistingOpen = true">添加已有工作项</VisButton>
+          </template>
           <VisButton
+            v-if="!isPlan"
             variant="text"
             size="md"
             prefix
@@ -568,7 +678,7 @@ onMounted(() => {
             :label="sortButtonLabel"
             @click="toggleSort"
           >{{ sortButtonLabel }}</VisButton>
-          <VisDropdown :items="overflowItems" @select="handleOverflowSelect">
+          <VisDropdown v-if="!isPlan" :items="overflowItems" @select="handleOverflowSelect">
             <template #trigger="{ open, toggle }">
               <VisButton
                 variant="text"
@@ -583,6 +693,7 @@ onMounted(() => {
           </VisDropdown>
           <VisButton size="md" prefix icon-name="plus" label="新建工作项" @click="createOpen = true">新建</VisButton>
           <VisSegmented
+            v-if="!isPlan"
             :model-value="activeView"
             :options="viewOptions"
             :text="false"
@@ -599,30 +710,35 @@ onMounted(() => {
       </div>
 
       <div class="work-items-page__table-shell">
-        <VisTable
-          class="work-items-page__table"
-          :data="pagedRows"
-          :columns="columns"
+        <component
+          :is="isPlan ? PlanGanttWorkspace : VisTable"
+          :ref="(value: unknown) => { if (isPlan) ganttRef = value as InstanceType<typeof PlanGanttWorkspace> }"
+          :class="isPlan ? 'work-items-page__gantt' : 'work-items-page__table'"
+          v-bind="ganttProps"
+          :data="isPlan ? planRows : pagedRows"
+          :columns="isPlan ? planColumns : columns"
           appearance="grid"
           row-key="id"
-          selectable
-          :fixed-start-columns="2"
-          :fixed-end-columns="1"
+          :selectable="!isPlan"
+          :fixed-start-columns="isPlan ? 0 : 2"
+          :fixed-end-columns="isPlan ? 0 : 1"
           height="100%"
           empty-text="未找到符合条件的工作项"
           :aria-label="activeView === 'list' ? '工作项列表' : '工作项树形列表'"
           @sort-change="handleTableSort"
           @header-left-button="toggleAllRows"
+          @update-work-item="updatePlanItem"
+          @notice="setMessage($event, 'info')"
         >
           <template #cell-title="{ row }">
             <div
               class="work-item-title-cell"
-              :style="activeView === 'tree'
+              :style="isPlan || activeView === 'tree'
                 ? { paddingInlineStart: `${(rowValue(row).level - 1) * 24}px` }
                 : undefined"
             >
               <VisButton
-                v-if="activeView === 'tree' && rowValue(row).hasChildren"
+                v-if="(isPlan || activeView === 'tree') && rowValue(row).hasChildren"
                 class="work-item-title-cell__toggle"
                 variant="text"
                 size="sm"
@@ -633,7 +749,7 @@ onMounted(() => {
                 @click.stop="toggleRow(rowValue(row).id)"
               />
               <span
-                v-else-if="activeView === 'tree'"
+                v-else-if="isPlan || activeView === 'tree'"
                 class="work-item-title-cell__spacer"
                 aria-hidden="true"
               />
@@ -681,8 +797,8 @@ onMounted(() => {
               <VisButton variant="text" size="sm" icon-only icon-name="dots-horizontal" label="更多操作" />
             </div>
           </template>
-        </VisTable>
-        <div class="work-items-page__table-settings">
+        </component>
+        <div v-if="!isPlan" class="work-items-page__table-settings">
           <VisButton
             variant="text"
             size="sm"
@@ -693,7 +809,7 @@ onMounted(() => {
         </div>
       </div>
 
-      <footer class="work-items-page__pagination">
+      <footer v-if="!isPlan" class="work-items-page__pagination">
         <VisPagination
           v-model="currentPage"
           v-model:page-size="pageSize"
@@ -708,6 +824,18 @@ onMounted(() => {
     </div>
 
     <Teleport to="body">
+      <div v-if="addExistingOpen" class="work-item-create__mask">
+        <VisModal :model-value="addExistingOpen" title="添加已有工作项" :width="680" height="auto" divider footer @close="addExistingOpen = false" @cancel="addExistingOpen = false">
+          <div class="work-item-add-existing">
+            <VisInputSearchBox v-model="addExistingSearch" placeholder="搜索标题或编号" aria-label="搜索待添加工作项" />
+            <VisTable :data="availableWorkItems" :columns="[{ key: 'key', label: '编号', width: 120 }, { key: 'title', label: '标题' }]" selectable height="320" row-key="id" empty-text="没有可添加的工作项" @selection-change="addExistingSelection = $event as unknown as DemoWorkItem[]" />
+          </div>
+          <template #footer>
+            <VisButton variant="secondary" size="md" @click="addExistingOpen = false">取消</VisButton>
+            <VisButton size="md" :disabled="!addExistingSelection.length" @click="confirmAddExisting">添加到计划</VisButton>
+          </template>
+        </VisModal>
+      </div>
       <div v-if="createOpen" class="work-item-create__mask">
         <VisModal
           :model-value="createOpen"
@@ -785,6 +913,14 @@ onMounted(() => {
   flex: 1 1 0;
   flex-direction: column;
   overflow: hidden;
+}
+
+.is-plan .work-items-page__workspace { padding-block-end: var(--space-20); }
+.work-items-page__gantt { flex: 1; min-width: 0; }
+.work-item-add-existing { display: flex; flex-direction: column; gap: var(--space-12); padding: var(--space-20); }
+@media (max-width: 1400px) {
+  .is-plan .work-items-page__toolbar { flex-wrap: wrap; }
+  .is-plan .work-items-page__actions { margin-inline-start: auto; }
 }
 
 .work-items-page__toolbar {

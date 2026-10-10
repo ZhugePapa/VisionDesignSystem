@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, ref, useId, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, useId, watch } from 'vue'
 
 import type { VisTooltipProps } from './tooltip.types'
 
@@ -113,6 +113,10 @@ watch(isOpen, (open) => {
   stopPositionTracking()
   if (open && props.teleported) startPositionTracking()
 })
+
+// Controlled tooltips can mount already open (e.g. a live Gantt drag preview).
+onMounted(() => { if (isOpen.value && props.teleported) startPositionTracking() })
+watch(() => props.content, () => { if (isOpen.value) updateTeleportedPosition() }, { flush: 'post' })
 
 onBeforeUnmount(() => {
   clearOpenTimer()

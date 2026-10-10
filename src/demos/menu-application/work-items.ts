@@ -32,6 +32,8 @@ export interface DemoWorkItem {
   actualHours: number
   progress: number
   followed?: boolean
+  blocked?: { reason: string }
+  scheduleOverrides?: Partial<{ plannedStart: string; plannedEnd: string; progress: number }>
 }
 
 export const demoWorkItemPeople: DemoWorkItemAssignee[] = [

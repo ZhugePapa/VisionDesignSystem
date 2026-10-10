@@ -26,6 +26,7 @@ const props = withDefaults(defineProps<VisTableProps>(), {
   selectable: false,
   highlightActiveRow: false,
   activeRowKey: null,
+  hoveredRowKey: null,
   defaultSort: undefined,
   emptyText: '暂无数据',
   height: undefined,
@@ -44,6 +45,7 @@ const emit = defineEmits<{
   'header-left-button': [column: VisTableColumn]
   'cell-shortcut': [row: VisTableRowData, column: VisTableColumn]
   'cell-drag': [event: PointerEvent, row: VisTableRowData, column: VisTableColumn]
+  'scroll': [position: { scrollTop: number; scrollLeft: number }]
 }>()
 
 const slots = useSlots()
@@ -105,9 +107,10 @@ function resolveRowKey(row: VisTableRowData): VisTableRowKey | undefined {
 
 function rowClassName({ row }: { row: VisTableRowData }): string {
   const key = resolveRowKey(row)
-  return props.highlightActiveRow && key !== undefined && key === props.activeRowKey
-    ? 'is-active-row'
-    : ''
+  return [
+    props.highlightActiveRow && key !== undefined && key === props.activeRowKey ? 'is-active-row' : '',
+    key !== undefined && key === props.hoveredRowKey ? 'is-hovered-row' : '',
+  ].filter(Boolean).join(' ')
 }
 
 function cellSlotName(column: VisTableColumn): string {
@@ -163,6 +166,9 @@ function handleRowClick(row: VisTableRowData, column: unknown, event: PointerEve
 
 defineExpose({
   tableRef,
+  setScrollTop: (top: number) => tableRef.value?.setScrollTop(top),
+  setScrollLeft: (left: number) => tableRef.value?.setScrollLeft(left),
+  doLayout: () => tableRef.value?.doLayout(),
   clearSelection: () => tableRef.value?.clearSelection(),
   getSelectionRows: () => tableRef.value?.getSelectionRows(),
   toggleAllSelection: () => tableRef.value?.toggleAllSelection(),
@@ -189,6 +195,7 @@ defineExpose({
     @selection-change="emit('selection-change', $event)"
     @sort-change="handleSortChange"
     @row-click="handleRowClick"
+    @scroll="emit('scroll', $event)"
   >
     <ElTableColumn
       v-if="selectable"
@@ -543,7 +550,8 @@ defineExpose({
   transition: background-color 0.16s ease;
 }
 
-.vis-table :deep(.vis-el-table__body tr:hover > td.vis-el-table__cell) {
+.vis-table :deep(.vis-el-table__body tr:hover > td.vis-el-table__cell),
+.vis-table :deep(.vis-el-table__body tr.is-hovered-row > td.vis-el-table__cell) {
   background: var(--color-bg-secondary);
 }
 

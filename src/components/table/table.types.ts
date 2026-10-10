@@ -163,6 +163,8 @@ export interface VisTableProps<Row extends VisTableRowData = VisTableRowData> {
   selectable?: boolean
   highlightActiveRow?: boolean
   activeRowKey?: VisTableRowKey | null
+  /** Display the normal row hover state for a linked external surface. */
+  hoveredRowKey?: VisTableRowKey | null
   defaultSort?: VisTableSort
   emptyText?: string
   height?: string | number
